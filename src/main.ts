@@ -33,9 +33,8 @@ import {
   VelocityDamping2D,
   WrapAroundBounds2D,
 } from './engine'
-import { ControlsRepository } from './app/controls/ControlsRepository'
 import type { ControlsConfig } from './app/controls/ControlsConfig'
-import { LocalStorageAdapter } from './app/storage/KeyValueStorage'
+import { DEFAULT_CONTROLS, parseControlsConfig } from './app/controls/ControlsConfig'
 import { PauseMenu } from './app/ui/PauseMenu'
 import { SaveManager } from './app/save/SaveManager'
 import { SceneSerializer } from './app/save/SceneSerializer'
@@ -44,12 +43,42 @@ import { DefaultTheme, applyThemeToCssVars } from './app/theme/AppTheme'
 import { WelcomeScreen } from './app/ui/WelcomeScreen'
 import { DeathScreen } from './app/ui/DeathScreen'
 import { Announcer } from './app/a11y/Announcer'
-import { SettingsRepository } from './app/settings/SettingsRepository'
-import type { AppSettings } from './app/settings/AppSettings'
 import { AccessibleOverlay } from './app/ui/AccessibleOverlay'
 import { AuthClient } from './app/auth/AuthClient'
 import { HybridSaveStorage } from './app/save/HybridSaveStorage'
 import { AdminClient } from './app/admin/AdminClient'
+
+const CONTROLS_KEY = 'my-ts-app:controls:v1'
+const SETTINGS_KEY = 'my-ts-app:settings:v1'
+
+function loadControls(): ControlsConfig {
+  try {
+    const raw = window.localStorage.getItem(CONTROLS_KEY)
+    if (!raw) return structuredClone(DEFAULT_CONTROLS)
+    return parseControlsConfig(JSON.parse(raw) as unknown)
+  } catch {
+    return structuredClone(DEFAULT_CONTROLS)
+  }
+}
+
+function saveControls(config: ControlsConfig): void {
+  window.localStorage.setItem(CONTROLS_KEY, JSON.stringify(config))
+}
+
+function loadAccessibleMode(): boolean {
+  try {
+    const raw = window.localStorage.getItem(SETTINGS_KEY)
+    if (!raw) return false
+    const parsed = JSON.parse(raw) as any
+    return Boolean(parsed?.accessibleMode)
+  } catch {
+    return false
+  }
+}
+
+function saveAccessibleMode(enabled: boolean): void {
+  window.localStorage.setItem(SETTINGS_KEY, JSON.stringify({ accessibleMode: enabled }))
+}
 
 const app = document.querySelector<HTMLDivElement>('#app')
 if (!app) throw new Error('Missing #app')
@@ -90,15 +119,13 @@ camera.zoom = 1
 
 const scene = new Scene(input, camera)
 
-const settingsRepo = new SettingsRepository()
-let settings: AppSettings = settingsRepo.load()
+let accessibleMode = loadAccessibleMode()
 
 const backendUrl = (import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8080').toString()
 const auth = new AuthClient(backendUrl)
 const admin = new AdminClient(backendUrl, auth)
 
-const controlsRepo = new ControlsRepository(new LocalStorageAdapter())
-let controls: ControlsConfig = controlsRepo.load()
+let controls: ControlsConfig = loadControls()
 
 let player: GameObject
 let playerMove: KeyboardMove2D
@@ -330,7 +357,7 @@ const applyAccessibleMode = (enabled: boolean) => {
   canvas.setAttribute('aria-hidden', enabled ? 'true' : 'false')
 }
 
-applyAccessibleMode(settings.accessibleMode)
+applyAccessibleMode(accessibleMode)
 
 const remoteStorage = new HttpSaveStorage({
   baseUrl: backendUrl,
@@ -357,15 +384,15 @@ const menu = new PauseMenu({
   getControls: () => controls,
   setControls: (next) => {
     controls = next
-    controlsRepo.save(next)
+    saveControls(next)
     playerMove.bindings = { ...DefaultMovementBindingsWASD, ...next.movement }
     playerShooter.aimBindings = { ...DefaultShootingBindingsArrows, ...next.aim }
     playerShooter.shootKey = next.shootKey
   },
-  getAccessibleMode: () => settings.accessibleMode,
+  getAccessibleMode: () => accessibleMode,
   setAccessibleMode: (enabled) => {
-    settings = { ...settings, accessibleMode: enabled }
-    settingsRepo.save(settings)
+    accessibleMode = enabled
+    saveAccessibleMode(enabled)
     applyAccessibleMode(enabled)
     announcer.announce(enabled ? 'Accessible mode enabled.' : 'Accessible mode disabled.', 'polite')
   },

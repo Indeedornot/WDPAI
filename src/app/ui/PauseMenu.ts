@@ -1,6 +1,5 @@
 import type { ControlsConfig } from '../controls/ControlsConfig'
-import { ControlsRepository } from '../controls/ControlsRepository'
-import { LocalStorageAdapter } from '../storage/KeyValueStorage'
+import { DEFAULT_CONTROLS } from '../controls/ControlsConfig'
 import type { AuthUser } from '../auth/AuthClient'
 import {
   focusFirstDescendant,
@@ -76,8 +75,6 @@ export class PauseMenu {
   private _adminSaves: Array<{ slot: string; version: number; updatedAt: string }> = []
   private _adminRuns: Array<{ createdAt: string; timeSeconds: number; level: number; xp: number; kills: number; shotsFired: number; shotsHit: number }> = []
   private _adminSelectedUserId: number | null = null
-
-  private readonly _repo = new ControlsRepository(new LocalStorageAdapter())
 
   readonly options: PauseMenuOptions
 
@@ -208,8 +205,7 @@ export class PauseMenu {
         uiButton({
           label: 'Reset Controls',
           onClick: () => {
-            const next = this._repo.reset()
-            this.options.setControls(next)
+            this.options.setControls(structuredClone(DEFAULT_CONTROLS))
             this._rebindTarget = null
             this.render()
           },
@@ -702,7 +698,6 @@ export class PauseMenu {
       next = { ...current, aim: { ...current.aim, [t.dir]: code } }
     }
 
-    this._repo.save(next)
     this.options.setControls(next)
     this._rebindTarget = null
     this.render()

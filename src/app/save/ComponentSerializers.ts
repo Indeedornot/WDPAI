@@ -9,7 +9,6 @@ import {
   Lifetime,
   Mover2D,
   PowerupController2D,
-  PreventDeath,
   Shooter2D,
   SpriteRenderer2D,
   Vec2,
@@ -214,15 +213,6 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
           projectileStickyTotalLifetimeSeconds: readNumber(rec['projectileStickyTotalLifetimeSeconds'], 0),
         })
         return s
-      },
-    },
-    {
-      type: 'PreventDeath',
-      supports: (c): c is PreventDeath => c instanceof PreventDeath,
-      serialize: (c) => ({ minHp: c.minHp }),
-      deserialize: (data) => {
-        const rec = (data ?? {}) as Record<string, unknown>
-        return new PreventDeath({ minHp: readNumber(rec['minHp'], 1) })
       },
     },
     {
