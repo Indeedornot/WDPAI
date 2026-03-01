@@ -3,7 +3,8 @@ import { uiBody, uiButton, uiOverlay, uiPanel, uiSubtitle, uiTitle, focusFirstDe
 export type WelcomeScreenOptions = {
   title?: string
   subtitle?: string
-  onStart: () => void
+  /** Return false to keep the welcome dialog open. */
+  onStart: () => void | boolean
 }
 
 export class WelcomeScreen {
@@ -100,18 +101,16 @@ export class WelcomeScreen {
       </div>
     `.trim()
 
-    body.appendChild(
-      uiButton({
-        label: 'Start',
-        title: 'Start the game',
-        onClick: () => {
-          this.options.onStart()
-          const canvas = document.querySelector<HTMLCanvasElement>('#game')
-          canvas?.focus()
-          this.close()
-        },
-      }),
-    )
+    const startBtn = uiButton({
+      label: 'Start',
+      title: 'Start the game',
+      onClick: () => {
+        const res = this.options.onStart()
+        if (res === false) return
+        this.close()
+      },
+    })
+    body.appendChild(startBtn)
 
     body.appendChild(
       uiButton({

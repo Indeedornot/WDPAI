@@ -44,6 +44,7 @@ import { AccessibleOverlay } from './app/ui/AccessibleOverlay'
 import { AuthClient } from './app/auth/AuthClient'
 import { HybridSaveStorage } from './app/save/HybridSaveStorage'
 import { AdminClient } from './app/admin/AdminClient'
+import { RegisterGate } from './app/ui/RegisterGate'
 
 const CONTROLS_KEY = 'my-ts-app:controls:v1'
 const SETTINGS_KEY = 'my-ts-app:settings:v1'
@@ -482,10 +483,38 @@ const death = new DeathScreen({
 })
 death.mount(app)
 
-const welcome = new WelcomeScreen({
+let welcome: WelcomeScreen
+
+const registerGate = new RegisterGate({
+  title: 'Create an account',
+  subtitle: 'Registration is required before playing.',
+  auth: {
+    isLoggedIn: () => auth.isLoggedIn(),
+    getUser: () => auth.user,
+    register: async (email, password) => {
+      const user = await auth.register(email, password)
+      announcer.announce(`Registered. Signed in as ${user.email}.`, 'polite')
+      return user
+    },
+  },
+  onRegistered: () => {
+    input.clear()
+    loop.resume()
+    canvas.focus()
+    welcome.close()
+    announcer.announce('Started.', 'polite')
+  },
+})
+registerGate.mount(app)
+
+welcome = new WelcomeScreen({
   title: 'Arcade Survival — Demo',
-  subtitle: 'Survive as long as you can, level up, and track your run stats. Press Esc anytime for options and save/load.',
+  subtitle: 'Create an account to play. Survive as long as you can, level up, and track your run stats.',
   onStart: () => {
+    if (!auth.isLoggedIn()) {
+      registerGate.open()
+      return
+    }
     input.clear()
     loop.resume()
     canvas.focus()

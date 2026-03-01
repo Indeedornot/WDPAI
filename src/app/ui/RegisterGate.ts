@@ -1,0 +1,188 @@
+import type { AuthUser } from '../auth/AuthClient'
+import { el, focusFirstDescendant, trapFocus, uiBody, uiButton, uiOverlay, uiPanel, uiSection, uiSmallButton, uiSubtitle, uiTitle } from './components/UiKit'
+
+export type RegisterGateOptions = {
+  title?: string
+  subtitle?: string
+
+  auth: {
+    isLoggedIn: () => boolean
+    getUser: () => AuthUser | null
+    register: (email: string, password: string) => Promise<AuthUser>
+  }
+
+  onRegistered?: (user: AuthUser) => void
+}
+
+export class RegisterGate {
+  private readonly _overlay: HTMLDivElement
+  private readonly _panel: HTMLDivElement
+  private _untrap: (() => void) | null = null
+  private _isOpen = false
+  private _unblockKeys: (() => void) | null = null
+
+  private _email = ''
+  private _password = ''
+  private _status = ''
+  private _busy = false
+
+  readonly options: RegisterGateOptions
+
+  constructor(options: RegisterGateOptions) {
+    this.options = options
+
+    this._overlay = uiOverlay(() => {
+      // Don't close by background click; registration is required.
+    })
+
+    this._panel = uiPanel()
+    this._panel.setAttribute('role', 'dialog')
+    this._panel.setAttribute('aria-modal', 'true')
+    this._panel.setAttribute('aria-label', 'Registration required')
+
+    this._overlay.appendChild(this._panel)
+    this.render()
+  }
+
+  mount(parent: HTMLElement): void {
+    parent.appendChild(this._overlay)
+  }
+
+  open(): void {
+    if (this._isOpen) return
+    this._isOpen = true
+    this._overlay.classList.remove('ui-hidden')
+
+    this._untrap = trapFocus(this._panel, () => this._isOpen)
+
+    const blockKeys = (e: KeyboardEvent) => {
+      if (!this._isOpen) return
+      if (e.code === 'Escape') {
+        // Avoid opening the pause hub behind the gate.
+        e.preventDefault()
+        e.stopImmediatePropagation()
+      }
+    }
+    window.addEventListener('keydown', blockKeys, { capture: true })
+    this._unblockKeys = () => window.removeEventListener('keydown', blockKeys, { capture: true })
+
+    focusFirstDescendant(this._panel)
+  }
+
+  close(): void {
+    if (!this._isOpen) return
+    this._isOpen = false
+    this._overlay.classList.add('ui-hidden')
+
+    this._untrap?.()
+    this._untrap = null
+
+    this._unblockKeys?.()
+    this._unblockKeys = null
+  }
+
+  private render(): void {
+    this._panel.innerHTML = ''
+
+    const titleText = this.options.title ?? 'Create an account'
+    const subtitleText = this.options.subtitle ?? 'Registration is required before playing.'
+
+    const h = uiTitle(titleText)
+    h.id = 'register-title'
+    this._panel.setAttribute('aria-labelledby', h.id)
+
+    const sub = uiSubtitle(subtitleText)
+    sub.id = 'register-sub'
+    this._panel.setAttribute('aria-describedby', sub.id)
+
+    const body = uiBody()
+
+    const auth = this.options.auth
+    const loggedIn = auth.isLoggedIn()
+    const user = auth.getUser()
+
+    if (loggedIn && user) {
+      const rows: HTMLElement[] = []
+      rows.push(el('div', { className: 'ui-hint', text: `Signed in as ${user.email}.` }))
+      body.appendChild(uiSection('Account', rows))
+
+      const cont = uiButton({
+        label: 'Continue',
+        title: 'Continue to the game',
+        onClick: () => {
+          this.close()
+        },
+      })
+      body.appendChild(cont)
+    } else {
+      const rows: HTMLElement[] = []
+
+      rows.push(this.makeInput('Email', 'email', this._email, (v) => {
+        this._email = v
+      }))
+      rows.push(this.makeInput('Password', 'password', this._password, (v) => {
+        this._password = v
+      }))
+
+      const actions = el('div', { className: 'ui-row' })
+      actions.appendChild(el('div', { className: 'ui-row-label', text: 'Actions' }))
+      const right = el('div', { className: 'ui-row-value' })
+
+      const regBtn = uiSmallButton({
+        label: this._busy ? 'Working…' : 'Register',
+        onClick: () => void this.handleRegister(),
+      })
+      regBtn.disabled = this._busy
+      right.appendChild(regBtn)
+
+      actions.appendChild(right)
+      rows.push(actions)
+
+      if (this._status) rows.push(el('div', { className: 'ui-hint', text: this._status }))
+
+      body.appendChild(uiSection('Account', rows))
+    }
+
+    this._panel.appendChild(h)
+    this._panel.appendChild(sub)
+    this._panel.appendChild(body)
+  }
+
+  private makeInput(label: string, type: string, value: string, onValue: (v: string) => void): HTMLElement {
+    const row = el('div', { className: 'ui-row' })
+    row.appendChild(el('div', { className: 'ui-row-label', text: label }))
+
+    const right = el('div', { className: 'ui-row-value' })
+    const input = document.createElement('input')
+    input.className = 'ui-input'
+    input.type = type
+    input.value = value
+    input.autocomplete = type === 'password' ? 'new-password' : 'email'
+    input.addEventListener('input', () => onValue(input.value))
+    right.appendChild(input)
+
+    row.appendChild(right)
+    return row
+  }
+
+  private async handleRegister(): Promise<void> {
+    const auth = this.options.auth
+
+    this._busy = true
+    this._status = ''
+    this.render()
+
+    try {
+      const user = await auth.register(this._email.trim(), this._password)
+      this._password = ''
+      this._status = `Registered. Signed in as ${user.email}.`
+      this.options.onRegistered?.(user)
+      this.close()
+    } catch (e) {
+      this._status = `Register failed: ${e instanceof Error ? e.message : 'unknown_error'}`
+    } finally {
+      this._busy = false
+      this.render()
+    }
+  }
+}
