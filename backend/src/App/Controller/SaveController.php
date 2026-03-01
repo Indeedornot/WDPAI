@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Auth\AuthUser;
+use App\Dto\Save\SlotQuery;
+use App\Dto\Save\UpsertSaveInput;
 use App\Routing\Attributes\RequireAuth;
 use App\Routing\Request;
 use App\Routing\Response;
@@ -15,13 +17,13 @@ final class SaveController extends Controller
     #[RequireAuth]
     public function get(Request $req, AuthUser $user): Response
     {
-        $slot = $req->queryString('slot');
-        if ($slot === null || trim($slot) === '') {
-            return Response::error('missing_slot', 400);
+        $query = SlotQuery::fromRequest($req);
+        if ($query instanceof Response) {
+            return $query;
         }
 
         $repo = new PlayerSaveRepository($this->kernel->pdo());
-        $row = $repo->findByUserAndSlot($user->id, $slot);
+        $row = $repo->findByUserAndSlot($user->id, $query->slot);
         if ($row === null) {
             return Response::error('not_found', 404);
         }
@@ -37,40 +39,26 @@ final class SaveController extends Controller
     #[RequireAuth]
     public function upsert(Request $req, AuthUser $user): Response
     {
-        $body = $req->json;
-        if (!is_array($body)) {
-            return Response::error('invalid_json', 400);
-        }
-
-        $slot = $body['slot'] ?? null;
-        $snapshot = $body['snapshot'] ?? null;
-        $version = $body['version'] ?? 1;
-
-        if (!is_string($slot) || trim($slot) === '') {
-            return Response::error('missing_slot', 400);
-        }
-        if ($snapshot === null) {
-            return Response::error('missing_snapshot', 400);
-        }
-        if (!is_int($version)) {
-            $version = 1;
+        $input = UpsertSaveInput::fromRequest($req);
+        if ($input instanceof Response) {
+            return $input;
         }
 
         $repo = new PlayerSaveRepository($this->kernel->pdo());
-        $repo->upsert($user->id, $slot, $snapshot, $version);
+        $repo->upsert($user->id, $input->slot, $input->snapshot, $input->version);
         return Response::ok();
     }
 
     #[RequireAuth]
     public function delete(Request $req, AuthUser $user): Response
     {
-        $slot = $req->queryString('slot');
-        if ($slot === null || trim($slot) === '') {
-            return Response::error('missing_slot', 400);
+        $query = SlotQuery::fromRequest($req);
+        if ($query instanceof Response) {
+            return $query;
         }
 
         $repo = new PlayerSaveRepository($this->kernel->pdo());
-        $repo->deleteByUserAndSlot($user->id, $slot);
+        $repo->deleteByUserAndSlot($user->id, $query->slot);
         return Response::ok();
     }
 }

@@ -37,6 +37,10 @@ Tests
 
 API
 
+Failure IDs (server errors)
+- Unexpected 500 responses return a friendly message and a `failureId`.
+- The server stores the full error details in the `api_failures` table keyed by that id.
+
 Auth
 - `POST /auth/register`
   - Body: `{ "email": "you@example.com", "password": "..." }`

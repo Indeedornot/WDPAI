@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Routing;
 
+use App\Error\FailureRepository;
 use App\Kernel;
 use Throwable;
 
@@ -47,8 +48,23 @@ final class App
 
             return $this->withCors($res, $req);
         } catch (Throwable $e) {
+            $failureId = null;
+            try {
+                $failureId = (new FailureRepository($this->kernel->pdo()))->logFailure($req, $e);
+            } catch (Throwable $ignore) {
+                // If failure logging itself fails, still return a friendly 500.
+                $failureId = null;
+            }
+
+            $message = 'Something went wrong.';
+            $extra = [];
+            if (is_string($failureId) && $failureId !== '') {
+                $message .= ' Reference: ' . $failureId;
+                $extra['failureId'] = $failureId;
+            }
+
             return $this->withCors(
-                Response::error('server_error', 500, $e->getMessage()),
+                Response::error('server_error', 500, $message, $extra),
                 $req,
             );
         }

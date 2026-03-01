@@ -7,6 +7,8 @@ namespace App\Controller;
 use App\Auth\AuthUser;
 use App\Auth\TokenRepository;
 use App\Auth\UserRepository;
+use App\Dto\Admin\BanUserInput;
+use App\Dto\Admin\UserIdQuery;
 use App\Routing\Attributes\PermissionPolicyGroup;
 use App\Routing\Attributes\RequireAuth;
 use App\Routing\Request;
@@ -37,14 +39,13 @@ final class AdminController extends Controller
     #[RequireAuth(policy: PermissionPolicyGroup::Admin)]
     public function saves(Request $req, AuthUser $user): Response
     {
-        $userIdStr = $req->queryString('userId');
-        if ($userIdStr === null || trim($userIdStr) === '' || !ctype_digit($userIdStr)) {
-            return Response::error('missing_userId', 400);
+        $query = UserIdQuery::fromRequest($req);
+        if ($query instanceof Response) {
+            return $query;
         }
-        $userId = (int)$userIdStr;
 
         $stmt = $this->kernel->pdo()->prepare('SELECT slot, version, updated_at FROM player_saves WHERE user_id = :uid ORDER BY updated_at DESC');
-        $stmt->execute([':uid' => $userId]);
+        $stmt->execute([':uid' => $query->userId]);
         $rows = [];
         foreach ($stmt->fetchAll() as $r) {
             $rows[] = [
@@ -54,20 +55,19 @@ final class AdminController extends Controller
             ];
         }
 
-        return Response::ok(['userId' => $userId, 'saves' => $rows]);
+        return Response::ok(['userId' => $query->userId, 'saves' => $rows]);
     }
 
     #[RequireAuth(policy: PermissionPolicyGroup::Admin)]
     public function runs(Request $req, AuthUser $user): Response
     {
-        $userIdStr = $req->queryString('userId');
-        if ($userIdStr === null || trim($userIdStr) === '' || !ctype_digit($userIdStr)) {
-            return Response::error('missing_userId', 400);
+        $query = UserIdQuery::fromRequest($req);
+        if ($query instanceof Response) {
+            return $query;
         }
-        $userId = (int)$userIdStr;
 
         $stmt = $this->kernel->pdo()->prepare('SELECT created_at, time_seconds, level, xp, kills, shots_fired, shots_hit FROM player_run_stats WHERE user_id = :uid ORDER BY created_at DESC LIMIT 50');
-        $stmt->execute([':uid' => $userId]);
+        $stmt->execute([':uid' => $query->userId]);
         $rows = [];
         foreach ($stmt->fetchAll() as $r) {
             $rows[] = [
@@ -81,41 +81,27 @@ final class AdminController extends Controller
             ];
         }
 
-        return Response::ok(['userId' => $userId, 'runs' => $rows]);
+        return Response::ok(['userId' => $query->userId, 'runs' => $rows]);
     }
 
     #[RequireAuth(policy: PermissionPolicyGroup::Admin)]
     public function ban(Request $req, AuthUser $user): Response
     {
-        $body = $req->json;
-        if (!is_array($body)) {
-            return Response::error('invalid_json', 400, 'Invalid JSON.');
+        $input = BanUserInput::fromRequest($req);
+        if ($input instanceof Response) {
+            return $input;
         }
 
-        $userId = $body['userId'] ?? null;
-        $banned = $body['banned'] ?? null;
-        $reason = $body['reason'] ?? null;
-
-        if (!is_int($userId)) {
-            return Response::error('invalid_userId', 400, 'Invalid userId.');
-        }
-        if (!is_bool($banned)) {
-            return Response::error('invalid_banned', 400, 'Invalid banned flag.');
-        }
-        if ($reason !== null && !is_string($reason)) {
-            return Response::error('invalid_reason', 400, 'Invalid reason.');
-        }
-
-        if ($userId === $user->id) {
+        if ($input->userId === $user->id) {
             return Response::error('cannot_ban_self', 400, 'Cannot ban yourself.');
         }
 
         $userRepo = new UserRepository($this->kernel->pdo());
         $tokenRepo = new TokenRepository($this->kernel->pdo());
 
-        $userRepo->setBan($userId, $banned, $reason);
-        if ($banned) {
-            $tokenRepo->revokeAllForUser($userId);
+        $userRepo->setBan($input->userId, $input->banned, $input->reason);
+        if ($input->banned) {
+            $tokenRepo->revokeAllForUser($input->userId);
         }
 
         return Response::ok();

@@ -8,48 +8,41 @@ use App\Auth\AuthService;
 use App\Auth\AuthUser;
 use App\Auth\TokenRepository;
 use App\Auth\UserRepository;
+use App\Dto\Auth\LoginInput;
+use App\Dto\Auth\RegisterInput;
 use App\Routing\Attributes\RequireAuth;
 use App\Routing\Request;
 use App\Routing\Response;
 use PDOException;
+use RuntimeException;
 
 final class AuthController extends Controller
 {
     public function register(Request $req): Response
     {
-        $body = $req->json;
-        if (!is_array($body)) {
-            return Response::error('invalid_json', 400);
-        }
-
-        $email = $body['email'] ?? '';
-        $password = $body['password'] ?? '';
-        if (!is_string($email) || !is_string($password)) {
-            return Response::error('invalid_input', 400);
-        }
-
-        $email = strtolower(trim($email));
-        if ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-            return Response::error('invalid_email', 400, 'Invalid email.');
-        }
-        if (strlen($password) < 8) {
-            return Response::error('weak_password', 400, 'Password must be at least 8 characters.');
+        $input = RegisterInput::fromRequest($req);
+        if ($input instanceof Response) {
+            return $input;
         }
 
         $userRepo = new UserRepository($this->kernel->pdo());
-        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+        $passwordHash = password_hash($input->password, PASSWORD_DEFAULT);
         if (!is_string($passwordHash) || $passwordHash === '') {
-            return Response::error('server_error', 500);
+            throw new RuntimeException('Failed to hash password.');
         }
 
         try {
-            $user = $userRepo->createPlayer($email, $passwordHash);
+            $user = $userRepo->createPlayer($input->email, $passwordHash);
         } catch (PDOException $e) {
-            return Response::error('email_taken', 409, 'Email already registered.');
+            // PostgreSQL unique_violation
+            if ($e->getCode() === '23505') {
+                return Response::error('email_taken', 409, 'Email already registered.');
+            }
+            throw $e;
         }
 
         if ($user === null) {
-            return Response::error('server_error', 500);
+            throw new RuntimeException('Failed to create user.');
         }
 
         $tokenRepo = new TokenRepository($this->kernel->pdo());
@@ -60,24 +53,13 @@ final class AuthController extends Controller
 
     public function login(Request $req): Response
     {
-        $body = $req->json;
-        if (!is_array($body)) {
-            return Response::error('invalid_json', 400);
-        }
-
-        $email = $body['email'] ?? '';
-        $password = $body['password'] ?? '';
-        if (!is_string($email) || !is_string($password)) {
-            return Response::error('invalid_input', 400);
-        }
-
-        $email = strtolower(trim($email));
-        if ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-            return Response::error('invalid_credentials', 401, 'Bad credentials.');
+        $input = LoginInput::fromRequest($req);
+        if ($input instanceof Response) {
+            return $input;
         }
 
         $userRepo = new UserRepository($this->kernel->pdo());
-        $row = $userRepo->findByEmail($email);
+        $row = $userRepo->findByEmail($input->email);
         if ($row === null) {
             return Response::error('invalid_credentials', 401, 'Bad credentials.');
         }
@@ -91,7 +73,7 @@ final class AuthController extends Controller
             return Response::error('banned', 403, $msg);
         }
 
-        if (!password_verify($password, (string)$row['password_hash'])) {
+        if (!password_verify($input->password, (string)$row['password_hash'])) {
             return Response::error('invalid_credentials', 401, 'Bad credentials.');
         }
 

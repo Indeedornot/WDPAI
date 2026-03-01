@@ -13,6 +13,8 @@ final class Request
         public readonly array $query,
         public readonly array $headers,
         public readonly mixed $json,
+        public readonly ?string $rawBody,
+        public readonly ?string $jsonError,
         public readonly string $origin,
     ) {
     }
@@ -44,11 +46,16 @@ final class Request
         }
 
         $raw = file_get_contents('php://input');
+        $rawBody = ($raw !== false) ? $raw : null;
+
         $json = null;
-        if ($raw !== false && trim($raw) !== '') {
-            $decoded = json_decode($raw, true);
+        $jsonError = null;
+        if ($rawBody !== null && trim($rawBody) !== '') {
+            $decoded = json_decode($rawBody, true);
             if (json_last_error() === JSON_ERROR_NONE) {
                 $json = $decoded;
+            } else {
+                $jsonError = json_last_error_msg();
             }
         }
 
@@ -58,6 +65,8 @@ final class Request
             $_GET,
             $headers,
             $json,
+            $rawBody,
+            $jsonError,
             is_string($origin) ? $origin : '',
         );
     }
