@@ -13,6 +13,7 @@ use ReflectionException;
 use ReflectionMethod;
 use ReflectionNamedType;
 use RuntimeException;
+use Throwable;
 
 final class Router
 {
@@ -70,48 +71,66 @@ final class Router
             throw new RuntimeException('Failed to reflect controller method.', 0, $e);
         }
 
-        $authResult = $this->authorizeIfRequired($rm, $req, $kernel);
-        if ($authResult instanceof Response) {
-            return $authResult;
-        }
-        $authUser = $authResult;
+        try {
+            $authResult = $this->authorizeIfRequired($rm, $req, $kernel);
+            if ($authResult instanceof Response) {
+                return $authResult;
+            }
+            $authUser = $authResult;
 
-        $args = [];
-        foreach ($rm->getParameters() as $param) {
-            $type = $param->getType();
-            if ($type instanceof ReflectionNamedType && !$type->isBuiltin()) {
-                $name = $type->getName();
-                if ($name === Request::class) {
-                    $args[] = $req;
-                    continue;
-                }
-                if ($name === Kernel::class) {
-                    $args[] = $kernel;
-                    continue;
-                }
-                if ($name === AuthUser::class) {
-                    if (!$authUser instanceof AuthUser) {
-                        throw new RuntimeException('Controller expects AuthUser but method is missing #[RequireAuth].');
+            $args = [];
+            foreach ($rm->getParameters() as $param) {
+                $type = $param->getType();
+                if ($type instanceof ReflectionNamedType && !$type->isBuiltin()) {
+                    $name = $type->getName();
+                    if ($name === Request::class) {
+                        $args[] = $req;
+                        continue;
                     }
-                    $args[] = $authUser;
+                    if ($name === Kernel::class) {
+                        $args[] = $kernel;
+                        continue;
+                    }
+                    if ($name === AuthUser::class) {
+                        if (!$authUser instanceof AuthUser) {
+                            throw new RuntimeException('Controller expects AuthUser but method is missing #[RequireAuth].');
+                        }
+                        $args[] = $authUser;
+                        continue;
+                    }
+
+                    // DTO parameter injection: if the class has `public static function fromRequest(Request): self`
+                    // then we construct it before the controller runs.
+                    if (method_exists($name, 'fromRequest')) {
+                        $dto = $name::fromRequest($req);
+                        if (!$dto instanceof $name) {
+                            throw new RuntimeException('DTO fromRequest did not return expected type: ' . $name);
+                        }
+                        $args[] = $dto;
+                        continue;
+                    }
+                }
+
+                if ($param->isDefaultValueAvailable()) {
+                    $args[] = $param->getDefaultValue();
                     continue;
                 }
+
+                throw new RuntimeException('Unsupported controller parameter: $' . $param->getName());
             }
 
-            if ($param->isDefaultValueAvailable()) {
-                $args[] = $param->getDefaultValue();
-                continue;
+            $res = $rm->invokeArgs($controller, $args);
+            if (!$res instanceof Response) {
+                throw new RuntimeException('Controller did not return a Response.');
             }
 
-            throw new RuntimeException('Unsupported controller parameter: $' . $param->getName());
+            return $res;
+        } catch (ValidationException $e) {
+            return Response::error($e->error, $e->status, $e->publicMessage, $e->extra);
+        } catch (Throwable $e) {
+            // Let App handle unexpected exceptions (and failureId logging).
+            throw $e;
         }
-
-        $res = $rm->invokeArgs($controller, $args);
-        if (!$res instanceof Response) {
-            throw new RuntimeException('Controller did not return a Response.');
-        }
-
-        return $res;
     }
 
     private function authorizeIfRequired(ReflectionMethod $rm, Request $req, Kernel $kernel): AuthUser|Response|null

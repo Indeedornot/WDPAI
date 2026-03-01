@@ -7,7 +7,6 @@ namespace App\Controller;
 use App\Auth\AuthUser;
 use App\Dto\Runs\CreateRunInput;
 use App\Routing\Attributes\RequireAuth;
-use App\Routing\Request;
 use App\Routing\Response;
 use App\Run\RunStatsRepository;
 use PDOException;
@@ -15,13 +14,8 @@ use PDOException;
 final class RunsController extends Controller
 {
     #[RequireAuth]
-    public function create(Request $req, AuthUser $user): Response
+    public function create(CreateRunInput $input, AuthUser $user): Response
     {
-        $input = CreateRunInput::fromRequest($req);
-        if ($input instanceof Response) {
-            return $input;
-        }
-
         try {
             $repo = new RunStatsRepository($this->kernel->pdo());
             $repo->recordRunWithAwards(

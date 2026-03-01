@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Dto\Save;
 
 use App\Routing\Request;
-use App\Routing\Response;
+use App\Routing\ValidationException;
 
 final readonly class SlotQuery
 {
@@ -14,16 +14,16 @@ final readonly class SlotQuery
     ) {
     }
 
-    public static function fromRequest(Request $req): self|Response
+    public static function fromRequest(Request $req): self
     {
         $slot = $req->queryString('slot');
         if ($slot === null || trim($slot) === '') {
-            return Response::error('missing_slot', 400, 'Missing slot.');
+            throw new ValidationException('missing_slot', 400, 'Missing slot.');
         }
 
         $slot = trim($slot);
         if (strlen($slot) > 255) {
-            return Response::error('invalid_slot', 400, 'Slot is too long.');
+            throw new ValidationException('invalid_slot', 400, 'Slot is too long.');
         }
 
         return new self($slot);

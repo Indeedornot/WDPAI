@@ -6,7 +6,7 @@ namespace App\Dto\Runs;
 
 use App\Dto\JsonBody;
 use App\Routing\Request;
-use App\Routing\Response;
+use App\Routing\ValidationException;
 
 final readonly class CreateRunInput
 {
@@ -20,12 +20,9 @@ final readonly class CreateRunInput
     ) {
     }
 
-    public static function fromRequest(Request $req): self|Response
+    public static function fromRequest(Request $req): self
     {
         $body = JsonBody::requireArray($req, 'Invalid JSON.');
-        if ($body instanceof Response) {
-            return $body;
-        }
 
         $timeSeconds = $body['timeSeconds'] ?? null;
         $level = $body['level'] ?? null;
@@ -35,7 +32,7 @@ final readonly class CreateRunInput
         $shotsHit = $body['shotsHit'] ?? null;
 
         if (!is_numeric($timeSeconds) || !is_numeric($level) || !is_numeric($xp) || !is_numeric($kills) || !is_numeric($shotsFired) || !is_numeric($shotsHit)) {
-            return Response::error('invalid_input', 400, 'Invalid run stats.');
+            throw new ValidationException('invalid_input', 400, 'Invalid run stats.');
         }
 
         $timeSecondsInt = max(0, (int)round((float)$timeSeconds));

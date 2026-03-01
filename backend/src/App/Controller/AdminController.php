@@ -11,7 +11,6 @@ use App\Dto\Admin\BanUserInput;
 use App\Dto\Admin\UserIdQuery;
 use App\Routing\Attributes\PermissionPolicyGroup;
 use App\Routing\Attributes\RequireAuth;
-use App\Routing\Request;
 use App\Routing\Response;
 
 final class AdminController extends Controller
@@ -37,13 +36,8 @@ final class AdminController extends Controller
     }
 
     #[RequireAuth(policy: PermissionPolicyGroup::Admin)]
-    public function saves(Request $req, AuthUser $user): Response
+    public function saves(UserIdQuery $query, AuthUser $user): Response
     {
-        $query = UserIdQuery::fromRequest($req);
-        if ($query instanceof Response) {
-            return $query;
-        }
-
         $stmt = $this->kernel->pdo()->prepare('SELECT slot, version, updated_at FROM player_saves WHERE user_id = :uid ORDER BY updated_at DESC');
         $stmt->execute([':uid' => $query->userId]);
         $rows = [];
@@ -59,13 +53,8 @@ final class AdminController extends Controller
     }
 
     #[RequireAuth(policy: PermissionPolicyGroup::Admin)]
-    public function runs(Request $req, AuthUser $user): Response
+    public function runs(UserIdQuery $query, AuthUser $user): Response
     {
-        $query = UserIdQuery::fromRequest($req);
-        if ($query instanceof Response) {
-            return $query;
-        }
-
         $stmt = $this->kernel->pdo()->prepare('SELECT created_at, time_seconds, level, xp, kills, shots_fired, shots_hit FROM player_run_stats WHERE user_id = :uid ORDER BY created_at DESC LIMIT 50');
         $stmt->execute([':uid' => $query->userId]);
         $rows = [];
@@ -85,13 +74,8 @@ final class AdminController extends Controller
     }
 
     #[RequireAuth(policy: PermissionPolicyGroup::Admin)]
-    public function ban(Request $req, AuthUser $user): Response
+    public function ban(BanUserInput $input, AuthUser $user): Response
     {
-        $input = BanUserInput::fromRequest($req);
-        if ($input instanceof Response) {
-            return $input;
-        }
-
         if ($input->userId === $user->id) {
             return Response::error('cannot_ban_self', 400, 'Cannot ban yourself.');
         }

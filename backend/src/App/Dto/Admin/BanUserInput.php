@@ -6,7 +6,7 @@ namespace App\Dto\Admin;
 
 use App\Dto\JsonBody;
 use App\Routing\Request;
-use App\Routing\Response;
+use App\Routing\ValidationException;
 
 final readonly class BanUserInput
 {
@@ -17,12 +17,9 @@ final readonly class BanUserInput
     ) {
     }
 
-    public static function fromRequest(Request $req): self|Response
+    public static function fromRequest(Request $req): self
     {
         $body = JsonBody::requireArray($req);
-        if ($body instanceof Response) {
-            return $body;
-        }
 
         $userId = $body['userId'] ?? null;
         $banned = $body['banned'] ?? null;
@@ -36,13 +33,13 @@ final readonly class BanUserInput
         }
 
         if ($userIdInt === null || $userIdInt <= 0) {
-            return Response::error('invalid_userId', 400, 'Invalid userId.');
+            throw new ValidationException('invalid_userId', 400, 'Invalid userId.');
         }
         if (!is_bool($banned)) {
-            return Response::error('invalid_banned', 400, 'Invalid banned flag.');
+            throw new ValidationException('invalid_banned', 400, 'Invalid banned flag.');
         }
         if ($reason !== null && !is_string($reason)) {
-            return Response::error('invalid_reason', 400, 'Invalid reason.');
+            throw new ValidationException('invalid_reason', 400, 'Invalid reason.');
         }
 
         $reasonNorm = null;
@@ -52,7 +49,7 @@ final readonly class BanUserInput
                 $reasonNorm = null;
             }
             if ($reasonNorm !== null && strlen($reasonNorm) > 255) {
-                return Response::error('invalid_reason', 400, 'Reason is too long.');
+                throw new ValidationException('invalid_reason', 400, 'Reason is too long.');
             }
         }
 

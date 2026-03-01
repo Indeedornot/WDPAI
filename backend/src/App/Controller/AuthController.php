@@ -18,13 +18,8 @@ use RuntimeException;
 
 final class AuthController extends Controller
 {
-    public function register(Request $req): Response
+    public function register(RegisterInput $input): Response
     {
-        $input = RegisterInput::fromRequest($req);
-        if ($input instanceof Response) {
-            return $input;
-        }
-
         $userRepo = new UserRepository($this->kernel->pdo());
         $passwordHash = password_hash($input->password, PASSWORD_DEFAULT);
         if (!is_string($passwordHash) || $passwordHash === '') {
@@ -51,13 +46,8 @@ final class AuthController extends Controller
         return Response::ok(['token' => $token, 'user' => $user]);
     }
 
-    public function login(Request $req): Response
+    public function login(LoginInput $input): Response
     {
-        $input = LoginInput::fromRequest($req);
-        if ($input instanceof Response) {
-            return $input;
-        }
-
         $userRepo = new UserRepository($this->kernel->pdo());
         $row = $userRepo->findByEmail($input->email);
         if ($row === null) {

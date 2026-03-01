@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Dto\Admin;
 
 use App\Routing\Request;
-use App\Routing\Response;
+use App\Routing\ValidationException;
 
 final readonly class UserIdQuery
 {
@@ -14,16 +14,16 @@ final readonly class UserIdQuery
     ) {
     }
 
-    public static function fromRequest(Request $req): self|Response
+    public static function fromRequest(Request $req): self
     {
         $userIdStr = $req->queryString('userId');
         if ($userIdStr === null || trim($userIdStr) === '' || !ctype_digit($userIdStr)) {
-            return Response::error('missing_userId', 400, 'Missing userId.');
+            throw new ValidationException('missing_userId', 400, 'Missing userId.');
         }
 
         $userId = (int)$userIdStr;
         if ($userId <= 0) {
-            return Response::error('invalid_userId', 400, 'Invalid userId.');
+            throw new ValidationException('invalid_userId', 400, 'Invalid userId.');
         }
 
         return new self($userId);
