@@ -60,6 +60,22 @@ final class Response
         return new self($status, ['Content-Type' => 'application/json; charset=utf-8'], $payload);
     }
 
+    /** @param array<string, mixed> $data */
+    public static function ok(array $data = [], int $status = 200): self
+    {
+        return self::json(array_merge(['ok' => true], $data), $status);
+    }
+
+    /** @param array<string, mixed> $extra */
+    public static function error(string $error, int $status, ?string $message = null, array $extra = []): self
+    {
+        $payload = ['ok' => false, 'error' => $error];
+        if ($message !== null) {
+            $payload['message'] = $message;
+        }
+        return self::json(array_merge($payload, $extra), $status);
+    }
+
     public static function empty(int $status = 204): self
     {
         return new self($status, [], '');

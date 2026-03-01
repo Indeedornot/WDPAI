@@ -18,20 +18,17 @@ final class App
         $this->router = new Router();
     }
 
-    /** @param callable(Request, Kernel): Response $handler */
-    public function get(string $path, callable $handler): void
+    public function get(string $path, ControllerAction $handler): void
     {
         $this->router->get($path, $handler);
     }
 
-    /** @param callable(Request, Kernel): Response $handler */
-    public function post(string $path, callable $handler): void
+    public function post(string $path, ControllerAction $handler): void
     {
         $this->router->post($path, $handler);
     }
 
-    /** @param callable(Request, Kernel): Response $handler */
-    public function delete(string $path, callable $handler): void
+    public function delete(string $path, ControllerAction $handler): void
     {
         $this->router->delete($path, $handler);
     }
@@ -45,13 +42,13 @@ final class App
         try {
             $res = $this->router->dispatch($req, $this->kernel);
             if (!$res) {
-                $res = Response::json(['ok' => false, 'error' => 'not_found'], 404);
+                $res = Response::error('not_found', 404);
             }
 
             return $this->withCors($res, $req);
         } catch (Throwable $e) {
             return $this->withCors(
-                Response::json(['ok' => false, 'error' => 'server_error', 'message' => $e->getMessage()], 500),
+                Response::error('server_error', 500, $e->getMessage()),
                 $req,
             );
         }
