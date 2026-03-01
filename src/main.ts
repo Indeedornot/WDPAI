@@ -84,6 +84,7 @@ applyThemeToCssVars(DefaultTheme)
 
 app.innerHTML = `
   <div class="hud">
+    <div class="hud-actions" id="hud-actions"></div>
     <div class="status" id="hud-status" aria-live="polite"></div>
   </div>
   <div id="sr-instructions" class="sr-only">
@@ -482,8 +483,8 @@ const death = new DeathScreen({
 death.mount(app)
 
 const welcome = new WelcomeScreen({
-  title: 'Canvas Engine Demo',
-  subtitle: 'Press Start to begin. Press Esc anytime for the hub (options, save/load, rebind controls).',
+  title: 'Arcade Survival — Demo',
+  subtitle: 'Survive as long as you can, level up, and track your run stats. Press Esc anytime for options and save/load.',
   onStart: () => {
     input.clear()
     loop.resume()

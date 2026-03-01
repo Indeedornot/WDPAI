@@ -98,7 +98,9 @@ export class PauseMenu {
     this._panel.setAttribute('aria-label', 'Pause menu')
 
     this._overlay.appendChild(this._panel)
-    this._root.appendChild(cog)
+    const hudActions = document.querySelector<HTMLElement>('#hud-actions')
+    if (hudActions) hudActions.appendChild(cog)
+    else this._root.appendChild(cog)
     this._root.appendChild(this._overlay)
 
     window.addEventListener('keydown', (e) => {
@@ -275,7 +277,14 @@ export class PauseMenu {
 
     this._panel.appendChild(h)
     if (subtitle) this._panel.appendChild(sub)
-    this._panel.appendChild(body)
+
+    if (this._view === 'options') {
+      const scroll = el('div', { className: 'ui-scroll' })
+      scroll.appendChild(body)
+      this._panel.appendChild(scroll)
+    } else {
+      this._panel.appendChild(body)
+    }
   }
 
   private renderAdminPanel(): HTMLDivElement {

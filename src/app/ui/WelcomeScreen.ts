@@ -23,6 +23,7 @@ export class WelcomeScreen {
     })
 
     this._panel = uiPanel()
+    this._panel.classList.add('ui-panel--welcome')
     this._panel.setAttribute('role', 'dialog')
     this._panel.setAttribute('aria-modal', 'true')
 
@@ -69,10 +70,10 @@ export class WelcomeScreen {
   private render(): void {
     this._panel.innerHTML = ''
 
-    const titleText = this.options.title ?? 'Welcome'
+    const titleText = this.options.title ?? 'Arcade Survival — Demo'
     const subtitleText =
       this.options.subtitle ??
-      'Play the demo, then press Esc for the hub (options, save/load, rebind controls).'
+      'A small top-down survival shooter. Survive, level up, and keep your accuracy high.'
 
     const h = uiTitle(titleText)
     h.id = 'welcome-title'
@@ -84,12 +85,29 @@ export class WelcomeScreen {
 
     const body = uiBody()
 
+    const tutorial = document.createElement('div')
+    tutorial.className = 'ui-tutorial'
+    tutorial.innerHTML = `
+      <div class="ui-tutorial-title">Quick start</div>
+      <ol class="ui-tutorial-list">
+        <li><span class="ui-kbd">WASD</span> move, <span class="ui-kbd">Arrow keys</span> aim, <span class="ui-kbd">Space</span> shoot.</li>
+        <li>Press <span class="ui-kbd">Esc</span> for the hub: options, rebind controls, save/load, accessibility.</li>
+        <li>If keys don’t seem to work, click <strong>Focus Game</strong> to move keyboard focus onto the canvas.</li>
+      </ol>
+      <div class="ui-hint">
+        Why focus? Browsers route keyboard events to the element that has focus. The game canvas is focusable so you can
+        explicitly “enter” gameplay with the keyboard and screen readers can announce the canvas region.
+      </div>
+    `.trim()
+
     body.appendChild(
       uiButton({
         label: 'Start',
         title: 'Start the game',
         onClick: () => {
           this.options.onStart()
+          const canvas = document.querySelector<HTMLCanvasElement>('#game')
+          canvas?.focus()
           this.close()
         },
       }),
@@ -97,8 +115,8 @@ export class WelcomeScreen {
 
     body.appendChild(
       uiButton({
-        label: 'Focus Canvas',
-        title: 'Move keyboard focus to the canvas',
+        label: 'Focus Game',
+        title: 'Move keyboard focus to the game canvas (keyboard controls)',
         onClick: () => {
           const canvas = document.querySelector<HTMLCanvasElement>('#game')
           canvas?.focus()
@@ -106,13 +124,9 @@ export class WelcomeScreen {
       }),
     )
 
-    const tips = document.createElement('div')
-    tips.className = 'hint'
-    tips.textContent = 'Controls: WASD move, arrows aim, Space shoot. Tip: use Tab/Shift+Tab to navigate UI.'
-
     this._panel.appendChild(h)
     this._panel.appendChild(sub)
+    this._panel.appendChild(tutorial)
     this._panel.appendChild(body)
-    this._panel.appendChild(tips)
   }
 }

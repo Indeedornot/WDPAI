@@ -14,24 +14,18 @@ export type AppTheme = {
 }
 
 export const DefaultTheme: AppTheme = {
-  // Palette (requested):
-  // - #4E6E58 (green)
-  // - #CD5334 (red)
-  // - #694966 (purple)
-  // - #D8BD8A (sand)
-  // - #8499B1 (blue-gray)
-  bg: '#694966',
-  surface: '#4E6E58',
-  text: '#D8BD8A',
-  mutedText: '#8499B1',
+  bg: '#f8fafc',
+  surface: '#ffffff',
+  text: '#0f172a',
+  mutedText: '#475569',
 
-  primary: '#8499B1',
-  accent: '#CD5334',
-  ok: '#4E6E58',
+  primary: '#2563eb',
+  accent: '#dc2626',
+  ok: '#16a34a',
 
-  canvasGrid: 'rgba(216,189,138,0.10)',
-  canvasAxis: 'rgba(216,189,138,0.55)',
-  canvasOutline: 'rgba(216,189,138,0.92)',
+  canvasGrid: 'rgba(15,23,42,0.06)',
+  canvasAxis: 'rgba(15,23,42,0.18)',
+  canvasOutline: 'rgba(15,23,42,0.65)',
 }
 
 export function applyThemeToCssVars(theme: AppTheme = DefaultTheme): void {

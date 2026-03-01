@@ -1,23 +1,31 @@
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
   /* 3–5 main colors live in TS theme and are mirrored here via CSS vars. */
-  --c-bg: #694966;
-  --c-surface: #4E6E58;
-  --c-text: #D8BD8A;
-  --c-muted-text: #8499B1;
+  --c-bg: #f8fafc;
+  --c-surface: #ffffff;
+  --c-text: #0f172a;
+  --c-muted-text: #475569;
 
-  --c-primary: #8499B1;
-  --c-accent: #CD5334;
-  --c-ok: #4E6E58;
+  --c-primary: #2563eb;
+  --c-accent: #dc2626;
+  --c-ok: #16a34a;
 
-  --c-border: rgba(216, 189, 138, 0.35);
-  --c-border-soft: rgba(216, 189, 138, 0.22);
-  --c-surface-glass: rgba(105, 73, 102, 0.78);
-  --c-surface-glass-strong: rgba(105, 73, 102, 0.92);
-  --c-overlay: rgba(0, 0, 0, 0.55);
+  /* UI primitives */
+  --r-sm: 4px;
+  --r-md: 6px;
 
-  --c-focus: #D8BD8A;
+  --c-border: rgba(15, 23, 42, 0.16);
+  --c-border-soft: rgba(15, 23, 42, 0.10);
+  --c-surface-glass: rgba(255, 255, 255, 0.80);
+  --c-surface-glass-strong: rgba(255, 255, 255, 0.94);
+  --c-overlay: rgba(15, 23, 42, 0.32);
+
+  --c-focus: var(--c-primary);
 
   background: var(--c-bg);
   color: var(--c-text);
@@ -27,6 +35,10 @@ html,
 body {
   height: 100%;
   margin: 0;
+}
+
+body {
+  line-height: 1.45;
 }
 
 .sr-only {
@@ -42,9 +54,10 @@ body {
 }
 
 .hud .status {
-  margin-top: 6px;
-  opacity: 0.9;
+  margin-top: 0;
+  color: var(--c-muted-text);
   font-size: 13px;
+  pointer-events: none;
 }
 
 #app {
@@ -71,13 +84,32 @@ canvas#game:focus-visible {
   position: absolute;
   top: 14px;
   left: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 10px 12px;
   border: 1px solid var(--c-border-soft);
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   background: var(--c-surface-glass);
   backdrop-filter: blur(8px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   user-select: none;
-  pointer-events: none;
+  pointer-events: auto;
+}
+
+.hud-actions {
+  display: flex;
+  align-items: center;
+}
+
+/* When the cog lives in the HUD, it should be inline and compact. */
+.hud .ui-cog {
+  position: static;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-sm);
+  font-size: 18px;
+  line-height: 1;
 }
 
 .a11y-root {
@@ -89,10 +121,11 @@ canvas#game:focus-visible {
 }
 
 .a11y-panel {
-  border-radius: 8px;
+  border-radius: var(--r-md);
   border: 1px solid var(--c-border);
   background: var(--c-surface-glass-strong);
   padding: 14px;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.10);
 }
 
 .a11y-list {
@@ -119,7 +152,7 @@ canvas#game:focus-visible {
   right: 12px;
   width: 44px;
   height: 44px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--c-border);
   background: var(--c-surface-glass);
   color: var(--c-text);
@@ -147,11 +180,58 @@ canvas#game:focus-visible {
 
 .ui-panel {
   width: min(520px, calc(100vw - 28px));
-  border-radius: 8px;
+  border-radius: var(--r-md);
   border: 1px solid var(--c-border);
   background: var(--c-surface-glass-strong);
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 18px 64px rgba(15, 23, 42, 0.18);
   padding: 16px;
+}
+
+.ui-panel--welcome {
+  width: min(720px, calc(100vw - 28px));
+}
+
+.ui-scroll {
+  max-height: min(52vh, 420px);
+  overflow: auto;
+  padding-right: 6px;
+}
+
+.ui-tutorial {
+  margin: 8px 0 12px;
+  padding: 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--c-border-soft);
+  background: rgba(15, 23, 42, 0.02);
+}
+
+.ui-tutorial-title {
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.2px;
+  margin-bottom: 6px;
+}
+
+.ui-tutorial-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--c-text);
+}
+
+.ui-tutorial-list li {
+  margin: 6px 0;
+}
+
+.ui-kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--c-border);
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--c-text);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
 }
 
 .ui-panel:focus-visible {
@@ -160,13 +240,14 @@ canvas#game:focus-visible {
 }
 
 .ui-title {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 650;
   margin-bottom: 6px;
+  letter-spacing: 0.2px;
 }
 
 .ui-subtitle {
-  opacity: 0.85;
+  color: var(--c-muted-text);
   font-size: 13px;
   margin-bottom: 12px;
 }
@@ -178,15 +259,15 @@ canvas#game:focus-visible {
 
 .ui-btn {
   height: 42px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--c-border);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.03);
   color: var(--c-text);
   cursor: pointer;
 }
 
 .ui-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.06);
 }
 
 .ui-btn:focus-visible {
@@ -196,14 +277,14 @@ canvas#game:focus-visible {
 
 .ui-section {
   padding: 10px 10px 2px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--c-border-soft);
+  background: rgba(15, 23, 42, 0.02);
 }
 
 .ui-section-title {
   font-size: 13px;
-  opacity: 0.85;
+  color: var(--c-muted-text);
   margin-bottom: 8px;
 }
 
@@ -229,9 +310,9 @@ canvas#game:focus-visible {
   height: 30px;
   min-width: 220px;
   padding: 0 10px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--c-border);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.85);
   color: var(--c-text);
 }
 
@@ -241,16 +322,16 @@ canvas#game:focus-visible {
 }
 
 .ui-hint {
-  opacity: 0.9;
+  color: var(--c-muted-text);
   font-size: 12px;
   line-height: 1.2rem;
 }
 
 .ui-pill {
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--c-border);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.03);
   font-size: 12px;
   opacity: 0.95;
 }
@@ -258,9 +339,9 @@ canvas#game:focus-visible {
 .ui-small {
   height: 30px;
   padding: 0 10px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--c-border);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.03);
   color: var(--c-text);
   cursor: pointer;
 }
@@ -282,7 +363,7 @@ canvas#game:focus-visible {
 }
 
 .hint {
-  opacity: 0.88;
+  color: var(--c-muted-text);
   font-size: 13px;
   line-height: 1.25rem;
 }
