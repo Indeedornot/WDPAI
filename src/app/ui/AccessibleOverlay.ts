@@ -1,6 +1,6 @@
-import type { Scene } from '../../engine'
-import { Vec2 } from '../../engine'
-import { Health } from '../../engine'
+import type { Scene } from '../../engine/core/Scene'
+import { Vec2 } from '../../engine/math/Vec2'
+import { Health } from '../../engine/components/Health'
 
 export type AccessibleOverlayOptions = {
   getPaused: () => boolean

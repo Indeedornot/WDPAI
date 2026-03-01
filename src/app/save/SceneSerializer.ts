@@ -1,6 +1,7 @@
-import { GameObject, Vec2 } from '../../engine'
-import type { Scene } from '../../engine'
-import type { Component } from '../../engine'
+import { GameObject } from '../../engine/core/GameObject'
+import type { Scene } from '../../engine/core/Scene'
+import type { Component } from '../../engine/core/Component'
+import { Vec2 } from '../../engine/math/Vec2'
 import type { SceneSnapshotV1, GameObjectSnapshot, ComponentSnapshot } from './types'
 import { defaultComponentSerializers, type ComponentSerializer, type LoadContext } from './ComponentSerializers'
 

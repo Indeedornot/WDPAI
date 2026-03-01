@@ -1,38 +1,35 @@
 import './style.css'
 
-import {
-  AabbCollider2D,
-  Camera2D,
-  DamageOnCollision2D,
-  DefaultMovementBindingsWASD,
-  DefaultShootingBindingsArrows,
-  DebugGridRenderer2D,
-  CountKillToPlayerStatsOnDeath2D,
-  DropPowerupOnDeath2D,
-  DestroyWhenDead,
-  Experience,
-  GameLoop,
-  GameObject,
-  GrantXpToPlayerOnDeath2D,
-  Health,
-  HealthBarRenderer2D,
-  Input,
-  KeyboardMove2D,
-  ChasePlayer2D,
-  KnockbackOnCollision2D,
-  Mover2D,
-  EnemySpawner2D,
-  PowerupController2D,
-  PowerupPickup2D,
-  RunStats,
-  Shooter2D,
-  Scene,
-  Spin2D,
-  SpriteRenderer2D,
-  Vec2,
-  VelocityDamping2D,
-  WrapAroundBounds2D,
-} from './engine'
+import { GameLoop } from './engine/core/GameLoop'
+import { GameObject } from './engine/core/GameObject'
+import { Scene } from './engine/core/Scene'
+import { Input } from './engine/input/Input'
+import { DefaultMovementBindingsWASD, DefaultShootingBindingsArrows } from './engine/input/DirectionalBindings2D'
+import { Vec2 } from './engine/math/Vec2'
+import { AabbCollider2D } from './engine/physics/AabbCollider2D'
+import { Camera2D } from './engine/render/Camera2D'
+import { DebugGridRenderer2D } from './engine/render/DebugGridRenderer2D'
+import { HealthBarRenderer2D } from './engine/render/HealthBarRenderer2D'
+import { SpriteRenderer2D } from './engine/render/SpriteRenderer2D'
+import { ChasePlayer2D } from './engine/components/ChasePlayer2D'
+import { CountKillToPlayerStatsOnDeath2D } from './engine/components/CountKillToPlayerStatsOnDeath2D'
+import { DamageOnCollision2D } from './engine/components/DamageOnCollision2D'
+import { DestroyWhenDead } from './engine/components/DestroyWhenDead'
+import { DropPowerupOnDeath2D } from './engine/components/DropPowerupOnDeath2D'
+import { EnemySpawner2D } from './engine/components/EnemySpawner2D'
+import { Experience } from './engine/components/Experience'
+import { GrantXpToPlayerOnDeath2D } from './engine/components/GrantXpToPlayerOnDeath2D'
+import { Health } from './engine/components/Health'
+import { KeyboardMove2D } from './engine/components/KeyboardMove2D'
+import { KnockbackOnCollision2D } from './engine/components/KnockbackOnCollision2D'
+import { Mover2D } from './engine/components/Mover2D'
+import { PowerupController2D } from './engine/components/PowerupController2D'
+import { PowerupPickup2D } from './engine/components/PowerupPickup2D'
+import { RunStats } from './engine/components/RunStats'
+import { Shooter2D } from './engine/components/Shooter2D'
+import { Spin2D } from './engine/components/Spin2D'
+import { VelocityDamping2D } from './engine/components/VelocityDamping2D'
+import { WrapAroundBounds2D } from './engine/components/WrapAroundBounds2D'
 import type { ControlsConfig } from './app/controls/ControlsConfig'
 import { DEFAULT_CONTROLS, parseControlsConfig } from './app/controls/ControlsConfig'
 import { PauseMenu } from './app/ui/PauseMenu'

@@ -56,20 +56,20 @@ export class Physics2D {
         if (isNew) {
           for (const c of aComponents) {
             if (!c.enabled) continue
-            c.OnCollisionEnter2D(aCollision)
+            c.onCollisionEnter2D(aCollision)
           }
           for (const c of bComponents) {
             if (!c.enabled) continue
-            c.OnCollisionEnter2D(bCollision)
+            c.onCollisionEnter2D(bCollision)
           }
         } else {
           for (const c of aComponents) {
             if (!c.enabled) continue
-            c.OnCollisionStay2D(aCollision)
+            c.onCollisionStay2D(aCollision)
           }
           for (const c of bComponents) {
             if (!c.enabled) continue
-            c.OnCollisionStay2D(bCollision)
+            c.onCollisionStay2D(bCollision)
           }
         }
       }
@@ -98,11 +98,11 @@ export class Physics2D {
 
       for (const c of goA.getComponents()) {
         if (!c.enabled) continue
-        c.OnCollisionExit2D(aCollision)
+        c.onCollisionExit2D(aCollision)
       }
       for (const c of goB.getComponents()) {
         if (!c.enabled) continue
-        c.OnCollisionExit2D(bCollision)
+        c.onCollisionExit2D(bCollision)
       }
     }
 

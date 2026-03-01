@@ -68,7 +68,7 @@ export class Scene {
       if (!go.active) continue
       for (const c of go.getComponents()) {
         if (!c.enabled) continue
-        c.Update(dt)
+        c.update(dt)
       }
     }
   }
@@ -80,7 +80,7 @@ export class Scene {
       if (!go.active) continue
       for (const c of go.getComponents()) {
         if (!c.enabled) continue
-        c.UpdatePhysics(dt)
+        c.fixedUpdate(dt)
       }
     }
 
@@ -96,7 +96,7 @@ export class Scene {
       if (!go.active) continue
       for (const c of go.getComponents()) {
         if (!c.enabled) continue
-        c.Render(ctx, camera)
+        c.render(ctx, camera)
       }
     }
   }

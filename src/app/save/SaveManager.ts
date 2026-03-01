@@ -1,4 +1,4 @@
-import type { Scene } from '../../engine'
+import type { Scene } from '../../engine/core/Scene'
 import { SceneSerializer } from './SceneSerializer'
 import type { SaveStorage } from './SaveStorage'
 

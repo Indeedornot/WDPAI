@@ -1,24 +1,22 @@
-import {
-  AabbCollider2D,
-  DropPowerupOnDeath2D,
-  Experience,
-  Health,
-  HealthBarRenderer2D,
-  KeyboardMove2D,
-  KnockbackOnCollision2D,
-  Lifetime,
-  Mover2D,
-  PowerupController2D,
-  Shooter2D,
-  SpriteRenderer2D,
-  Vec2,
-  VelocityDamping2D,
-  DamageOnCollision2D,
-  DestroyOnCollision2D,
-  DestroyWhenDead,
-  GrantXpToPlayerOnDeath2D,
-} from '../../engine'
-import type { Component } from '../../engine'
+import type { Component } from '../../engine/core/Component'
+import { DamageOnCollision2D } from '../../engine/components/DamageOnCollision2D'
+import { DestroyOnCollision2D } from '../../engine/components/DestroyOnCollision2D'
+import { DestroyWhenDead } from '../../engine/components/DestroyWhenDead'
+import { DropPowerupOnDeath2D } from '../../engine/components/DropPowerupOnDeath2D'
+import { Experience } from '../../engine/components/Experience'
+import { GrantXpToPlayerOnDeath2D } from '../../engine/components/GrantXpToPlayerOnDeath2D'
+import { Health } from '../../engine/components/Health'
+import { KeyboardMove2D } from '../../engine/components/KeyboardMove2D'
+import { KnockbackOnCollision2D } from '../../engine/components/KnockbackOnCollision2D'
+import { Lifetime } from '../../engine/components/Lifetime'
+import { Mover2D } from '../../engine/components/Mover2D'
+import { PowerupController2D } from '../../engine/components/PowerupController2D'
+import { Shooter2D } from '../../engine/components/Shooter2D'
+import { VelocityDamping2D } from '../../engine/components/VelocityDamping2D'
+import { Vec2 } from '../../engine/math/Vec2'
+import { AabbCollider2D } from '../../engine/physics/AabbCollider2D'
+import { HealthBarRenderer2D } from '../../engine/render/HealthBarRenderer2D'
+import { SpriteRenderer2D } from '../../engine/render/SpriteRenderer2D'
 
 export type LoadContext = {
   getObjectById: (id: string) => { id: string } | null

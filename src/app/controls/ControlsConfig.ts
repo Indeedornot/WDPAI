@@ -3,7 +3,7 @@ import {
   DefaultShootingBindingsArrows,
   type MovementBindings2D,
   type ShootingBindings2D,
-} from '../../engine'
+ } from '../../engine/input/DirectionalBindings2D'
 
 export type ControlsConfig = {
   movement: MovementBindings2D
