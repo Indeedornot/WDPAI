@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Dto\Admin;
 
 use App\Dto\JsonBody;
+use App\Error\ApiErrorCode;
+use App\Http\HttpStatus;
 use App\Routing\Request;
 use App\Routing\ValidationException;
 
@@ -33,13 +35,13 @@ final readonly class BanUserInput
         }
 
         if ($userIdInt === null || $userIdInt <= 0) {
-            throw new ValidationException('invalid_userId', 400, 'Invalid userId.');
+            throw new ValidationException(ApiErrorCode::InvalidUserId, HttpStatus::BadRequest, 'Invalid userId.');
         }
         if (!is_bool($banned)) {
-            throw new ValidationException('invalid_banned', 400, 'Invalid banned flag.');
+            throw new ValidationException(ApiErrorCode::InvalidBanned, HttpStatus::BadRequest, 'Invalid banned flag.');
         }
         if ($reason !== null && !is_string($reason)) {
-            throw new ValidationException('invalid_reason', 400, 'Invalid reason.');
+            throw new ValidationException(ApiErrorCode::InvalidReason, HttpStatus::BadRequest, 'Invalid reason.');
         }
 
         $reasonNorm = null;
@@ -49,7 +51,7 @@ final readonly class BanUserInput
                 $reasonNorm = null;
             }
             if ($reasonNorm !== null && strlen($reasonNorm) > 255) {
-                throw new ValidationException('invalid_reason', 400, 'Reason is too long.');
+                throw new ValidationException(ApiErrorCode::InvalidReason, HttpStatus::BadRequest, 'Reason is too long.');
             }
         }
 

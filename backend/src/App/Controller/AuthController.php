@@ -10,6 +10,8 @@ use App\Auth\TokenRepository;
 use App\Auth\UserRepository;
 use App\Dto\Auth\LoginInput;
 use App\Dto\Auth\RegisterInput;
+use App\Error\ApiErrorCode;
+use App\Http\HttpStatus;
 use App\Routing\Attributes\RequireAuth;
 use App\Routing\Request;
 use App\Routing\Response;
@@ -31,7 +33,7 @@ final class AuthController extends Controller
         } catch (PDOException $e) {
             // PostgreSQL unique_violation
             if ($e->getCode() === '23505') {
-                return Response::error('email_taken', 409, 'Email already registered.');
+                return Response::error(ApiErrorCode::EmailTaken, HttpStatus::Conflict, 'Email already registered.');
             }
             throw $e;
         }
@@ -51,7 +53,7 @@ final class AuthController extends Controller
         $userRepo = new UserRepository($this->kernel->pdo());
         $row = $userRepo->findByEmail($input->email);
         if ($row === null) {
-            return Response::error('invalid_credentials', 401, 'Bad credentials.');
+            return Response::error(ApiErrorCode::InvalidCredentials, HttpStatus::Unauthorized, 'Bad credentials.');
         }
 
         if (($row['banned_at'] ?? null) !== null) {
@@ -60,11 +62,11 @@ final class AuthController extends Controller
             if (is_string($reason) && trim($reason) !== '') {
                 $msg = 'Account banned: ' . trim($reason);
             }
-            return Response::error('banned', 403, $msg);
+            return Response::error(ApiErrorCode::Banned, HttpStatus::Forbidden, $msg);
         }
 
         if (!password_verify($input->password, (string)$row['password_hash'])) {
-            return Response::error('invalid_credentials', 401, 'Bad credentials.');
+            return Response::error(ApiErrorCode::InvalidCredentials, HttpStatus::Unauthorized, 'Bad credentials.');
         }
 
         $userRepo->markLogin((int)$row['id']);
@@ -92,7 +94,7 @@ final class AuthController extends Controller
         $auth = new AuthService($this->kernel->pdo());
         $token = $auth->parseBearerToken($authorization);
         if ($token === null) {
-            return Response::error('unauthorized', 401);
+            return Response::error(ApiErrorCode::Unauthorized, HttpStatus::Unauthorized);
         }
 
         $tokenRepo = new TokenRepository($this->kernel->pdo());

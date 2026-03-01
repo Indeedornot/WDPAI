@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Routing;
 
+use App\Error\ApiErrorCode;
 use App\Error\FailureRepository;
+use App\Http\HttpStatus;
 use App\Kernel;
 use Throwable;
 
@@ -37,13 +39,13 @@ final class App
     public function handle(Request $req): Response
     {
         if ($req->method === 'OPTIONS') {
-            return $this->withCors(Response::empty(204), $req);
+            return $this->withCors(Response::empty(HttpStatus::NoContent), $req);
         }
 
         try {
             $res = $this->router->dispatch($req, $this->kernel);
             if (!$res) {
-                $res = Response::error('not_found', 404);
+                $res = Response::error(ApiErrorCode::NotFound, HttpStatus::NotFound);
             }
 
             return $this->withCors($res, $req);
@@ -64,7 +66,7 @@ final class App
             }
 
             return $this->withCors(
-                Response::error('server_error', 500, $message, $extra),
+                Response::error(ApiErrorCode::ServerError, HttpStatus::InternalServerError, $message, $extra),
                 $req,
             );
         }

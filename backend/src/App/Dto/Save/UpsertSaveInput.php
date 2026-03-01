@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Dto\Save;
 
 use App\Dto\JsonBody;
+use App\Error\ApiErrorCode;
+use App\Http\HttpStatus;
 use App\Routing\Request;
 use App\Routing\ValidationException;
 
@@ -26,15 +28,15 @@ final readonly class UpsertSaveInput
         $version = $body['version'] ?? 1;
 
         if (!is_string($slot) || trim($slot) === '') {
-            throw new ValidationException('missing_slot', 400, 'Missing slot.');
+            throw new ValidationException(ApiErrorCode::MissingSlot, HttpStatus::BadRequest, 'Missing slot.');
         }
         $slot = trim($slot);
         if (strlen($slot) > 255) {
-            throw new ValidationException('invalid_slot', 400, 'Slot is too long.');
+            throw new ValidationException(ApiErrorCode::InvalidSlot, HttpStatus::BadRequest, 'Slot is too long.');
         }
 
         if ($snapshot === null) {
-            throw new ValidationException('missing_snapshot', 400, 'Missing snapshot.');
+            throw new ValidationException(ApiErrorCode::MissingSnapshot, HttpStatus::BadRequest, 'Missing snapshot.');
         }
 
         $versionInt = 1;

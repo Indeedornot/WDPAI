@@ -7,6 +7,8 @@ namespace App\Controller;
 use App\Auth\AuthUser;
 use App\Dto\Save\SlotQuery;
 use App\Dto\Save\UpsertSaveInput;
+use App\Error\ApiErrorCode;
+use App\Http\HttpStatus;
 use App\Routing\Attributes\RequireAuth;
 use App\Routing\Response;
 use App\Save\PlayerSaveRepository;
@@ -19,7 +21,7 @@ final class SaveController extends Controller
         $repo = new PlayerSaveRepository($this->kernel->pdo());
         $row = $repo->findByUserAndSlot($user->id, $query->slot);
         if ($row === null) {
-            return Response::error('not_found', 404);
+            return Response::error(ApiErrorCode::NotFound, HttpStatus::NotFound);
         }
 
         return Response::ok([

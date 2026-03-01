@@ -6,6 +6,8 @@ namespace App\Controller;
 
 use App\Auth\AuthUser;
 use App\Dto\Runs\CreateRunInput;
+use App\Error\ApiErrorCode;
+use App\Http\HttpStatus;
 use App\Routing\Attributes\RequireAuth;
 use App\Routing\Response;
 use App\Run\RunStatsRepository;
@@ -30,7 +32,7 @@ final class RunsController extends Controller
         } catch (PDOException $e) {
             // PostgreSQL serialization_failure
             if ($e->getCode() === '40001') {
-                return Response::error('retry', 409, 'Please retry.');
+                return Response::error(ApiErrorCode::Retry, HttpStatus::Conflict, 'Please retry.');
             }
             throw $e;
         }

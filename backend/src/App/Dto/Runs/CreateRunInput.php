@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Dto\Runs;
 
 use App\Dto\JsonBody;
+use App\Error\ApiErrorCode;
+use App\Http\HttpStatus;
 use App\Routing\Request;
 use App\Routing\ValidationException;
 
@@ -32,7 +34,7 @@ final readonly class CreateRunInput
         $shotsHit = $body['shotsHit'] ?? null;
 
         if (!is_numeric($timeSeconds) || !is_numeric($level) || !is_numeric($xp) || !is_numeric($kills) || !is_numeric($shotsFired) || !is_numeric($shotsHit)) {
-            throw new ValidationException('invalid_input', 400, 'Invalid run stats.');
+            throw new ValidationException(ApiErrorCode::InvalidInput, HttpStatus::BadRequest, 'Invalid run stats.');
         }
 
         $timeSecondsInt = max(0, (int)round((float)$timeSeconds));

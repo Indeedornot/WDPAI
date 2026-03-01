@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Dto;
 
+use App\Error\ApiErrorCode;
+use App\Http\HttpStatus;
 use App\Routing\Request;
 use App\Routing\ValidationException;
 
@@ -13,11 +15,11 @@ final class JsonBody
     public static function requireArray(Request $req, string $message = 'Invalid JSON.'): array
     {
         if ($req->jsonError !== null) {
-            throw new ValidationException('invalid_json', 400, $message);
+            throw new ValidationException(ApiErrorCode::InvalidJson, HttpStatus::BadRequest, $message);
         }
 
         if (!is_array($req->json)) {
-            throw new ValidationException('invalid_json', 400, $message);
+            throw new ValidationException(ApiErrorCode::InvalidJson, HttpStatus::BadRequest, $message);
         }
 
         /** @var array<string, mixed> */

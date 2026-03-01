@@ -75,7 +75,7 @@ final class UserRepository
         $ok = $stmt->execute([
             ':email' => $email,
             ':ph' => $passwordHash,
-            ':role' => 'player',
+            ':role' => UserRole::Player->value,
         ]);
         if (!$ok) {
             return null;
@@ -89,7 +89,7 @@ final class UserRepository
         return [
             'id' => $id,
             'email' => $email,
-            'role' => 'player',
+            'role' => UserRole::Player->value,
         ];
     }
 

@@ -6,6 +6,8 @@ namespace App\Routing;
 
 use App\Auth\AuthService;
 use App\Auth\AuthUser;
+use App\Error\ApiErrorCode;
+use App\Http\HttpStatus;
 use App\Kernel;
 use App\Routing\Attributes\RequireAuth;
 use App\Routing\Attributes\PermissionPolicyGroup;
@@ -126,7 +128,9 @@ final class Router
 
             return $res;
         } catch (ValidationException $e) {
-            return Response::error($e->error, $e->status, $e->publicMessage, $e->extra);
+            $status = $e->status instanceof HttpStatus ? $e->status : $e->status;
+            $error = $e->error instanceof ApiErrorCode ? $e->error : $e->error;
+            return Response::error($error, $status, $e->publicMessage, $e->extra);
         } catch (Throwable $e) {
             // Let App handle unexpected exceptions (and failureId logging).
             throw $e;
@@ -146,15 +150,15 @@ final class Router
         $auth = new AuthService($kernel->pdo());
         $user = $auth->authenticate($req);
         if ($user === null) {
-            return Response::error('unauthorized', 401, 'Missing or invalid token.');
+            return Response::error(ApiErrorCode::Unauthorized, HttpStatus::Unauthorized, 'Missing or invalid token.');
         }
 
         if (!$cfg->allowBanned && $user->isBanned()) {
-            return Response::error('banned', 403, 'Account banned.');
+            return Response::error(ApiErrorCode::Banned, HttpStatus::Forbidden, 'Account banned.');
         }
 
         if ($cfg->policy === PermissionPolicyGroup::Admin && !$user->isAdmin()) {
-            return Response::error('forbidden', 403);
+            return Response::error(ApiErrorCode::Forbidden, HttpStatus::Forbidden);
         }
 
         return $user;

@@ -17,7 +17,7 @@ final class AuthUser
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return strtolower(trim($this->role)) === UserRole::Admin->value;
     }
 
     public function isBanned(): bool

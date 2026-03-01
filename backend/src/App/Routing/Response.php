@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Routing;
 
+use App\Error\ApiErrorCode;
+use App\Http\HttpStatus;
+
 final class Response
 {
     /** @var array<string, string> */
@@ -49,35 +52,38 @@ final class Response
         echo $this->body;
     }
 
-    public static function json(mixed $data, int $status = 200): self
+    public static function json(mixed $data, HttpStatus|int $status = HttpStatus::Ok): self
     {
+        $statusCode = $status instanceof HttpStatus ? $status->value : $status;
         $payload = json_encode($data, JSON_UNESCAPED_SLASHES);
         if ($payload === false) {
             $payload = '{"ok":false,"error":"json_encode_failed"}';
-            $status = 500;
+            $statusCode = HttpStatus::InternalServerError->value;
         }
 
-        return new self($status, ['Content-Type' => 'application/json; charset=utf-8'], $payload);
+        return new self($statusCode, ['Content-Type' => 'application/json; charset=utf-8'], $payload);
     }
 
     /** @param array<string, mixed> $data */
-    public static function ok(array $data = [], int $status = 200): self
+    public static function ok(array $data = [], HttpStatus|int $status = HttpStatus::Ok): self
     {
         return self::json(array_merge(['ok' => true], $data), $status);
     }
 
     /** @param array<string, mixed> $extra */
-    public static function error(string $error, int $status, ?string $message = null, array $extra = []): self
+    public static function error(ApiErrorCode|string $error, HttpStatus|int $status, ?string $message = null, array $extra = []): self
     {
-        $payload = ['ok' => false, 'error' => $error];
+        $code = $error instanceof ApiErrorCode ? $error->value : $error;
+        $payload = ['ok' => false, 'error' => $code];
         if ($message !== null) {
             $payload['message'] = $message;
         }
         return self::json(array_merge($payload, $extra), $status);
     }
 
-    public static function empty(int $status = 204): self
+    public static function empty(HttpStatus|int $status = HttpStatus::NoContent): self
     {
-        return new self($status, [], '');
+        $statusCode = $status instanceof HttpStatus ? $status->value : $status;
+        return new self($statusCode, [], '');
     }
 }

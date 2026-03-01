@@ -9,6 +9,8 @@ use App\Auth\TokenRepository;
 use App\Auth\UserRepository;
 use App\Dto\Admin\BanUserInput;
 use App\Dto\Admin\UserIdQuery;
+use App\Error\ApiErrorCode;
+use App\Http\HttpStatus;
 use App\Routing\Attributes\PermissionPolicyGroup;
 use App\Routing\Attributes\RequireAuth;
 use App\Routing\Response;
@@ -77,7 +79,7 @@ final class AdminController extends Controller
     public function ban(BanUserInput $input, AuthUser $user): Response
     {
         if ($input->userId === $user->id) {
-            return Response::error('cannot_ban_self', 400, 'Cannot ban yourself.');
+            return Response::error(ApiErrorCode::CannotBanSelf, HttpStatus::BadRequest, 'Cannot ban yourself.');
         }
 
         $userRepo = new UserRepository($this->kernel->pdo());
