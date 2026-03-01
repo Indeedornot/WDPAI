@@ -2,39 +2,43 @@
 
 -- Users (players + future admins)
 CREATE TABLE IF NOT EXISTS users (
-  id bigint unsigned NOT NULL AUTO_INCREMENT,
+  id bigserial PRIMARY KEY,
   email varchar(255) NOT NULL,
   password_hash varchar(255) NOT NULL,
-  role enum('player','admin') NOT NULL DEFAULT 'player',
-  created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_login_at timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (id),
-  UNIQUE KEY users_email_uq (email)
-) ENGINE=InnoDB;
+  role varchar(16) NOT NULL DEFAULT 'player' CHECK (role IN ('player','admin')),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  last_login_at timestamptz NULL DEFAULT NULL,
+  UNIQUE (email)
+);
 
 -- Bearer tokens (store only a hash)
 CREATE TABLE IF NOT EXISTS auth_tokens (
-  id bigint unsigned NOT NULL AUTO_INCREMENT,
-  user_id bigint unsigned NOT NULL,
+  id bigserial PRIMARY KEY,
+  user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   token_hash char(64) NOT NULL,
-  created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  expires_at timestamp NULL DEFAULT NULL,
-  revoked_at timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (id),
-  UNIQUE KEY auth_tokens_token_hash_uq (token_hash),
-  KEY auth_tokens_user_id_idx (user_id),
-  CONSTRAINT auth_tokens_user_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
+  created_at timestamptz NOT NULL DEFAULT now(),
+  expires_at timestamptz NULL DEFAULT NULL,
+  revoked_at timestamptz NULL DEFAULT NULL,
+  UNIQUE (token_hash)
+);
+
+CREATE INDEX IF NOT EXISTS auth_tokens_user_id_idx ON auth_tokens (user_id);
 
 -- Per-player saves (slot is scoped to user_id)
 CREATE TABLE IF NOT EXISTS player_saves (
-  user_id bigint unsigned NOT NULL,
+  user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   slot varchar(255) NOT NULL,
   version int NOT NULL DEFAULT 1,
-  payload json NOT NULL,
-  created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (user_id, slot),
-  KEY player_saves_updated_at_idx (updated_at),
-  CONSTRAINT player_saves_user_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
+  payload jsonb NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, slot)
+);
+
+CREATE INDEX IF NOT EXISTS player_saves_updated_at_idx ON player_saves (updated_at);
+
+DROP TRIGGER IF EXISTS player_saves_set_updated_at ON player_saves;
+CREATE TRIGGER player_saves_set_updated_at
+BEFORE UPDATE ON player_saves
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();

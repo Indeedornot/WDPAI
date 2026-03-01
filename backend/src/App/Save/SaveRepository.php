@@ -26,7 +26,7 @@ final class SaveRepository
             return null;
         }
 
-        // MySQL returns JSON columns as strings.
+        // PDO typically returns json/jsonb columns as strings.
         $payload = $row['payload'];
         if (is_string($payload)) {
             $decoded = json_decode($payload, true);
@@ -49,7 +49,7 @@ final class SaveRepository
         }
 
         $sql = 'INSERT INTO saves (slot, version, payload) VALUES (:slot, :version, :payload) '
-            . 'ON DUPLICATE KEY UPDATE version = VALUES(version), payload = VALUES(payload), updated_at = CURRENT_TIMESTAMP';
+            . 'ON CONFLICT (slot) DO UPDATE SET version = EXCLUDED.version, payload = EXCLUDED.payload';
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([

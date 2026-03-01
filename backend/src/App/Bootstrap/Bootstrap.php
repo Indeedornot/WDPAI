@@ -34,11 +34,11 @@ final class Bootstrap
 
         $databaseUrl = $envString('DATABASE_URL', '');
 
-        $dbHost = $envString('MYSQL_HOST', 'localhost');
-        $dbPort = $envString('MYSQL_PORT', '3306');
-        $dbDatabase = $envString('MYSQL_DATABASE', 'mysql');
-        $dbUser = $envString('MYSQL_USER', '');
-        $dbPassword = $envString('MYSQL_PASSWORD', '');
+        $dbHost = $envString('POSTGRES_HOST', 'localhost');
+        $dbPort = $envString('POSTGRES_PORT', '5432');
+        $dbDatabase = $envString('POSTGRES_DB', 'postgres');
+        $dbUser = $envString('POSTGRES_USER', '');
+        $dbPassword = $envString('POSTGRES_PASSWORD', '');
 
         if ($databaseUrl !== '') {
             $parsed = Helpers::dbFromDatabaseUrl($databaseUrl);
@@ -46,7 +46,7 @@ final class Bootstrap
             $dbUser = $parsed['user'] !== '' ? $parsed['user'] : $dbUser;
             $dbPassword = $parsed['password'] !== '' ? $parsed['password'] : $dbPassword;
         } else {
-            $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $dbHost, $dbPort, $dbDatabase);
+            $dsn = sprintf('pgsql:host=%s;port=%s;dbname=%s', $dbHost, $dbPort, $dbDatabase);
         }
 
         $corsOrigins = Helpers::parseCsvList($envString('CORS_ORIGINS', ''));

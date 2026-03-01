@@ -10,7 +10,7 @@ $kernel = Bootstrap::kernel();
 $pdo = $kernel->pdo();
 
 // Ensure migrations table exists (in case you run migrate without the first migration).
-$pdo->exec('CREATE TABLE IF NOT EXISTS schema_migrations (version varchar(255) PRIMARY KEY, applied_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP)');
+$pdo->exec('CREATE TABLE IF NOT EXISTS schema_migrations (version varchar(255) PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())');
 
 $migrationsDir = realpath(__DIR__ . '/../migrations');
 if ($migrationsDir === false) {

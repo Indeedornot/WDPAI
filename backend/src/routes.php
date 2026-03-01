@@ -8,6 +8,7 @@ use App\Auth\AuthService;
 use App\Auth\TokenRepository;
 use App\Auth\UserRepository;
 use App\Kernel;
+use App\Run\RunStatsRepository;
 use App\Routing\App;
 use App\Routing\Request;
 use App\Routing\Response;
@@ -198,18 +199,24 @@ function map_endpoints(App $app): void
         $shotsHit = max(0, (int)round((float)$shotsHit));
         if ($shotsHit > $shotsFired) $shotsHit = $shotsFired;
 
-        $stmt = $kernel->pdo()->prepare(
-            'INSERT INTO player_run_stats (user_id, time_seconds, level, xp, kills, shots_fired, shots_hit) VALUES (:uid, :t, :lvl, :xp, :k, :sf, :sh)'
-        );
-        $stmt->execute([
-            ':uid' => $user->id,
-            ':t' => $timeSeconds,
-            ':lvl' => $level,
-            ':xp' => $xp,
-            ':k' => $kills,
-            ':sf' => $shotsFired,
-            ':sh' => $shotsHit,
-        ]);
+        try {
+            $repo = new RunStatsRepository($kernel->pdo());
+            $repo->recordRunWithAwards(
+                $user->id,
+                $timeSeconds,
+                $level,
+                $xp,
+                $kills,
+                $shotsFired,
+                $shotsHit,
+            );
+        } catch (PDOException $e) {
+            // PostgreSQL serialization_failure
+            if ($e->getCode() === '40001') {
+                return Response::json(['ok' => false, 'error' => 'retry', 'message' => 'Please retry.'], 409);
+            }
+            throw $e;
+        }
 
         return Response::json(['ok' => true]);
     });

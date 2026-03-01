@@ -1,4 +1,4 @@
-PHP backend (PDO + MySQL)
+PHP backend (PDO + PostgreSQL)
 
 What this provides
 - `GET /health` -> simple status check
@@ -9,6 +9,7 @@ What this provides
 - `GET /save?slot=...` -> load latest saved snapshot for a slot
 - `POST /save` -> upsert snapshot for a slot
 - `DELETE /save?slot=...` -> delete a slot
+- `POST /runs` -> record run stats (uses an explicit SERIALIZABLE transaction)
 - A tiny migration runner to create the required tables
 
 Routing style
@@ -16,12 +17,12 @@ Routing style
   - See `backend/src/routes.php` (`App\\Routes\\map_endpoints(App $app)`)
 
 Requirements
-- PHP 8.1+
-- PHP extensions: `pdo`, `pdo_mysql`
-- MySQL 8+
+- PHP 8.3+
+- PHP extensions: `pdo`, `pdo_pgsql`
+- PostgreSQL 16+
 
 Configuration
-- Copy `.env.example` to `.env` and fill in `DATABASE_URL` (preferred) or `MYSQL_*` variables.
+- Copy `.env.example` to `.env` and fill in `DATABASE_URL` (preferred) or `POSTGRES_*` variables.
 
 Run migrations
 - From `backend/` run: `php bin/migrate.php`
@@ -29,6 +30,10 @@ Run migrations
 Run locally
 - From `backend/` run: `php -S localhost:8080 -t public`
 - Then hit `http://localhost:8080/health`
+
+Tests
+- Unit tests (PHPUnit): `composer install` then `composer test`
+- Integration smoke test (curl): from repo root: `BASE_URL=http://localhost:8081 ./backend/bin/integration-smoke.sh`
 
 API
 
@@ -54,6 +59,7 @@ Admin auditing (future-facing)
 - Users have a `role` (`player` or `admin`). Two basic admin-only read endpoints exist:
   - `GET /admin/users`
   - `GET /admin/saves?userId=...`
+  - `GET /admin/runs?userId=...`
   - Admins can ban/unban users:
     - `POST /admin/ban` body: `{ "userId": 123, "banned": true, "reason": "optional" }`
 

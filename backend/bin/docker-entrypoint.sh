@@ -6,7 +6,7 @@ cd /app/backend
 echo "[backend] waiting for database..."
 
 # Try to boot the kernel and open a PDO connection.
-# This uses the same env vars the app uses (DATABASE_URL or MYSQL_*).
+# This uses the same env vars the app uses (DATABASE_URL or POSTGRES_*).
 max_attempts="60"
 attempt="1"
 while [ "$attempt" -le "$max_attempts" ]; do

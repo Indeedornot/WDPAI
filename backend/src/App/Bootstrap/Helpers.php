@@ -33,17 +33,17 @@ final class Helpers
         }
 
         $scheme = $parts['scheme'] ?? '';
-        if ($scheme !== 'mysql') {
-            throw new RuntimeException('DATABASE_URL must be mysql://');
+        if ($scheme !== 'postgres' && $scheme !== 'postgresql') {
+            throw new RuntimeException('DATABASE_URL must be postgres://');
         }
 
         $host = $parts['host'] ?? 'localhost';
-        $port = (string)($parts['port'] ?? 3306);
-        $path = $parts['path'] ?? '/mysql';
+        $port = (string)($parts['port'] ?? 5432);
+        $path = $parts['path'] ?? '/postgres';
         $dbname = ltrim($path, '/');
 
-        // Note: MySQL ssl/query params are intentionally ignored here for simplicity.
-        $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $host, $port, $dbname);
+        // Note: SSL/query params are intentionally ignored here for simplicity.
+        $dsn = sprintf('pgsql:host=%s;port=%s;dbname=%s', $host, $port, $dbname);
 
         $user = (string)($parts['user'] ?? '');
         $password = (string)($parts['pass'] ?? '');
