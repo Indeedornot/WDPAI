@@ -1,0 +1,10 @@
+node_modules
+.dist
+.dist-*
+dist
+backend/vendor
+backend/.env
+backend/.env.*
+.git
+.vscode
+.DS_Store
