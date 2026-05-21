@@ -8,6 +8,9 @@ use App\Config\AppConfig;
 use App\Config\CorsConfig;
 use App\Config\DbConfig;
 use App\Config\RoutingConfig;
+use App\Auth\UserRepository;
+use App\Auth\TokenRepository;
+use App\Auth\LoginAuditRepository;
 use App\Kernel;
 
 final class Bootstrap
@@ -59,6 +62,20 @@ final class Bootstrap
             new RoutingConfig($basePath),
         );
 
-        return new Kernel($config);
+        $kernel = new Kernel($config);
+
+        // Register common singleton services in the container.
+        $container = $kernel->container();
+        $container->registerSingleton(UserRepository::class, function($c) use ($kernel) {
+            return new UserRepository($kernel->pdo());
+        });
+        $container->registerSingleton(TokenRepository::class, function($c) use ($kernel) {
+            return new TokenRepository($kernel->pdo());
+        });
+        $container->registerSingleton(LoginAuditRepository::class, function($c) use ($kernel) {
+            return new LoginAuditRepository($kernel->pdo());
+        });
+
+        return $kernel;
     }
 }

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Save;
 
+use App\Container\Attributes\Injectable;
 use PDO;
 use RuntimeException;
 
+#[Injectable]
 final class PlayerSaveRepository
 {
     private PDO $pdo;

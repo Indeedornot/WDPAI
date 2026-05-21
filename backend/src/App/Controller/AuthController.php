@@ -6,99 +6,167 @@ namespace App\Controller;
 
 use App\Auth\AuthService;
 use App\Auth\AuthUser;
+use App\Auth\CsrfTokenGenerator;
+use App\Auth\Dto\Response\AuthSessionResponse;
+use App\Auth\Dto\Response\CsrfTokenResponse;
+use App\Auth\EmailAlreadyExistsException;
+use App\Auth\LoginAuditReason;
+use App\Auth\LoginAuditRepository;
 use App\Auth\TokenRepository;
 use App\Auth\UserRepository;
+use App\Constants\AuthConstants;
 use App\Dto\Auth\LoginInput;
 use App\Dto\Auth\RegisterInput;
 use App\Error\ApiErrorCode;
 use App\Http\HttpStatus;
 use App\Routing\Attributes\RequireAuth;
+use App\Routing\Dto\CookieOptions;
 use App\Routing\Request;
 use App\Routing\Response;
-use PDOException;
+use DateTimeImmutable;
+use DateTimeInterface;
 use RuntimeException;
 
 final class AuthController extends Controller
 {
-    public function register(RegisterInput $input): Response
+    public function register(RegisterInput $input, UserRepository $userRepo, TokenRepository $tokenRepo): Response
     {
-        $userRepo = new UserRepository($this->kernel->pdo());
         $passwordHash = password_hash($input->password, PASSWORD_DEFAULT);
         if (!is_string($passwordHash) || $passwordHash === '') {
-            throw new RuntimeException('Failed to hash password.');
+            throw new RuntimeException(AuthConstants::MSG_PASSWORD_HASH_FAILED);
         }
 
         try {
             $user = $userRepo->createPlayer($input->email, $passwordHash);
-        } catch (PDOException $e) {
-            // PostgreSQL unique_violation
-            if ($e->getCode() === '23505') {
-                return Response::error(ApiErrorCode::EmailTaken, HttpStatus::Conflict, 'Email already registered.');
-            }
-            throw $e;
+        } catch (EmailAlreadyExistsException) {
+            // Do not reveal whether the email already exists — return a generic registration failure.
+            return Response::error(ApiErrorCode::InvalidInput, HttpStatus::BadRequest, AuthConstants::MSG_REGISTRATION_FAILED);
         }
 
         if ($user === null) {
-            throw new RuntimeException('Failed to create user.');
+            throw new RuntimeException(AuthConstants::MSG_USER_CREATE_FAILED);
         }
 
-        $tokenRepo = new TokenRepository($this->kernel->pdo());
-        $token = $tokenRepo->issueToken((int)$user['id']);
+        $session = $this->issueSession((int)$user['id'], $user['email'], $user['role'], $tokenRepo);
 
-        return Response::ok(['token' => $token, 'user' => $user]);
+        return $session;
     }
 
-    public function login(LoginInput $input): Response
+    public function login(LoginInput $input, UserRepository $userRepo, LoginAuditRepository $audit, TokenRepository $tokenRepo): Response
     {
-        $userRepo = new UserRepository($this->kernel->pdo());
         $row = $userRepo->findByEmail($input->email);
         if ($row === null) {
-            return Response::error(ApiErrorCode::InvalidCredentials, HttpStatus::Unauthorized, 'Bad credentials.');
+            $audit->logFailed($input->email, LoginAuditReason::NotFound);
+            return Response::error(ApiErrorCode::InvalidCredentials, HttpStatus::Unauthorized, AuthConstants::MSG_BAD_CREDENTIALS);
         }
 
         if (($row['banned_at'] ?? null) !== null) {
             $reason = $row['banned_reason'] ?? null;
-            $msg = 'Account banned.';
+            $msg = AuthConstants::MSG_ACCOUNT_BANNED;
             if (is_string($reason) && trim($reason) !== '') {
-                $msg = 'Account banned: ' . trim($reason);
+                $msg = AuthConstants::MSG_ACCOUNT_BANNED_WITH_REASON . trim($reason);
             }
             return Response::error(ApiErrorCode::Banned, HttpStatus::Forbidden, $msg);
         }
 
         if (!password_verify($input->password, (string)$row['password_hash'])) {
-            return Response::error(ApiErrorCode::InvalidCredentials, HttpStatus::Unauthorized, 'Bad credentials.');
+            $audit->logFailed($input->email, LoginAuditReason::InvalidPassword);
+            return Response::error(ApiErrorCode::InvalidCredentials, HttpStatus::Unauthorized, AuthConstants::MSG_BAD_CREDENTIALS);
         }
 
         $userRepo->markLogin((int)$row['id']);
 
-        $tokenRepo = new TokenRepository($this->kernel->pdo());
-        $token = $tokenRepo->issueToken((int)$row['id']);
+        $audit->logSuccess($input->email);
 
-        return Response::ok([
-            'token' => $token,
-            'user' => [
-                'id' => (int)$row['id'],
-                'email' => (string)$row['email'],
-                'role' => (string)$row['role'],
-            ],
-        ]);
+        return $this->issueSession((int)$row['id'], (string)$row['email'], (string)$row['role'], $tokenRepo);
+    }
+
+    public function csrf(Request $req, CsrfTokenGenerator $tokenGenerator): Response
+    {
+        $token = $tokenGenerator->generate();
+        return Response::ok(new CsrfTokenResponse($token))
+            ->withCookie(AuthConstants::CSRF_COOKIE_NAME, $token, $this->csrfCookieOptions($req));
     }
 
     #[RequireAuth(allowBanned: true)]
-    public function logout(Request $req, AuthUser $user): Response
+    public function session(Request $req, AuthUser $user, TokenRepository $tokenRepo): Response
     {
-        // $user is unused, but required for #[RequireAuth] to authenticate the token.
-        $authorization = $req->headers['authorization'] ?? '';
-        $authorization = is_string($authorization) ? $authorization : '';
+        $auth = new AuthService($this->kernel->pdo());
+        $rawToken = $auth->rawTokenFromRequest($req);
+        if ($rawToken === null) {
+            return Response::error(ApiErrorCode::Unauthorized, HttpStatus::Unauthorized, AuthConstants::MSG_MISSING_INVALID_TOKEN);
+        }
+
+        $session = $tokenRepo->findSessionByToken($rawToken);
+        if ($session === null) {
+            return Response::error(ApiErrorCode::Unauthorized, HttpStatus::Unauthorized, AuthConstants::MSG_MISSING_INVALID_TOKEN);
+        }
+
+        return Response::ok(AuthSessionResponse::fromSession($session));
+    }
+
+    #[RequireAuth(allowBanned: true)]
+    public function refresh(Request $req, AuthUser $user, TokenRepository $tokenRepo): Response
+    {
+        if ($user->isBanned()) {
+            return Response::error(ApiErrorCode::Banned, HttpStatus::Forbidden, AuthConstants::MSG_ACCOUNT_BANNED);
+        }
 
         $auth = new AuthService($this->kernel->pdo());
-        $token = $auth->parseBearerToken($authorization);
+        $rawToken = $auth->rawTokenFromRequest($req);
+        if ($rawToken === null) {
+            return Response::error(ApiErrorCode::Unauthorized, HttpStatus::Unauthorized, AuthConstants::MSG_MISSING_INVALID_TOKEN);
+        }
+
+        $tokenRepo->revoke($rawToken);
+
+        return $this->issueSession($user->id, $user->email, $user->role, $tokenRepo);
+    }
+
+    #[RequireAuth(allowBanned: true)]
+    public function logout(Request $req, AuthUser $user, TokenRepository $tokenRepo): Response
+    {
+        $auth = new AuthService($this->kernel->pdo());
+        $token = $auth->rawTokenFromRequest($req);
         if ($token === null) {
             return Response::error(ApiErrorCode::Unauthorized, HttpStatus::Unauthorized);
         }
 
-        $tokenRepo = new TokenRepository($this->kernel->pdo());
         $tokenRepo->revoke($token);
-        return Response::ok();
+
+        return Response::ok()->deleteCookie(AuthConstants::AUTH_TOKEN_COOKIE_NAME);
+    }
+
+    /** @return Response */
+    private function issueSession(int $userId, string $email, string $role, TokenRepository $tokenRepo): Response
+    {
+        $expiresAt = (new DateTimeImmutable(AuthConstants::TOKEN_TTL))->format(DateTimeInterface::ATOM);
+        $rawToken = $tokenRepo->issueToken($userId, $expiresAt);
+
+        return Response::ok(new AuthSessionResponse($expiresAt, new \App\Auth\Dto\Response\UserResponse($userId, $email, $role)))
+            ->withCookie(AuthConstants::AUTH_TOKEN_COOKIE_NAME, $rawToken, $this->authCookieOptions($expiresAt));
+    }
+
+    /** @return array{path:string,secure:bool,httpOnly:bool,sameSite:string,expires?:string} */
+    private function authCookieOptions(string $expiresAt): array
+    {
+        return (new CookieOptions(
+            path: AuthConstants::COOKIE_PATH,
+            secure: AuthConstants::COOKIE_SECURE,
+            httpOnly: AuthConstants::COOKIE_HTTP_ONLY,
+            sameSite: AuthConstants::COOKIE_SAME_SITE,
+            expires: $expiresAt,
+        ))->toArray();
+    }
+
+    /** @return array{path:string,secure:bool,httpOnly:bool,sameSite:string} */
+    private function csrfCookieOptions(Request $req): array
+    {
+        return (new CookieOptions(
+            path: AuthConstants::COOKIE_PATH,
+            secure: $req->secure,
+            httpOnly: false,
+            sameSite: AuthConstants::COOKIE_SAME_SITE,
+        ))->toArray();
     }
 }

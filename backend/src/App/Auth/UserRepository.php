@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Auth;
 
+use App\Container\Attributes\Injectable;
 use PDO;
 
+#[Injectable]
 final class UserRepository
 {
     private PDO $pdo;
@@ -72,11 +74,21 @@ final class UserRepository
     public function createPlayer(string $email, string $passwordHash): ?array
     {
         $stmt = $this->pdo->prepare('INSERT INTO users (email, password_hash, role) VALUES (:email, :ph, :role)');
-        $ok = $stmt->execute([
-            ':email' => $email,
-            ':ph' => $passwordHash,
-            ':role' => UserRole::Player->value,
-        ]);
+        try {
+            $ok = $stmt->execute([
+                ':email' => $email,
+                ':ph' => $passwordHash,
+                ':role' => UserRole::Player->value,
+            ]);
+        } catch (\PDOException $e) {
+            // Translate duplicate key into a domain-level exception to avoid
+            // leaking database-specific error codes into controllers.
+            if ($e->getCode() === '23505') {
+                throw new EmailAlreadyExistsException('Email already exists', 0, $e);
+            }
+            throw $e;
+        }
+
         if (!$ok) {
             return null;
         }

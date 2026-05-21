@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Auth\AuthUser;
+use App\Auth\LoginAuditRepository;
 use App\Auth\TokenRepository;
 use App\Auth\UserRepository;
 use App\Dto\Admin\BanUserInput;
@@ -76,14 +77,17 @@ final class AdminController extends Controller
     }
 
     #[RequireAuth(policy: PermissionPolicyGroup::Admin)]
-    public function ban(BanUserInput $input, AuthUser $user): Response
+    public function loginAudit(AuthUser $user, LoginAuditRepository $repo): Response
+    {
+        return Response::ok(['entries' => $repo->listRecent(50)]);
+    }
+
+    #[RequireAuth(policy: PermissionPolicyGroup::Admin)]
+    public function ban(BanUserInput $input, AuthUser $user, UserRepository $userRepo, TokenRepository $tokenRepo): Response
     {
         if ($input->userId === $user->id) {
             return Response::error(ApiErrorCode::CannotBanSelf, HttpStatus::BadRequest, 'Cannot ban yourself.');
         }
-
-        $userRepo = new UserRepository($this->kernel->pdo());
-        $tokenRepo = new TokenRepository($this->kernel->pdo());
 
         $userRepo->setBan($input->userId, $input->banned, $input->reason);
         if ($input->banned) {

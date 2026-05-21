@@ -42,6 +42,11 @@ final class App
             return $this->withCors(Response::empty(HttpStatus::NoContent), $req);
         }
 
+        $transport = $this->enforceTransportAndCsrf($req);
+        if ($transport instanceof Response) {
+            return $this->withCors($transport, $req);
+        }
+
         try {
             $res = $this->router->dispatch($req, $this->kernel);
             if (!$res) {
@@ -79,7 +84,7 @@ final class App
         if (in_array('*', $cors->allowedOrigins, true)) {
             return $res
                 ->withHeader('Access-Control-Allow-Origin', '*')
-                ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token')
                 ->withHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
         }
 
@@ -88,10 +93,38 @@ final class App
                 ->withHeader('Access-Control-Allow-Origin', $req->origin)
                 ->withHeader('Vary', 'Origin')
                 ->withHeader('Access-Control-Allow-Credentials', 'true')
-                ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token')
                 ->withHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
         }
 
         return $res;
+    }
+
+    private function enforceTransportAndCsrf(Request $req): ?Response
+    {
+        $method = strtoupper($req->method);
+        $unsafe = in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true);
+
+        if (!$unsafe) {
+            return null;
+        }
+
+        if (str_starts_with($req->path, '/auth/') && !$req->secure) {
+            return Response::error(ApiErrorCode::Forbidden, HttpStatus::Forbidden, 'HTTPS required.');
+        }
+
+        if ($req->path === '/auth/csrf') {
+            return null;
+        }
+
+        $csrfCookie = $req->cookie('csrf_token');
+        $csrfHeader = $req->headers['x-csrf-token'] ?? '';
+        $csrfHeader = is_string($csrfHeader) ? trim($csrfHeader) : '';
+
+        if ($csrfCookie === null || $csrfCookie === '' || $csrfHeader === '' || !hash_equals($csrfCookie, $csrfHeader)) {
+            return Response::error(ApiErrorCode::Forbidden, HttpStatus::Forbidden, 'CSRF validation failed.');
+        }
+
+        return null;
     }
 }

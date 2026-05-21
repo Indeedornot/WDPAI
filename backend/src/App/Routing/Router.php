@@ -62,7 +62,12 @@ final class Router
             throw new RuntimeException('Controller not found: ' . $controllerClass);
         }
 
-        $controller = new $controllerClass($kernel);
+        // Prefer container resolution (allows singletons / DI). Fall back to direct construction.
+        try {
+            $controller = $kernel->container()->make($controllerClass);
+        } catch (\Throwable $e) {
+            $controller = new $controllerClass($kernel);
+        }
         if (!method_exists($controller, $action->method)) {
             throw new RuntimeException('Controller method not found: ' . $controllerClass . '::' . $action->method);
         }
@@ -110,6 +115,15 @@ final class Router
                         }
                         $args[] = $dto;
                         continue;
+                    }
+
+                    // Service resolution: try to get from container for any injectable service
+                    try {
+                        $service = $kernel->container()->get($name);
+                        $args[] = $service;
+                        continue;
+                    } catch (Throwable) {
+                        // If container resolution fails, fall through to default value or error below
                     }
                 }
 

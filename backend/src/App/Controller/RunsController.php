@@ -16,10 +16,9 @@ use PDOException;
 final class RunsController extends Controller
 {
     #[RequireAuth]
-    public function create(CreateRunInput $input, AuthUser $user): Response
+    public function create(CreateRunInput $input, AuthUser $user, RunStatsRepository $repo): Response
     {
         try {
-            $repo = new RunStatsRepository($this->kernel->pdo());
             $repo->recordRunWithAwards(
                 $user->id,
                 $input->timeSeconds,

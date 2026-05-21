@@ -11,13 +11,17 @@ final class Response
 {
     /** @var array<string, string> */
     private array $headers;
+    /** @var list<string> */
+    private array $cookies;
 
     public function __construct(
         private int $status,
         array $headers,
         private string $body,
+        array $cookies = [],
     ) {
         $this->headers = $headers;
+        $this->cookies = $cookies;
     }
 
     /** @return array<string, string> */
@@ -38,9 +42,22 @@ final class Response
 
     public function withHeader(string $name, string $value): self
     {
-        $next = new self($this->status, $this->headers, $this->body);
+        $next = new self($this->status, $this->headers, $this->body, $this->cookies);
         $next->headers[$name] = $value;
         return $next;
+    }
+
+    /** @param array{expires?:string|int|null,path?:string,secure?:bool,httpOnly?:bool,sameSite?:string,domain?:string} $options */
+    public function withCookie(string $name, string $value, array $options = []): self
+    {
+        $next = new self($this->status, $this->headers, $this->body, $this->cookies);
+        $next->cookies[] = self::buildCookieHeader($name, $value, $options);
+        return $next;
+    }
+
+    public function deleteCookie(string $name, string $path = '/'): self
+    {
+        return $this->withCookie($name, '', ['expires' => 1, 'path' => $path]);
     }
 
     public function send(): void
@@ -48,6 +65,9 @@ final class Response
         http_response_code($this->status);
         foreach ($this->headers as $k => $v) {
             header($k . ': ' . $v);
+        }
+        foreach ($this->cookies as $cookie) {
+            header('Set-Cookie: ' . $cookie, false);
         }
         echo $this->body;
     }
@@ -85,5 +105,35 @@ final class Response
     {
         $statusCode = $status instanceof HttpStatus ? $status->value : $status;
         return new self($statusCode, [], '');
+    }
+
+    /** @param array{expires?:string|int|null,path?:string,secure?:bool,httpOnly?:bool,sameSite?:string,domain?:string} $options */
+    private static function buildCookieHeader(string $name, string $value, array $options): string
+    {
+        $parts = [rawurlencode($name) . '=' . rawurlencode($value)];
+
+        if (array_key_exists('expires', $options) && $options['expires'] !== null) {
+            $expires = $options['expires'];
+            $parts[] = 'Expires=' . (is_int($expires) ? gmdate('D, d M Y H:i:s T', $expires) : $expires);
+        }
+
+        $parts[] = 'Path=' . ($options['path'] ?? '/');
+
+        if (!empty($options['domain'])) {
+            $parts[] = 'Domain=' . $options['domain'];
+        }
+        if (($options['secure'] ?? false) === true) {
+            $parts[] = 'Secure';
+        }
+        if (($options['httpOnly'] ?? false) === true) {
+            $parts[] = 'HttpOnly';
+        }
+
+        $sameSite = $options['sameSite'] ?? null;
+        if (is_string($sameSite) && $sameSite !== '') {
+            $parts[] = 'SameSite=' . $sameSite;
+        }
+
+        return implode('; ', $parts);
     }
 }

@@ -22,6 +22,9 @@ function map_endpoints(App $app): void
 
     $app->post('/auth/register', new ControllerAction(AuthController::class, 'register'));
     $app->post('/auth/login', new ControllerAction(AuthController::class, 'login'));
+    $app->get('/auth/csrf', new ControllerAction(AuthController::class, 'csrf'));
+    $app->get('/auth/session', new ControllerAction(AuthController::class, 'session'));
+    $app->post('/auth/refresh', new ControllerAction(AuthController::class, 'refresh'));
     $app->post('/auth/logout', new ControllerAction(AuthController::class, 'logout'));
 
     $app->get('/me', new ControllerAction(MeController::class, 'me'));
@@ -30,6 +33,7 @@ function map_endpoints(App $app): void
     $app->get('/admin/users', new ControllerAction(AdminController::class, 'users'));
     $app->get('/admin/saves', new ControllerAction(AdminController::class, 'saves'));
     $app->get('/admin/runs', new ControllerAction(AdminController::class, 'runs'));
+    $app->get('/admin/login-audit', new ControllerAction(AdminController::class, 'loginAudit'));
     $app->post('/admin/ban', new ControllerAction(AdminController::class, 'ban'));
 
     $app->get('/save', new ControllerAction(SaveController::class, 'get'));

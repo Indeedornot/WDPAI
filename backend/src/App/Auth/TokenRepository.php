@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Auth;
 
+use App\Container\Attributes\Injectable;
 use PDO;
+use App\Auth\AuthSession;
 
+#[Injectable]
 final class TokenRepository
 {
     private PDO $pdo;
@@ -51,10 +54,19 @@ final class TokenRepository
 
     public function findUserByToken(string $rawToken): ?AuthUser
     {
+        $session = $this->findSessionByToken($rawToken);
+        if ($session === null) {
+            return null;
+        }
+
+        return $session->user;
+    }
+
+    public function findSessionByToken(string $rawToken): ?AuthSession
+    {
         $hash = hash('sha256', $rawToken);
 
-        $sql = 'SELECT u.id, u.email, u.role '
-            . ', u.banned_at, u.banned_reason '
+        $sql = 'SELECT u.id, u.email, u.role, u.banned_at, u.banned_reason, t.expires_at '
             . 'FROM auth_tokens t '
             . 'JOIN users u ON u.id = t.user_id '
             . 'WHERE t.token_hash = :th '
@@ -69,12 +81,15 @@ final class TokenRepository
             return null;
         }
 
-        return new AuthUser(
-            (int)$row['id'],
-            (string)$row['email'],
-            (string)$row['role'],
-            $row['banned_at'] === null ? null : (string)$row['banned_at'],
-            $row['banned_reason'] === null ? null : (string)$row['banned_reason'],
+        return new AuthSession(
+            new AuthUser(
+                (int)$row['id'],
+                (string)$row['email'],
+                (string)$row['role'],
+                $row['banned_at'] === null ? null : (string)$row['banned_at'],
+                $row['banned_reason'] === null ? null : (string)$row['banned_reason'],
+            ),
+            $row['expires_at'] === null ? null : (string)$row['expires_at'],
         );
     }
 }

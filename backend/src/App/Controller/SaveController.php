@@ -16,9 +16,8 @@ use App\Save\PlayerSaveRepository;
 final class SaveController extends Controller
 {
     #[RequireAuth]
-    public function get(SlotQuery $query, AuthUser $user): Response
+    public function get(SlotQuery $query, AuthUser $user, PlayerSaveRepository $repo): Response
     {
-        $repo = new PlayerSaveRepository($this->kernel->pdo());
         $row = $repo->findByUserAndSlot($user->id, $query->slot);
         if ($row === null) {
             return Response::error(ApiErrorCode::NotFound, HttpStatus::NotFound);
@@ -33,17 +32,15 @@ final class SaveController extends Controller
     }
 
     #[RequireAuth]
-    public function upsert(UpsertSaveInput $input, AuthUser $user): Response
+    public function upsert(UpsertSaveInput $input, AuthUser $user, PlayerSaveRepository $repo): Response
     {
-        $repo = new PlayerSaveRepository($this->kernel->pdo());
         $repo->upsert($user->id, $input->slot, $input->snapshot, $input->version);
         return Response::ok();
     }
 
     #[RequireAuth]
-    public function delete(SlotQuery $query, AuthUser $user): Response
+    public function delete(SlotQuery $query, AuthUser $user, PlayerSaveRepository $repo): Response
     {
-        $repo = new PlayerSaveRepository($this->kernel->pdo());
         $repo->deleteByUserAndSlot($user->id, $query->slot);
         return Response::ok();
     }

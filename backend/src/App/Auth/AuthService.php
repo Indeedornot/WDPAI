@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Auth;
 
+use App\Container\Attributes\Injectable;
 use App\Routing\Request;
 use PDO;
 
+#[Injectable]
 final class AuthService
 {
     private TokenRepository $tokens;
@@ -18,17 +20,30 @@ final class AuthService
 
     public function authenticate(Request $req): ?AuthUser
     {
-        $auth = $req->headers['authorization'] ?? '';
-        if (!is_string($auth) || trim($auth) === '') {
-            return null;
-        }
-
-        $token = $this->parseBearerToken($auth);
+        $token = $this->rawTokenFromRequest($req);
         if ($token === null) {
             return null;
         }
 
         return $this->tokens->findUserByToken($token);
+    }
+
+    public function rawTokenFromRequest(Request $req): ?string
+    {
+        $auth = $req->headers['authorization'] ?? '';
+        if (is_string($auth) && trim($auth) !== '') {
+            $token = $this->parseBearerToken($auth);
+            if ($token !== null) {
+                return $token;
+            }
+        }
+
+        $cookieToken = $req->cookie('auth_token');
+        if (is_string($cookieToken) && trim($cookieToken) !== '') {
+            return trim($cookieToken);
+        }
+
+        return null;
     }
 
     public function parseBearerToken(string $authorizationHeader): ?string

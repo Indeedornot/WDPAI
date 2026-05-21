@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Run;
 
+use App\Container\Attributes\Injectable;
 use PDO;
 use PDOException;
 use Throwable;
 
+#[Injectable]
 final class RunStatsRepository
 {
     private PDO $pdo;
