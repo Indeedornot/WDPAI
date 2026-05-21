@@ -360,6 +360,7 @@ applyAccessibleMode(accessibleMode)
 
 const remoteStorage = new HttpSaveStorage({
   baseUrl: backendUrl,
+  credentials: 'include',
   headersProvider: () => auth.authHeaders(),
 })
 const saveStorage = new HybridSaveStorage(new LocalStorageSaveStorage(), remoteStorage, auth)
@@ -450,15 +451,24 @@ const menu = new PauseMenu({
     register: async (email, password) => {
       const user = await auth.register(email, password)
       announcer.announce(`Registered. Signed in as ${user.email}.`, 'polite')
+      return undefined
     },
     login: async (email, password) => {
       const user = await auth.login(email, password)
       announcer.announce(`Signed in as ${user.email}.`, 'polite')
+      return undefined
     },
     logout: async () => {
       await auth.logout()
       announcer.announce('Signed out.', 'polite')
     },
+    refreshSession: async () => {
+      const user = await auth.refreshSession()
+      announcer.announce(`Token refreshed for ${user.email}.`, 'polite')
+      return user
+    },
+    getSessionExpiresAt: () => auth.sessionExpiresAt,
+    isExpiringSoon: () => auth.isExpiringSoon(),
   },
   admin: {
     isAdmin: () => admin.isAdminUser(),
@@ -466,6 +476,7 @@ const menu = new PauseMenu({
     listUsers: () => admin.listUsers(),
     listSaves: (userId) => admin.listSaves(userId),
     listRuns: (userId) => admin.listRuns(userId),
+    listLoginAudit: () => admin.listLoginAudit(),
     setBan: (userId, banned, reason) => admin.setBan(userId, banned, reason),
   },
 })
@@ -506,6 +517,13 @@ const registerGate = new RegisterGate({
   },
 })
 registerGate.mount(app)
+
+auth.subscribe(() => {
+  menu.refresh()
+  registerGate.refresh()
+})
+
+void auth.bootstrapSession()
 
 welcome = new WelcomeScreen({
   title: 'Arcade Survival — Demo',

@@ -48,6 +48,10 @@ export class RegisterGate {
     parent.appendChild(this._overlay)
   }
 
+  refresh(): void {
+    this.render()
+  }
+
   open(): void {
     if (this._isOpen) return
     this._isOpen = true

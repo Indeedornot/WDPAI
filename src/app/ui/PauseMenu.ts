@@ -32,8 +32,11 @@ export type PauseMenuOptions = {
   auth?: {
     getUser: () => AuthUser | null
     isLoggedIn: () => boolean
+    getSessionExpiresAt: () => string | null
+    isExpiringSoon: () => boolean
     register: (email: string, password: string) => Promise<void>
     login: (email: string, password: string) => Promise<void>
+    refreshSession: () => Promise<AuthUser>
     logout: () => Promise<void>
   }
 
@@ -43,6 +46,7 @@ export type PauseMenuOptions = {
     listUsers: () => Promise<Array<{ id: number; email: string; role: string; createdAt: string; lastLoginAt: string | null; bannedAt: string | null; bannedReason: string | null }>>
     listSaves: (userId: number) => Promise<Array<{ slot: string; version: number; updatedAt: string }>>
     listRuns: (userId: number) => Promise<Array<{ createdAt: string; timeSeconds: number; level: number; xp: number; kills: number; shotsFired: number; shotsHit: number }>>
+    listLoginAudit: () => Promise<Array<{ id: string; email: string; ip: string | null; attempted_at: string; reason: string }>>
     setBan: (userId: number, banned: boolean, reason?: string) => Promise<void>
   }
 }
@@ -74,6 +78,7 @@ export class PauseMenu {
   private _adminUsers: Array<{ id: number; email: string; role: string; createdAt: string; lastLoginAt: string | null; bannedAt: string | null; bannedReason: string | null }> = []
   private _adminSaves: Array<{ slot: string; version: number; updatedAt: string }> = []
   private _adminRuns: Array<{ createdAt: string; timeSeconds: number; level: number; xp: number; kills: number; shotsFired: number; shotsHit: number }> = []
+  private _adminAudit: Array<{ id: string; email: string; ip: string | null; attempted_at: string; reason: string }> = []
   private _adminSelectedUserId: number | null = null
 
   readonly options: PauseMenuOptions
@@ -123,6 +128,10 @@ export class PauseMenu {
     parent.appendChild(this._root)
   }
 
+  refresh(): void {
+    this.render()
+  }
+
   open(): void {
     if (this._isOpen) return
     this._isOpen = true
@@ -140,6 +149,7 @@ export class PauseMenu {
     this._view = 'main'
     this._adminStatus = ''
     this._adminBusy = false
+    this._adminAudit = []
     this.options.onResume()
     this._overlay.classList.add('ui-hidden')
     this._untrap?.()
@@ -391,6 +401,23 @@ export class PauseMenu {
     }
     rows.push(uiSection(runsTitle, runRows))
 
+    const auditRows: HTMLElement[] = []
+    if (this._adminAudit.length === 0) {
+      auditRows.push(el('div', { className: 'ui-hint', text: 'No audit events loaded yet.' }))
+    } else {
+      for (const entry of this._adminAudit) {
+        const row = el('div', { className: 'ui-row' })
+        row.appendChild(el('div', { className: 'ui-row-label', text: entry.attempted_at }))
+        const right = el('div', { className: 'ui-row-value' })
+        right.appendChild(uiPill(entry.email))
+        right.appendChild(uiPill(entry.reason))
+        if (entry.ip) right.appendChild(uiPill(entry.ip))
+        row.appendChild(right)
+        auditRows.push(row)
+      }
+    }
+    rows.push(uiSection('Login audit', auditRows))
+
     if (this._adminStatus) {
       rows.push(el('div', { className: 'ui-hint', text: this._adminStatus }))
     }
@@ -456,6 +483,7 @@ export class PauseMenu {
 
     try {
       this._adminUsers = await admin.listUsers()
+      this._adminAudit = await admin.listLoginAudit()
       this._adminStatus = `Loaded ${this._adminUsers.length} user(s).`
     } catch (e) {
       this._adminStatus = `Failed to load users: ${e instanceof Error ? e.message : 'unknown_error'}`
@@ -532,6 +560,19 @@ export class PauseMenu {
       const right = el('div', { className: 'ui-row-value' })
       right.appendChild(uiPill(user.email))
       right.appendChild(uiPill(user.role))
+      const expiresAt = auth.getSessionExpiresAt()
+      if (expiresAt) {
+        right.appendChild(uiPill(`Expires ${new Date(expiresAt).toLocaleString()}`))
+      }
+      if (auth.isExpiringSoon()) {
+        right.appendChild(uiPill('Refresh recommended'))
+      }
+      right.appendChild(
+        uiSmallButton({
+          label: this._authBusy ? 'Working…' : 'Refresh token',
+          onClick: () => void this.handleRefreshSession(),
+        }),
+      )
       const logoutBtn = uiSmallButton({
         label: this._authBusy ? 'Working…' : 'Log out',
         onClick: () => void this.handleLogout(),
@@ -650,6 +691,25 @@ export class PauseMenu {
       this._authStatus = 'Signed out.'
     } catch (e) {
       this._authStatus = `Logout failed: ${e instanceof Error ? e.message : 'unknown_error'}`
+    } finally {
+      this._authBusy = false
+      this.render()
+    }
+  }
+
+  private async handleRefreshSession(): Promise<void> {
+    const auth = this.options.auth
+    if (!auth) return
+
+    this._authBusy = true
+    this._authStatus = ''
+    this.render()
+
+    try {
+      const user = await auth.refreshSession()
+      this._authStatus = `Token refreshed for ${user.email}.`
+    } catch (e) {
+      this._authStatus = `Refresh failed: ${e instanceof Error ? e.message : 'unknown_error'}`
     } finally {
       this._authBusy = false
       this.render()

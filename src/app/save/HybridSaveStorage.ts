@@ -22,7 +22,7 @@ export class HybridSaveStorage implements SaveStorage {
     try {
       return await this._remote.load(slot)
     } catch (e) {
-      if (isUnauthorized(e)) this._auth.clearLocal()
+      if (isUnauthorized(e)) this._auth.clearSession()
       return this._local.load(slot)
     }
   }
@@ -32,7 +32,7 @@ export class HybridSaveStorage implements SaveStorage {
     try {
       await this._remote.save(slot, data)
     } catch (e) {
-      if (isUnauthorized(e)) this._auth.clearLocal()
+      if (isUnauthorized(e)) this._auth.clearSession()
       await this._local.save(slot, data)
     }
   }
@@ -42,7 +42,7 @@ export class HybridSaveStorage implements SaveStorage {
     try {
       await this._remote.remove(slot)
     } catch (e) {
-      if (isUnauthorized(e)) this._auth.clearLocal()
+      if (isUnauthorized(e)) this._auth.clearSession()
       await this._local.remove(slot)
     }
   }
