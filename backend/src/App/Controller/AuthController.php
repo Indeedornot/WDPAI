@@ -39,7 +39,6 @@ final class AuthController extends Controller
         try {
             $user = $userRepo->createPlayer($input->email, $passwordHash);
         } catch (EmailAlreadyExistsException) {
-            // Do not reveal whether the email already exists — return a generic registration failure.
             return Response::error(ApiErrorCode::InvalidInput, HttpStatus::BadRequest, AuthConstants::MSG_REGISTRATION_FAILED);
         }
 
@@ -47,9 +46,7 @@ final class AuthController extends Controller
             throw new RuntimeException(AuthConstants::MSG_USER_CREATE_FAILED);
         }
 
-        $session = $this->issueSession((int)$user['id'], $user['email'], $user['role'], $tokenRepo);
-
-        return $session;
+        return $this->issueSession((int)$user['id'], $user['email'], $user['role'], $tokenRepo);
     }
 
     public function login(LoginInput $input, UserRepository $userRepo, LoginAuditRepository $audit, TokenRepository $tokenRepo): Response
@@ -75,7 +72,6 @@ final class AuthController extends Controller
         }
 
         $userRepo->markLogin((int)$row['id']);
-
         $audit->logSuccess($input->email);
 
         return $this->issueSession((int)$row['id'], (string)$row['email'], (string)$row['role'], $tokenRepo);
@@ -89,9 +85,8 @@ final class AuthController extends Controller
     }
 
     #[RequireAuth(allowBanned: true)]
-    public function session(Request $req, AuthUser $user, TokenRepository $tokenRepo): Response
+    public function session(Request $req, AuthUser $user, TokenRepository $tokenRepo, AuthService $auth): Response
     {
-        $auth = new AuthService($this->kernel->pdo());
         $rawToken = $auth->rawTokenFromRequest($req);
         if ($rawToken === null) {
             return Response::error(ApiErrorCode::Unauthorized, HttpStatus::Unauthorized, AuthConstants::MSG_MISSING_INVALID_TOKEN);
@@ -106,13 +101,12 @@ final class AuthController extends Controller
     }
 
     #[RequireAuth(allowBanned: true)]
-    public function refresh(Request $req, AuthUser $user, TokenRepository $tokenRepo): Response
+    public function refresh(Request $req, AuthUser $user, TokenRepository $tokenRepo, AuthService $auth): Response
     {
         if ($user->isBanned()) {
             return Response::error(ApiErrorCode::Banned, HttpStatus::Forbidden, AuthConstants::MSG_ACCOUNT_BANNED);
         }
 
-        $auth = new AuthService($this->kernel->pdo());
         $rawToken = $auth->rawTokenFromRequest($req);
         if ($rawToken === null) {
             return Response::error(ApiErrorCode::Unauthorized, HttpStatus::Unauthorized, AuthConstants::MSG_MISSING_INVALID_TOKEN);
@@ -124,9 +118,8 @@ final class AuthController extends Controller
     }
 
     #[RequireAuth(allowBanned: true)]
-    public function logout(Request $req, AuthUser $user, TokenRepository $tokenRepo): Response
+    public function logout(Request $req, AuthUser $user, TokenRepository $tokenRepo, AuthService $auth): Response
     {
-        $auth = new AuthService($this->kernel->pdo());
         $token = $auth->rawTokenFromRequest($req);
         if ($token === null) {
             return Response::error(ApiErrorCode::Unauthorized, HttpStatus::Unauthorized);
@@ -137,7 +130,6 @@ final class AuthController extends Controller
         return Response::ok()->deleteCookie(AuthConstants::AUTH_TOKEN_COOKIE_NAME);
     }
 
-    /** @return Response */
     private function issueSession(int $userId, string $email, string $role, TokenRepository $tokenRepo): Response
     {
         $expiresAt = (new DateTimeImmutable(AuthConstants::TOKEN_TTL))->format(DateTimeInterface::ATOM);
@@ -147,7 +139,6 @@ final class AuthController extends Controller
             ->withCookie(AuthConstants::AUTH_TOKEN_COOKIE_NAME, $rawToken, $this->authCookieOptions($expiresAt));
     }
 
-    /** @return array{path:string,secure:bool,httpOnly:bool,sameSite:string,expires?:string} */
     private function authCookieOptions(string $expiresAt): array
     {
         return (new CookieOptions(
@@ -159,7 +150,6 @@ final class AuthController extends Controller
         ))->toArray();
     }
 
-    /** @return array{path:string,secure:bool,httpOnly:bool,sameSite:string} */
     private function csrfCookieOptions(Request $req): array
     {
         return (new CookieOptions(

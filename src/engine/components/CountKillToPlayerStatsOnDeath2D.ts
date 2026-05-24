@@ -1,40 +1,40 @@
-import { Component } from '../core/Component'
-import { Health } from './Health'
-import { RunStats } from './RunStats'
+import { Component } from '../core/Component';
+import { Health } from './Health';
+import { RunStats } from './RunStats';
 
 export type CountKillToPlayerStatsOnDeath2DOptions = {
-  playerTag?: string
-}
+  playerTag?: string;
+};
 
 export class CountKillToPlayerStatsOnDeath2D extends Component {
-  playerTag: string
+  playerTag: string;
 
-  private _done = false
+  private _done = false;
 
   constructor(options: CountKillToPlayerStatsOnDeath2DOptions = {}) {
-    super()
-    this.playerTag = options.playerTag ?? 'Player'
+    super();
+    this.playerTag = options.playerTag ?? 'Player';
   }
 
   update(_dt: number): void {
-    if (this._done) return
+    if (this._done) return;
 
-    const go = this.gameObject
-    const scene = this.scene
-    if (!go || !scene) return
+    const go = this.gameObject;
+    const scene = this.scene;
+    if (!go || !scene) return;
 
-    const health = go.getComponent(Health)
-    if (!health || !health.isDead) return
+    const health = go.getComponent(Health);
+    if (!health || !health.isDead) return;
 
-    const player = scene.getGameObjects().find((o) => o.active && o.tag === this.playerTag) ?? null
+    const player = scene.getGameObjects().find((o) => o.active && o.tag === this.playerTag) ?? null;
     if (!player) {
-      this._done = true
-      return
+      this._done = true;
+      return;
     }
 
-    const stats = player.getComponent(RunStats)
-    if (stats) stats.kills += 1
+    const stats = player.getComponent(RunStats);
+    if (stats) stats.kills += 1;
 
-    this._done = true
+    this._done = true;
   }
 }

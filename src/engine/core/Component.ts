@@ -1,16 +1,16 @@
-import type { GameObject } from './GameObject'
-import type { Scene } from './Scene'
-import type { Camera2D } from '../render/Camera2D'
-import type { Collision2D } from '../physics/Collision2D'
+import type { GameObject } from './GameObject';
+import type { Scene } from './Scene';
+import type { Camera2D } from '../render/Camera2D';
+import type { Collision2D } from '../physics/Collision2D';
 
 export abstract class Component {
-  gameObject: GameObject | null = null
-  enabled = true
+  gameObject: GameObject | null = null;
+  enabled = true;
 
-  private _started = false
+  private _started = false;
 
   get scene(): Scene | null {
-    return this.gameObject?.scene ?? null
+    return this.gameObject?.scene ?? null;
   }
 
   /** Called when the component becomes part of a Scene (not in constructor). */
@@ -36,18 +36,18 @@ export abstract class Component {
 
   /** @internal */
   __internalOnAdded(scene: Scene): void {
-    this.onAdded(scene)
+    this.onAdded(scene);
   }
 
   /** @internal */
   __internalOnRemoved(scene: Scene): void {
-    this.onRemoved(scene)
+    this.onRemoved(scene);
   }
 
   /** @internal */
   __internalTryStart(): void {
-    if (this._started) return
-    this._started = true
-    this.start()
+    if (this._started) return;
+    this._started = true;
+    this.start();
   }
 }

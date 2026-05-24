@@ -1,93 +1,102 @@
-import { uiBody, uiButton, uiOverlay, uiPanel, uiSubtitle, uiTitle, focusFirstDescendant, trapFocus } from './components/UiKit'
+import {
+  uiBody,
+  uiButton,
+  uiOverlay,
+  uiPanel,
+  uiSubtitle,
+  uiTitle,
+  focusFirstDescendant,
+  trapFocus,
+} from './components/UiKit';
 
 export type WelcomeScreenOptions = {
-  title?: string
-  subtitle?: string
+  title?: string;
+  subtitle?: string;
   /** Return false to keep the welcome dialog open. */
-  onStart: () => void | boolean
-}
+  onStart: () => void | boolean;
+};
 
 export class WelcomeScreen {
-  private readonly _overlay: HTMLDivElement
-  private readonly _panel: HTMLDivElement
-  private _untrap: (() => void) | null = null
-  private _isOpen = false
-  private _unblockKeys: (() => void) | null = null
+  private readonly _overlay: HTMLDivElement;
+  private readonly _panel: HTMLDivElement;
+  private _untrap: (() => void) | null = null;
+  private _isOpen = false;
+  private _unblockKeys: (() => void) | null = null;
 
-  readonly options: WelcomeScreenOptions
+  readonly options: WelcomeScreenOptions;
 
   constructor(options: WelcomeScreenOptions) {
-    this.options = options
+    this.options = options;
 
     this._overlay = uiOverlay(() => {
       // Don’t close on background click; welcome is an explicit action.
-    })
+    });
 
-    this._panel = uiPanel()
-    this._panel.classList.add('ui-panel--welcome')
-    this._panel.setAttribute('role', 'dialog')
-    this._panel.setAttribute('aria-modal', 'true')
+    this._panel = uiPanel();
+    this._panel.classList.add('ui-panel--welcome');
+    this._panel.setAttribute('role', 'dialog');
+    this._panel.setAttribute('aria-modal', 'true');
 
-    this._overlay.appendChild(this._panel)
-    this.render()
+    this._overlay.appendChild(this._panel);
+    this.render();
   }
 
   mount(parent: HTMLElement): void {
-    parent.appendChild(this._overlay)
+    parent.appendChild(this._overlay);
   }
 
   open(): void {
-    if (this._isOpen) return
-    this._isOpen = true
-    this._overlay.classList.remove('ui-hidden')
+    if (this._isOpen) return;
+    this._isOpen = true;
+    this._overlay.classList.remove('ui-hidden');
 
-    this._untrap = trapFocus(this._panel, () => this._isOpen)
+    this._untrap = trapFocus(this._panel, () => this._isOpen);
 
     const blockKeys = (e: KeyboardEvent) => {
-      if (!this._isOpen) return
+      if (!this._isOpen) return;
       if (e.code === 'Escape') {
         // Avoid opening the pause hub behind the welcome dialog.
-        e.preventDefault()
-        e.stopImmediatePropagation()
+        e.preventDefault();
+        e.stopImmediatePropagation();
       }
-    }
-    window.addEventListener('keydown', blockKeys, { capture: true })
-    this._unblockKeys = () => window.removeEventListener('keydown', blockKeys, { capture: true })
+    };
+    window.addEventListener('keydown', blockKeys, { capture: true });
+    this._unblockKeys = () => window.removeEventListener('keydown', blockKeys, { capture: true });
 
-    focusFirstDescendant(this._panel)
+    focusFirstDescendant(this._panel);
   }
 
   close(): void {
-    if (!this._isOpen) return
-    this._isOpen = false
-    this._overlay.classList.add('ui-hidden')
-    this._untrap?.()
-    this._untrap = null
+    if (!this._isOpen) return;
+    this._isOpen = false;
+    this._overlay.classList.add('ui-hidden');
+    this._untrap?.();
+    this._untrap = null;
 
-    this._unblockKeys?.()
-    this._unblockKeys = null
+    this._unblockKeys?.();
+    this._unblockKeys = null;
   }
 
   private render(): void {
-    this._panel.innerHTML = ''
+    this._panel.innerHTML = '';
 
-    const titleText = this.options.title ?? 'Arcade Survival — Demo'
+    const titleText = this.options.title ?? 'Arcade Survival — Demo';
     const subtitleText =
       this.options.subtitle ??
-      'A small top-down survival shooter. Survive, level up, and keep your accuracy high.'
+      'A small top-down survival shooter. Survive, level up, and keep your accuracy high.';
 
-    const h = uiTitle(titleText)
-    h.id = 'welcome-title'
-    this._panel.setAttribute('aria-labelledby', h.id)
+    const h = uiTitle(titleText);
+    h.id = 'welcome-title';
+    this._panel.setAttribute('aria-labelledby', h.id);
 
-    const sub = uiSubtitle(subtitleText)
-    sub.id = 'welcome-sub'
-    this._panel.setAttribute('aria-describedby', sub.id)
+    const sub = uiSubtitle(subtitleText);
+    sub.id = 'welcome-sub';
+    this._panel.setAttribute('aria-describedby', sub.id);
 
-    const body = uiBody()
+    const body = uiBody();
 
-    const tutorial = document.createElement('div')
-    tutorial.className = 'ui-tutorial'
+    const tutorial = document.createElement('div');
+    tutorial.className = 'ui-tutorial';
     tutorial.innerHTML = `
       <div class="ui-tutorial-title">Quick start</div>
       <ol class="ui-tutorial-list">
@@ -99,33 +108,33 @@ export class WelcomeScreen {
         Why focus? Browsers route keyboard events to the element that has focus. The game canvas is focusable so you can
         explicitly “enter” gameplay with the keyboard and screen readers can announce the canvas region.
       </div>
-    `.trim()
+    `.trim();
 
     const startBtn = uiButton({
       label: 'Start',
       title: 'Start the game',
       onClick: () => {
-        const res = this.options.onStart()
-        if (res === false) return
-        this.close()
+        const res = this.options.onStart();
+        if (res === false) return;
+        this.close();
       },
-    })
-    body.appendChild(startBtn)
+    });
+    body.appendChild(startBtn);
 
     body.appendChild(
       uiButton({
         label: 'Focus Game',
         title: 'Move keyboard focus to the game canvas (keyboard controls)',
         onClick: () => {
-          const canvas = document.querySelector<HTMLCanvasElement>('#game')
-          canvas?.focus()
+          const canvas = document.querySelector<HTMLCanvasElement>('#game');
+          canvas?.focus();
         },
       }),
-    )
+    );
 
-    this._panel.appendChild(h)
-    this._panel.appendChild(sub)
-    this._panel.appendChild(tutorial)
-    this._panel.appendChild(body)
+    this._panel.appendChild(h);
+    this._panel.appendChild(sub);
+    this._panel.appendChild(tutorial);
+    this._panel.appendChild(body);
   }
 }
