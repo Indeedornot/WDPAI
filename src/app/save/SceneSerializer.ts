@@ -9,25 +9,33 @@ import {
   type LoadContext,
 } from './ComponentSerializers';
 
-function vec2ToSnapshot(v: Vec2): { x: number; y: number } {
+function vec2ToSnapshot(v: Vec2): { x: number; y: number } 
+{
   return { x: v.x, y: v.y };
 }
 
-function snapshotToVec2(v: any, fallback: Vec2): Vec2 {
-  if (!v || typeof v !== 'object') return fallback;
+function snapshotToVec2(v: any, fallback: Vec2): Vec2 
+{
+  if (!v || typeof v !== 'object') 
+  {
+    return fallback;
+  }
   const x = typeof v.x === 'number' ? v.x : fallback.x;
   const y = typeof v.y === 'number' ? v.y : fallback.y;
   return new Vec2(x, y);
 }
 
-export class SceneSerializer {
+export class SceneSerializer 
+{
   readonly serializers: ComponentSerializer<any>[];
 
-  constructor(serializers: ComponentSerializer<any>[] = defaultComponentSerializers()) {
+  constructor(serializers: ComponentSerializer<any>[] = defaultComponentSerializers()) 
+  {
     this.serializers = serializers;
   }
 
-  serialize(scene: Scene): SceneSnapshotV1 {
+  serialize(scene: Scene): SceneSnapshotV1 
+  {
     const objects = scene.getGameObjects().map((go) => this.serializeGameObject(go));
 
     return {
@@ -41,14 +49,16 @@ export class SceneSerializer {
     };
   }
 
-  restore(scene: Scene, snapshot: SceneSnapshotV1): void {
+  restore(scene: Scene, snapshot: SceneSnapshotV1): void 
+  {
     // Clear current world.
     scene.clearImmediate();
 
     // First pass: create objects with transforms.
     const byId = new Map<string, GameObject>();
 
-    for (const o of snapshot.objects) {
+    for (const o of snapshot.objects) 
+    {
       const go = new GameObject(o.name);
       // Force id to match snapshot (not truly immutable at runtime).
       (go as any).id = o.id;
@@ -73,16 +83,25 @@ export class SceneSerializer {
       serializer: ComponentSerializer<any>;
       data: unknown;
     }> = [];
-    for (const o of snapshot.objects) {
+    for (const o of snapshot.objects) 
+    {
       const go = byId.get(o.id);
-      if (!go) continue;
+      if (!go) 
+      {
+        continue;
+      }
 
-      for (const c of o.components) {
+      for (const c of o.components) 
+      {
         const { component: comp, serializer } = this.deserializeComponent(c);
-        if (!comp) continue;
+        if (!comp) 
+        {
+          continue;
+        }
         go.addComponent(comp);
 
-        if (serializer?.link) {
+        if (serializer?.link) 
+        {
           linkQueue.push({ component: comp, serializer, data: c.data });
         }
       }
@@ -92,7 +111,8 @@ export class SceneSerializer {
     const ctx: LoadContext = {
       getObjectById: (id: string) => byId.get(id) ?? null,
     };
-    for (const item of linkQueue) {
+    for (const item of linkQueue) 
+    {
       item.serializer.link?.(item.component, item.data, ctx);
     }
 
@@ -104,12 +124,17 @@ export class SceneSerializer {
     scene.flushQueues();
   }
 
-  private serializeGameObject(go: GameObject): GameObjectSnapshot {
+  private serializeGameObject(go: GameObject): GameObjectSnapshot 
+  {
     const components: ComponentSnapshot[] = [];
 
-    for (const c of go.getComponents()) {
+    for (const c of go.getComponents()) 
+    {
       const s = this.serializeComponent(c);
-      if (s) components.push(s);
+      if (s) 
+      {
+        components.push(s);
+      }
     }
 
     return {
@@ -126,9 +151,14 @@ export class SceneSerializer {
     };
   }
 
-  private serializeComponent(component: Component): ComponentSnapshot | null {
-    for (const s of this.serializers) {
-      if (!s.supports(component)) continue;
+  private serializeComponent(component: Component): ComponentSnapshot | null 
+  {
+    for (const s of this.serializers) 
+    {
+      if (!s.supports(component)) 
+      {
+        continue;
+      }
       return { type: s.type, enabled: component.enabled, data: s.serialize(component) };
     }
     return null;
@@ -137,9 +167,13 @@ export class SceneSerializer {
   private deserializeComponent(snapshot: ComponentSnapshot): {
     component: Component | null;
     serializer: ComponentSerializer<any> | null;
-  } {
+  } 
+  {
     const serializer = this.serializers.find((s) => s.type === snapshot.type);
-    if (!serializer) return { component: null, serializer: null };
+    if (!serializer) 
+    {
+      return { component: null, serializer: null };
+    }
     const c = serializer.deserialize(snapshot.data);
     c.enabled = snapshot.enabled;
     return { component: c, serializer };

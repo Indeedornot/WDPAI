@@ -14,7 +14,8 @@ type EntitySnapshot = {
   distanceToPlayer?: number;
 };
 
-export class AccessibleOverlay {
+export class AccessibleOverlay 
+{
   private readonly _root: HTMLDivElement;
   private readonly _panel: HTMLDivElement;
   private readonly _title: HTMLDivElement;
@@ -27,7 +28,8 @@ export class AccessibleOverlay {
   readonly scene: Scene;
   readonly options: AccessibleOverlayOptions;
 
-  constructor(scene: Scene, options: AccessibleOverlayOptions) {
+  constructor(scene: Scene, options: AccessibleOverlayOptions) 
+  {
     this.scene = scene;
     this.options = options;
 
@@ -55,40 +57,58 @@ export class AccessibleOverlay {
     this._root.appendChild(this._panel);
   }
 
-  mount(parent: HTMLElement): void {
+  mount(parent: HTMLElement): void 
+  {
     parent.appendChild(this._root);
   }
 
-  setEnabled(enabled: boolean): void {
-    if (this._enabled === enabled) return;
+  setEnabled(enabled: boolean): void 
+  {
+    if (this._enabled === enabled) 
+    {
+      return;
+    }
     this._enabled = enabled;
 
-    if (enabled) {
+    if (enabled) 
+    {
       this._root.classList.remove('ui-hidden');
       this.start();
-    } else {
+    }
+    else 
+    {
       this._root.classList.add('ui-hidden');
       this.stop();
     }
   }
 
-  get enabled(): boolean {
+  get enabled(): boolean 
+  {
     return this._enabled;
   }
 
-  private start(): void {
-    if (this._timer != null) return;
+  private start(): void 
+  {
+    if (this._timer != null) 
+    {
+      return;
+    }
     this.render();
     this._timer = window.setInterval(() => this.render(), 350);
   }
 
-  private stop(): void {
-    if (this._timer == null) return;
+  private stop(): void 
+  {
+    if (this._timer == null) 
+    {
+      return;
+    }
     window.clearInterval(this._timer);
     this._timer = null;
   }
 
-  private render(): void {
+  private render(): void 
+  {
     const objects = this.scene.getGameObjects();
 
     const player = objects.find((o) => o.tag === 'Player');
@@ -96,8 +116,12 @@ export class AccessibleOverlay {
 
     const rows: EntitySnapshot[] = [];
 
-    for (const o of objects) {
-      if (!o.active) continue;
+    for (const o of objects) 
+    {
+      if (!o.active) 
+      {
+        continue;
+      }
 
       const h = o.getComponent(Health);
       const pos = o.transform.position;
@@ -108,9 +132,13 @@ export class AccessibleOverlay {
         position: { x: pos.x, y: pos.y },
       };
 
-      if (h) row.hp = { current: h.current, max: h.max };
+      if (h) 
+      {
+        row.hp = { current: h.current, max: h.max };
+      }
 
-      if (o !== player) {
+      if (o !== player) 
+      {
         const dx = pos.x - playerPos.x;
         const dy = pos.y - playerPos.y;
         row.distanceToPlayer = Math.sqrt(dx * dx + dy * dy);
@@ -132,7 +160,8 @@ export class AccessibleOverlay {
     const top = [playerRow, ...enemies.slice(0, 5)].filter(Boolean) as EntitySnapshot[];
 
     this._list.innerHTML = '';
-    for (const r of top) {
+    for (const r of top) 
+    {
       const li = document.createElement('li');
       const hp = r.hp ? `HP ${Math.round(r.hp.current)}/${Math.round(r.hp.max)}` : '';
       const dist =

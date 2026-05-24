@@ -12,7 +12,8 @@ export type AccountSectionAuth = {
   logout: () => Promise<void>;
 };
 
-export class AccountSection {
+export class AccountSection 
+{
   private readonly _auth: AccountSectionAuth;
   private readonly _onNeedRender: () => void;
   private _email = '';
@@ -20,20 +21,24 @@ export class AccountSection {
   private _status = '';
   private _busy = false;
 
-  constructor(auth: AccountSectionAuth, onNeedRender: () => void) {
+  constructor(auth: AccountSectionAuth, onNeedRender: () => void) 
+  {
     this._auth = auth;
     this._onNeedRender = onNeedRender;
   }
 
-  get isBusy(): boolean {
+  get isBusy(): boolean 
+  {
     return this._busy;
   }
 
-  render(): HTMLDivElement {
+  render(): HTMLDivElement 
+  {
     const rows: HTMLElement[] = [];
     const user = this._auth.getUser();
 
-    if (this._auth.isLoggedIn() && user) {
+    if (this._auth.isLoggedIn() && user) 
+    {
       const expiresAt = this._auth.getSessionExpiresAt();
 
       const refreshBtn = uiSmallButton({
@@ -57,13 +62,16 @@ export class AccountSection {
         logoutBtn,
       ];
       rows.push(uiRow('Signed in', ...pills));
-    } else {
+    }
+    else 
+    {
       rows.push(
         uiInputRow(
           'Email',
           'email',
           this._email,
-          (v) => {
+          (v) => 
+          {
             this._email = v;
           },
           'email',
@@ -74,7 +82,8 @@ export class AccountSection {
           'Password',
           'password',
           this._password,
-          (v) => {
+          (v) => 
+          {
             this._password = v;
           },
           'current-password',
@@ -96,54 +105,72 @@ export class AccountSection {
       rows.push(uiRow('Actions', loginBtn, regBtn));
     }
 
-    if (this._status) rows.push(uiHint(this._status));
+    if (this._status) 
+    {
+      rows.push(uiHint(this._status));
+    }
 
     return uiSection('Account', rows);
   }
 
-  async triggerLogout(): Promise<void> {
+  async triggerLogout(): Promise<void> 
+  {
     return this._handleLogout();
   }
 
-  private async _runBusy(errorLabel: string, fn: () => Promise<void>): Promise<void> {
+  private async _runBusy(errorLabel: string, fn: () => Promise<void>): Promise<void> 
+  {
     this._busy = true;
     this._status = '';
     this._onNeedRender();
-    try {
+    try 
+    {
       await fn();
-    } catch (e) {
+    }
+    catch (e) 
+    {
       this._status = `${errorLabel}: ${e instanceof Error ? e.message : 'unknown_error'}`;
-    } finally {
+    }
+    finally 
+    {
       this._busy = false;
       this._onNeedRender();
     }
   }
 
-  private async _handleRegister(): Promise<void> {
-    await this._runBusy('Register failed', async () => {
+  private async _handleRegister(): Promise<void> 
+  {
+    await this._runBusy('Register failed', async () => 
+    {
       await this._auth.register(this._email.trim(), this._password);
       this._password = '';
       this._status = 'Registered and signed in.';
     });
   }
 
-  private async _handleLogin(): Promise<void> {
-    await this._runBusy('Login failed', async () => {
+  private async _handleLogin(): Promise<void> 
+  {
+    await this._runBusy('Login failed', async () => 
+    {
       await this._auth.login(this._email.trim(), this._password);
       this._password = '';
       this._status = 'Signed in.';
     });
   }
 
-  private async _handleLogout(): Promise<void> {
-    await this._runBusy('Logout failed', async () => {
+  private async _handleLogout(): Promise<void> 
+  {
+    await this._runBusy('Logout failed', async () => 
+    {
       await this._auth.logout();
       this._status = 'Signed out.';
     });
   }
 
-  private async _handleRefreshSession(): Promise<void> {
-    await this._runBusy('Refresh failed', async () => {
+  private async _handleRefreshSession(): Promise<void> 
+  {
+    await this._runBusy('Refresh failed', async () => 
+    {
       const user = await this._auth.refreshSession();
       this._status = `Token refreshed for ${user.email}.`;
     });

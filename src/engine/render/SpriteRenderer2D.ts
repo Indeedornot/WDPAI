@@ -20,7 +20,8 @@ export type SpriteRenderer2DOptions = {
   labelColor?: string;
 };
 
-export class SpriteRenderer2D extends Component {
+export class SpriteRenderer2D extends Component 
+{
   size: Vec2;
   fillColor: string;
   strokeColor: string;
@@ -29,7 +30,8 @@ export class SpriteRenderer2D extends Component {
   label: string;
   labelColor: string;
 
-  constructor(options: SpriteRenderer2DOptions = {}) {
+  constructor(options: SpriteRenderer2DOptions = {}) 
+  {
     super();
     this.size = options.size ?? new Vec2(64, 64);
     this.fillColor = options.fillColor ?? options.color ?? '#7dd3fc';
@@ -40,9 +42,13 @@ export class SpriteRenderer2D extends Component {
     this.labelColor = options.labelColor ?? 'rgba(0,0,0,0.86)';
   }
 
-  override render(ctx: CanvasRenderingContext2D, camera: Camera2D): void {
+  override render(ctx: CanvasRenderingContext2D, camera: Camera2D): void 
+  {
     const go = this.gameObject;
-    if (!go) return;
+    if (!go) 
+    {
+      return;
+    }
 
     const pos = camera.worldToScreen(go.transform.position);
     const w = camera.sizeToScreen(this.size.x * go.transform.scale.x);
@@ -56,18 +62,22 @@ export class SpriteRenderer2D extends Component {
 
     ctx.fillStyle = this.fillColor;
 
-    if (this.shape === 'circle') {
+    if (this.shape === 'circle') 
+    {
       const r = Math.min(w, h) / 2;
       ctx.beginPath();
       ctx.arc(0, 0, r, 0, Math.PI * 2);
       ctx.closePath();
       ctx.fill();
-      if (this.strokeWidth > 0) {
+      if (this.strokeWidth > 0) 
+      {
         ctx.strokeStyle = this.strokeColor;
         ctx.lineWidth = this.strokeWidth;
         ctx.stroke();
       }
-    } else if (this.shape === 'diamond') {
+    }
+    else if (this.shape === 'diamond') 
+    {
       ctx.beginPath();
       ctx.moveTo(0, -h / 2);
       ctx.lineTo(w / 2, 0);
@@ -75,22 +85,27 @@ export class SpriteRenderer2D extends Component {
       ctx.lineTo(-w / 2, 0);
       ctx.closePath();
       ctx.fill();
-      if (this.strokeWidth > 0) {
+      if (this.strokeWidth > 0) 
+      {
         ctx.strokeStyle = this.strokeColor;
         ctx.lineWidth = this.strokeWidth;
         ctx.stroke();
       }
-    } else {
+    }
+    else 
+    {
       // rect
       ctx.fillRect(-w / 2, -h / 2, w, h);
-      if (this.strokeWidth > 0) {
+      if (this.strokeWidth > 0) 
+      {
         ctx.strokeStyle = this.strokeColor;
         ctx.lineWidth = this.strokeWidth;
         ctx.strokeRect(-w / 2, -h / 2, w, h);
       }
     }
 
-    if (this.label) {
+    if (this.label) 
+    {
       const fontPx = Math.max(10, Math.floor(Math.min(w, h) * 0.35));
       ctx.fillStyle = this.labelColor;
       ctx.font = `700 ${fontPx}px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif`;

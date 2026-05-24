@@ -12,7 +12,8 @@ export type ChasePlayer2DOptions = {
   reacquireSeconds?: number;
 };
 
-export class ChasePlayer2D extends Component {
+export class ChasePlayer2D extends Component 
+{
   speed: number;
   targetTag: string;
   stopDistance: number;
@@ -21,7 +22,8 @@ export class ChasePlayer2D extends Component {
   private _target: GameObject | null = null;
   private _reacquireTimer = 0;
 
-  constructor(options: ChasePlayer2DOptions = {}) {
+  constructor(options: ChasePlayer2DOptions = {}) 
+  {
     super();
     this.speed = options.speed ?? 160;
     this.targetTag = options.targetTag ?? 'Player';
@@ -29,16 +31,24 @@ export class ChasePlayer2D extends Component {
     this.reacquireSeconds = options.reacquireSeconds ?? 0.25;
   }
 
-  update(dt: number): void {
+  update(dt: number): void 
+  {
     const go = this.gameObject;
     const scene = this.scene;
-    if (!go || !scene) return;
+    if (!go || !scene) 
+    {
+      return;
+    }
 
     const mover = go.getComponent(Mover2D);
-    if (!mover) return;
+    if (!mover) 
+    {
+      return;
+    }
 
     const target = this.getTarget(dt);
-    if (!target) {
+    if (!target) 
+    {
       mover.velocity.set(0, 0);
       return;
     }
@@ -51,13 +61,15 @@ export class ChasePlayer2D extends Component {
 
     const distSq = dx * dx + dy * dy;
     const stopDistSq = this.stopDistance * this.stopDistance;
-    if (distSq <= stopDistSq) {
+    if (distSq <= stopDistSq) 
+    {
       mover.velocity.set(0, 0);
       return;
     }
 
     const dist = Math.sqrt(distSq);
-    if (dist <= 1e-6) {
+    if (dist <= 1e-6) 
+    {
       mover.velocity.set(0, 0);
       return;
     }
@@ -66,28 +78,43 @@ export class ChasePlayer2D extends Component {
     mover.velocity.set(dx * inv * this.speed, dy * inv * this.speed);
   }
 
-  private getTarget(dt: number): GameObject | null {
+  private getTarget(dt: number): GameObject | null 
+  {
     const scene = this.scene;
-    if (!scene) return null;
+    if (!scene) 
+    {
+      return null;
+    }
 
     if (
       this._target &&
       this._target.scene === scene &&
       this._target.active &&
       this._target.tag === this.targetTag
-    ) {
+    ) 
+    {
       return this._target;
     }
 
     this._reacquireTimer -= dt;
-    if (this._reacquireTimer > 0) return this._target;
+    if (this._reacquireTimer > 0) 
+    {
+      return this._target;
+    }
 
     this._reacquireTimer = this.reacquireSeconds;
 
     const objects = scene.getGameObjects();
-    for (const o of objects) {
-      if (!o.active) continue;
-      if (o.tag !== this.targetTag) continue;
+    for (const o of objects) 
+    {
+      if (!o.active) 
+      {
+        continue;
+      }
+      if (o.tag !== this.targetTag) 
+      {
+        continue;
+      }
       this._target = o;
       return o;
     }

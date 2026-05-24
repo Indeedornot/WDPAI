@@ -10,7 +10,8 @@ export type DebugGridRenderer2DOptions = {
   extent?: number;
 };
 
-export class DebugGridRenderer2D extends Component {
+export class DebugGridRenderer2D extends Component 
+{
   step: number;
   color: string;
   axisColor: string;
@@ -18,7 +19,8 @@ export class DebugGridRenderer2D extends Component {
   lineWidth: number;
   extent: number;
 
-  constructor(options: DebugGridRenderer2DOptions = {}) {
+  constructor(options: DebugGridRenderer2DOptions = {}) 
+  {
     super();
     this.step = options.step ?? 50;
     this.color = options.color ?? 'rgba(255,255,255,0.07)';
@@ -28,7 +30,8 @@ export class DebugGridRenderer2D extends Component {
     this.extent = options.extent ?? 2000;
   }
 
-  override render(ctx: CanvasRenderingContext2D, camera: Camera2D): void {
+  override render(ctx: CanvasRenderingContext2D, camera: Camera2D): void 
+  {
     // Grid is centered around camera, rendered in screen space.
     const origin = camera.worldToScreen(camera.position);
 
@@ -39,7 +42,8 @@ export class DebugGridRenderer2D extends Component {
     ctx.lineWidth = this.lineWidth;
 
     const step = this.step * camera.zoom;
-    if (step <= 2) {
+    if (step <= 2) 
+    {
       ctx.restore();
       return;
     }
@@ -48,7 +52,8 @@ export class DebugGridRenderer2D extends Component {
     const lines = Math.ceil(extent / step);
 
     ctx.beginPath();
-    for (let i = -lines; i <= lines; i++) {
+    for (let i = -lines; i <= lines; i++) 
+    {
       const x = i * step;
       ctx.moveTo(x, -extent);
       ctx.lineTo(x, extent);

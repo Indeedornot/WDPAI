@@ -7,13 +7,15 @@ export type WrapAroundBounds2DOptions = {
   maxY: number;
 };
 
-export class WrapAroundBounds2D extends Component {
+export class WrapAroundBounds2D extends Component 
+{
   minX: number;
   maxX: number;
   minY: number;
   maxY: number;
 
-  constructor(options: WrapAroundBounds2DOptions) {
+  constructor(options: WrapAroundBounds2DOptions) 
+  {
     super();
     this.minX = options.minX;
     this.maxX = options.maxX;
@@ -21,13 +23,20 @@ export class WrapAroundBounds2D extends Component {
     this.maxY = options.maxY;
   }
 
-  update(_dt: number): void {
+  update(_dt: number): void 
+  {
     const go = this.gameObject;
-    if (!go) return;
+    if (!go) 
+    {
+      return;
+    }
 
     const w = this.maxX - this.minX;
     const h = this.maxY - this.minY;
-    if (w <= 0 || h <= 0) return;
+    if (w <= 0 || h <= 0) 
+    {
+      return;
+    }
 
     const p = go.transform.position;
 
@@ -37,7 +46,8 @@ export class WrapAroundBounds2D extends Component {
   }
 }
 
-function wrap(v: number, min: number, size: number): number {
+function wrap(v: number, min: number, size: number): number 
+{
   const x = v - min;
   const m = ((x % size) + size) % size;
   return min + m;

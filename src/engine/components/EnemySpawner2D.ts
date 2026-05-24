@@ -22,7 +22,8 @@ export type EnemySpawner2DOptions = {
   factory: (spawnPosition: Vec2, spawnIndex: number) => GameObject;
 };
 
-export class EnemySpawner2D extends Component {
+export class EnemySpawner2D extends Component 
+{
   enemyTag: string;
   playerTag: string;
   spawnEverySeconds: number;
@@ -34,7 +35,8 @@ export class EnemySpawner2D extends Component {
   private _elapsed = 0;
   private _spawnIndex = 0;
 
-  constructor(options: EnemySpawner2DOptions) {
+  constructor(options: EnemySpawner2DOptions) 
+  {
     super();
     this.enemyTag = options.enemyTag ?? 'Enemy';
     this.playerTag = options.playerTag ?? 'Player';
@@ -45,22 +47,36 @@ export class EnemySpawner2D extends Component {
     this.factory = options.factory;
   }
 
-  update(dt: number): void {
+  update(dt: number): void 
+  {
     const scene = this.scene;
-    if (!scene) return;
+    if (!scene) 
+    {
+      return;
+    }
 
     this._elapsed += dt;
-    if (this.spawnEverySeconds <= 0) return;
+    if (this.spawnEverySeconds <= 0) 
+    {
+      return;
+    }
 
     // Catch-up loop so spawning is stable even if a frame hitches.
-    while (this._elapsed >= this.spawnEverySeconds) {
+    while (this._elapsed >= this.spawnEverySeconds) 
+    {
       this._elapsed -= this.spawnEverySeconds;
 
       const alive = this.countAliveEnemies();
-      if (alive >= this.maxAlive) break;
+      if (alive >= this.maxAlive) 
+      {
+        break;
+      }
 
       const playerPos = this.getPlayerPosition();
-      if (!playerPos) break;
+      if (!playerPos) 
+      {
+        break;
+      }
 
       const spawnPos = this.computeSpawnPosition(playerPos);
       const enemy = this.factory(spawnPos, this._spawnIndex++);
@@ -68,33 +84,56 @@ export class EnemySpawner2D extends Component {
     }
   }
 
-  private countAliveEnemies(): number {
+  private countAliveEnemies(): number 
+  {
     const scene = this.scene;
-    if (!scene) return 0;
+    if (!scene) 
+    {
+      return 0;
+    }
 
     let count = 0;
-    for (const o of scene.getGameObjects()) {
-      if (!o.active) continue;
-      if (o.tag !== this.enemyTag) continue;
+    for (const o of scene.getGameObjects()) 
+    {
+      if (!o.active) 
+      {
+        continue;
+      }
+      if (o.tag !== this.enemyTag) 
+      {
+        continue;
+      }
       count++;
     }
     return count;
   }
 
-  private getPlayerPosition(): Vec2 | null {
+  private getPlayerPosition(): Vec2 | null 
+  {
     const scene = this.scene;
-    if (!scene) return null;
+    if (!scene) 
+    {
+      return null;
+    }
 
-    for (const o of scene.getGameObjects()) {
-      if (!o.active) continue;
-      if (o.tag !== this.playerTag) continue;
+    for (const o of scene.getGameObjects()) 
+    {
+      if (!o.active) 
+      {
+        continue;
+      }
+      if (o.tag !== this.playerTag) 
+      {
+        continue;
+      }
       return o.transform.position;
     }
 
     return null;
   }
 
-  private computeSpawnPosition(playerPos: Vec2): Vec2 {
+  private computeSpawnPosition(playerPos: Vec2): Vec2 
+  {
     const angle = Math.random() * Math.PI * 2;
     const jitter = (Math.random() * 2 - 1) * this.spawnDistanceJitter;
     const dist = Math.max(0, this.spawnDistance + jitter);

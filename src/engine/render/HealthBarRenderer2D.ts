@@ -15,14 +15,16 @@ export type HealthBarRenderer2DOptions = {
   borderColor?: string;
 };
 
-export class HealthBarRenderer2D extends Component {
+export class HealthBarRenderer2D extends Component 
+{
   size: Vec2;
   offset: Vec2;
   backgroundColor: string;
   fillColor: string;
   borderColor: string;
 
-  constructor(options: HealthBarRenderer2DOptions = {}) {
+  constructor(options: HealthBarRenderer2DOptions = {}) 
+  {
     super();
     this.size = options.size ?? new Vec2(90, 12);
     this.offset = options.offset ?? new Vec2(0, -70);
@@ -31,12 +33,19 @@ export class HealthBarRenderer2D extends Component {
     this.borderColor = options.borderColor ?? 'rgba(255,255,255,0.35)';
   }
 
-  render(ctx: CanvasRenderingContext2D, camera: Camera2D): void {
+  render(ctx: CanvasRenderingContext2D, camera: Camera2D): void 
+  {
     const go = this.gameObject;
-    if (!go) return;
+    if (!go) 
+    {
+      return;
+    }
 
     const health = go.getComponent(Health);
-    if (!health) return;
+    if (!health) 
+    {
+      return;
+    }
 
     const worldPos = new Vec2(
       go.transform.position.x + this.offset.x,

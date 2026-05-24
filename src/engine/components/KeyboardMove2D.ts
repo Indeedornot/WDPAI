@@ -11,11 +11,13 @@ export type KeyboardMove2DOptions = {
   bindings?: Partial<MovementBindings2D>;
 };
 
-export class KeyboardMove2D extends Component {
+export class KeyboardMove2D extends Component 
+{
   speed: number;
   bindings: MovementBindings2D;
 
-  constructor(options: KeyboardMove2DOptions = {}) {
+  constructor(options: KeyboardMove2DOptions = {}) 
+  {
     super();
     this.speed = options.speed ?? 250;
     this.bindings = {
@@ -24,13 +26,20 @@ export class KeyboardMove2D extends Component {
     };
   }
 
-  update(_dt: number): void {
+  update(_dt: number): void 
+  {
     const go = this.gameObject;
     const scene = this.scene;
-    if (!go || !scene) return;
+    if (!go || !scene) 
+    {
+      return;
+    }
 
     const mover = go.getComponent(Mover2D);
-    if (!mover) return;
+    if (!mover) 
+    {
+      return;
+    }
 
     const input = scene.input;
 

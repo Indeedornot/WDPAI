@@ -33,7 +33,8 @@ type CsrfResponse = CsrfOk | CsrfErr;
 const REFRESH_LEAD_MS = 2 * 60 * 1000;
 const REFRESH_RETRY_MS = 30 * 1000;
 
-export class AuthClient {
+export class AuthClient 
+{
   private readonly _http: HttpClient;
   private readonly _userKey = 'my-ts-app:auth:user';
   private readonly _expiresKey = 'my-ts-app:auth:expiresAt';
@@ -42,7 +43,8 @@ export class AuthClient {
   private _refreshTimer: number | null = null;
   private readonly _listeners = new Set<() => void>();
 
-  constructor(baseUrl: string) {
+  constructor(baseUrl: string) 
+  {
     this._csrfToken = this.loadCsrfToken();
     this._http = new HttpClient(baseUrl, {
       credentials: 'include',
@@ -50,194 +52,279 @@ export class AuthClient {
     });
 
     window.addEventListener('focus', () => void this.refreshIfActive());
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') void this.refreshIfActive();
+    document.addEventListener('visibilitychange', () => 
+    {
+      if (document.visibilityState === 'visible') 
+      {
+        void this.refreshIfActive();
+      }
     });
 
     this.planAutoRefresh();
   }
 
-  get user(): AuthUser | null {
+  get user(): AuthUser | null 
+  {
     const raw = window.localStorage.getItem(this._userKey);
-    if (!raw) return null;
-    try {
+    if (!raw) 
+    {
+      return null;
+    }
+    try 
+    {
       const parsed = JSON.parse(raw) as Record<string, unknown>;
       if (!parsed || typeof parsed['email'] !== 'string' || typeof parsed['id'] !== 'number')
+      {
         return null;
+      }
       return { id: parsed['id'], email: parsed['email'], role: String(parsed['role'] ?? 'player') };
-    } catch {
+    }
+    catch 
+    {
       return null;
     }
   }
 
-  get sessionExpiresAt(): string | null {
+  get sessionExpiresAt(): string | null 
+  {
     const raw = window.localStorage.getItem(this._expiresKey);
     return typeof raw === 'string' && raw.trim() !== '' ? raw : null;
   }
 
-  get csrfToken(): string | null {
+  get csrfToken(): string | null 
+  {
     return this._csrfToken;
   }
 
-  isLoggedIn(): boolean {
+  isLoggedIn(): boolean 
+  {
     const expiresAt = this.sessionExpiresAt;
     const user = this.user;
-    if (!user || !expiresAt) return false;
+    if (!user || !expiresAt) 
+    {
+      return false;
+    }
     const ms = Date.parse(expiresAt);
-    if (Number.isNaN(ms)) return true;
-    if (ms <= Date.now()) {
+    if (Number.isNaN(ms)) 
+    {
+      return true;
+    }
+    if (ms <= Date.now()) 
+    {
       this.clearSession();
       return false;
     }
     return true;
   }
 
-  isExpiringSoon(thresholdMs = REFRESH_LEAD_MS): boolean {
+  isExpiringSoon(thresholdMs = REFRESH_LEAD_MS): boolean 
+  {
     const expiresAt = this.sessionExpiresAt;
-    if (!expiresAt) return false;
+    if (!expiresAt) 
+    {
+      return false;
+    }
     const ms = Date.parse(expiresAt);
-    if (Number.isNaN(ms)) return false;
+    if (Number.isNaN(ms)) 
+    {
+      return false;
+    }
     return ms - Date.now() <= thresholdMs;
   }
 
-  authHeaders(): Record<string, string> {
+  authHeaders(): Record<string, string> 
+  {
     return this._csrfToken ? { 'X-CSRF-Token': this._csrfToken } : ({} as Record<string, string>);
   }
 
-  subscribe(listener: () => void): () => void {
+  subscribe(listener: () => void): () => void 
+  {
     this._listeners.add(listener);
     return () => this._listeners.delete(listener);
   }
 
-  async bootstrapSession(): Promise<void> {
-    try {
+  async bootstrapSession(): Promise<void> 
+  {
+    try 
+    {
       const body = await this._http.get.json<AuthResponse>('/auth/session');
-      if (!body.ok) {
+      if (!body.ok) 
+      {
         this.clearSession();
         return;
       }
       this.saveSession(body.user, body.expiresAt);
       await this.ensureCsrfToken();
-    } catch {
+    }
+    catch 
+    {
       this.clearSession();
     }
   }
 
-  async ensureCsrfToken(): Promise<string> {
-    if (this._csrfToken) return this._csrfToken;
+  async ensureCsrfToken(): Promise<string> 
+  {
+    if (this._csrfToken) 
+    {
+      return this._csrfToken;
+    }
 
     const body = await this._http.get.json<CsrfResponse>('/auth/csrf');
-    if (!body.ok || body.csrfToken.trim() === '') {
+    if (!body.ok || body.csrfToken.trim() === '') 
+    {
       throw new Error('csrf_failed');
     }
     this.setCsrfToken(body.csrfToken);
     return body.csrfToken;
   }
 
-  async register(email: string, password: string): Promise<AuthUser> {
+  async register(email: string, password: string): Promise<AuthUser> 
+  {
     return this.authMutation('/auth/register', { email, password });
   }
 
-  async login(email: string, password: string): Promise<AuthUser> {
+  async login(email: string, password: string): Promise<AuthUser> 
+  {
     return this.authMutation('/auth/login', { email, password });
   }
 
-  async refreshSession(): Promise<AuthUser> {
+  async refreshSession(): Promise<AuthUser> 
+  {
     await this.ensureCsrfToken();
-    try {
+    try 
+    {
       const body = await this._http.post.json<AuthResponse>('/auth/refresh', {});
-      if (!body.ok) throw new Error(body.message ?? body.error);
+      if (!body.ok) 
+      {
+        throw new Error(body.message ?? body.error);
+      }
       this.saveSession(body.user, body.expiresAt);
       return body.user;
-    } catch (e) {
-      if (e instanceof HttpError && (e.status === 401 || e.status === 403)) {
+    }
+    catch (e) 
+    {
+      if (e instanceof HttpError && (e.status === 401 || e.status === 403)) 
+      {
         this.clearSession();
       }
       throw e;
     }
   }
 
-  async logout(): Promise<void> {
-    void this._http.post.json('/auth/logout', {}).catch(() => {});
+  async logout(): Promise<void> 
+  {
+    void this._http.post.json('/auth/logout', {}).catch(() => 
+    {});
     this.clearSession();
   }
 
-  async refreshIfActive(): Promise<void> {
-    if (!this.isLoggedIn() || !this.isExpiringSoon()) {
+  async refreshIfActive(): Promise<void> 
+  {
+    if (!this.isLoggedIn() || !this.isExpiringSoon()) 
+    {
       this.planAutoRefresh();
       return;
     }
-    if (document.visibilityState !== 'visible' || !document.hasFocus()) {
+    if (document.visibilityState !== 'visible' || !document.hasFocus()) 
+    {
       this.planAutoRefresh(REFRESH_RETRY_MS);
       return;
     }
-    try {
+    try 
+    {
       await this.refreshSession();
-    } catch {
+    }
+    catch 
+    {
       this.planAutoRefresh(REFRESH_RETRY_MS);
     }
   }
 
-  clearSession(): void {
+  clearSession(): void 
+  {
     window.localStorage.removeItem(this._userKey);
     window.localStorage.removeItem(this._expiresKey);
     this.planAutoRefresh();
     this.notify();
   }
 
-  clearCsrfToken(): void {
+  clearCsrfToken(): void 
+  {
     this._csrfToken = null;
     window.localStorage.removeItem(this._csrfKey);
     this.notify();
   }
 
-  private async authMutation(path: string, payload: Record<string, string>): Promise<AuthUser> {
+  private async authMutation(path: string, payload: Record<string, string>): Promise<AuthUser> 
+  {
     await this.ensureCsrfToken();
-    try {
+    try 
+    {
       const body = await this._http.post.json<AuthResponse>(path, payload);
-      if (!body.ok) throw new Error(body.message ?? body.error);
+      if (!body.ok) 
+      {
+        throw new Error(body.message ?? body.error);
+      }
       this.saveSession(body.user, body.expiresAt);
       return body.user;
-    } catch (e) {
-      if (e instanceof HttpError && (e.status === 401 || e.status === 403)) {
+    }
+    catch (e) 
+    {
+      if (e instanceof HttpError && (e.status === 401 || e.status === 403)) 
+      {
         this.clearSession();
       }
       throw e;
     }
   }
 
-  private saveSession(user: AuthUser, expiresAt: string): void {
+  private saveSession(user: AuthUser, expiresAt: string): void 
+  {
     window.localStorage.setItem(this._userKey, JSON.stringify(user));
     window.localStorage.setItem(this._expiresKey, expiresAt);
     this.planAutoRefresh();
     this.notify();
   }
 
-  private setCsrfToken(token: string): void {
+  private setCsrfToken(token: string): void 
+  {
     this._csrfToken = token;
     window.localStorage.setItem(this._csrfKey, token);
     this.notify();
   }
 
-  private loadCsrfToken(): string | null {
+  private loadCsrfToken(): string | null 
+  {
     const raw = window.localStorage.getItem(this._csrfKey);
     return raw && raw.trim() !== '' ? raw : null;
   }
 
-  private planAutoRefresh(delayMs?: number): void {
-    if (this._refreshTimer !== null) {
+  private planAutoRefresh(delayMs?: number): void 
+  {
+    if (this._refreshTimer !== null) 
+    {
       window.clearTimeout(this._refreshTimer);
       this._refreshTimer = null;
     }
     const expiresAt = this.sessionExpiresAt;
-    if (!expiresAt || !this.user) return;
+    if (!expiresAt || !this.user) 
+    {
+      return;
+    }
     const expiresMs = Date.parse(expiresAt);
-    if (Number.isNaN(expiresMs)) return;
+    if (Number.isNaN(expiresMs)) 
+    {
+      return;
+    }
     const nextDelay = delayMs ?? Math.max(0, expiresMs - Date.now() - REFRESH_LEAD_MS);
     this._refreshTimer = window.setTimeout(() => void this.refreshIfActive(), nextDelay);
   }
 
-  private notify(): void {
-    for (const listener of this._listeners) listener();
+  private notify(): void 
+  {
+    for (const listener of this._listeners) 
+    {
+      listener();
+    }
   }
 }

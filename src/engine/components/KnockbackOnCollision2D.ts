@@ -15,7 +15,8 @@ export type KnockbackOnCollision2DOptions = {
   otherForceMultiplier?: number;
 };
 
-export class KnockbackOnCollision2D extends Component {
+export class KnockbackOnCollision2D extends Component 
+{
   otherTag: string;
   force: number;
   directionMode: KnockbackDirectionMode;
@@ -24,7 +25,8 @@ export class KnockbackOnCollision2D extends Component {
   applyToOther: boolean;
   otherForceMultiplier: number;
 
-  constructor(options: KnockbackOnCollision2DOptions = {}) {
+  constructor(options: KnockbackOnCollision2DOptions = {}) 
+  {
     super();
     this.otherTag = options.otherTag ?? '';
     this.force = options.force ?? 350;
@@ -35,22 +37,37 @@ export class KnockbackOnCollision2D extends Component {
     this.otherForceMultiplier = options.otherForceMultiplier ?? 1;
   }
 
-  onCollisionEnter2D(collision: Collision2D): void {
+  onCollisionEnter2D(collision: Collision2D): void 
+  {
     const go = this.gameObject;
     const otherGo = collision.other.gameObject;
-    if (!go || !otherGo) return;
-
-    if (this.otherTag && otherGo.tag !== this.otherTag) return;
-
-    const dir = this.computeDirection(go.transform.position, otherGo.transform.position);
-    if (dir.length() <= 1e-6) return;
-
-    if (this.applyToSelf) {
-      const selfMover = go.getComponent(Mover2D);
-      if (selfMover) selfMover.impulse.add(dir.scaled(this.force));
+    if (!go || !otherGo) 
+    {
+      return;
     }
 
-    if (this.applyToOther) {
+    if (this.otherTag && otherGo.tag !== this.otherTag) 
+    {
+      return;
+    }
+
+    const dir = this.computeDirection(go.transform.position, otherGo.transform.position);
+    if (dir.length() <= 1e-6) 
+    {
+      return;
+    }
+
+    if (this.applyToSelf) 
+    {
+      const selfMover = go.getComponent(Mover2D);
+      if (selfMover) 
+      {
+        selfMover.impulse.add(dir.scaled(this.force));
+      }
+    }
+
+    if (this.applyToOther) 
+    {
       const otherMover = otherGo.getComponent(Mover2D);
       // For the default "awayFromOther" direction, applying the opposite direction to the
       // other object pushes both objects away from each other.
@@ -58,15 +75,20 @@ export class KnockbackOnCollision2D extends Component {
       // direction (e.g. projectiles knocking enemies back).
       const sign = this.directionMode === 'alongSelfVelocity' ? 1 : -1;
       if (otherMover)
+      {
         otherMover.impulse.add(dir.scaled(sign * this.force * this.otherForceMultiplier));
+      }
     }
   }
 
-  private computeDirection(selfPos: Vec2, otherPos: Vec2): Vec2 {
-    if (this.directionMode === 'alongSelfVelocity') {
+  private computeDirection(selfPos: Vec2, otherPos: Vec2): Vec2 
+  {
+    if (this.directionMode === 'alongSelfVelocity') 
+    {
       const go = this.gameObject;
       const mover = go?.getComponent(Mover2D);
-      if (mover && mover.velocity.length() > 1e-6) {
+      if (mover && mover.velocity.length() > 1e-6) 
+      {
         return mover.velocity.clone().normalize();
       }
     }

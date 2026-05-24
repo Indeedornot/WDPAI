@@ -8,31 +8,42 @@ export type LifetimeOptions = {
   expireMode?: LifetimeExpireMode;
 };
 
-export class Lifetime extends Component {
+export class Lifetime extends Component 
+{
   secondsRemaining: number;
   expireMode: LifetimeExpireMode;
 
-  constructor(options: LifetimeOptions = {}) {
+  constructor(options: LifetimeOptions = {}) 
+  {
     super();
     this.secondsRemaining = options.seconds ?? 2;
     this.expireMode = options.expireMode ?? 'destroy';
   }
 
-  update(dt: number): void {
+  update(dt: number): void 
+  {
     const go = this.gameObject;
-    if (!go) return;
+    if (!go) 
+    {
+      return;
+    }
 
     this.secondsRemaining -= dt;
-    if (this.secondsRemaining > 0) return;
+    if (this.secondsRemaining > 0) 
+    {
+      return;
+    }
 
-    if (this.expireMode === 'destroy') {
+    if (this.expireMode === 'destroy') 
+    {
       go.destroy();
       return;
     }
 
     // Freeze in place.
     const mover = go.getComponent(Mover2D);
-    if (mover) {
+    if (mover) 
+    {
       mover.velocity.set(0, 0);
       mover.impulse.set(0, 0);
     }

@@ -2,7 +2,8 @@ import { Transform2D } from './Transform2D';
 import { Component } from './Component';
 import type { Scene } from './Scene';
 
-export class GameObject {
+export class GameObject 
+{
   readonly transform = new Transform2D();
   active = true;
   scene: Scene | null = null;
@@ -13,7 +14,8 @@ export class GameObject {
 
   private readonly _components: Component[] = [];
 
-  constructor(name = 'GameObject') {
+  constructor(name = 'GameObject') 
+  {
     this.id =
       globalThis.crypto && 'randomUUID' in globalThis.crypto
         ? globalThis.crypto.randomUUID()
@@ -21,8 +23,10 @@ export class GameObject {
     this.name = name;
   }
 
-  addComponent<T extends Component>(component: T): T {
-    if (component.gameObject) {
+  addComponent<T extends Component>(component: T): T 
+  {
+    if (component.gameObject) 
+    {
       throw new Error('Component already belongs to a GameObject');
     }
 
@@ -30,7 +34,8 @@ export class GameObject {
     this._components.push(component);
 
     const scene = this.scene;
-    if (scene) {
+    if (scene) 
+    {
       component.__internalOnAdded(scene);
       scene.__internalMarkComponentNeedsStart(component);
     }
@@ -38,44 +43,62 @@ export class GameObject {
     return component;
   }
 
-  getComponents(): readonly Component[] {
+  getComponents(): readonly Component[] 
+  {
     return this._components;
   }
 
-  getComponent<T extends Component>(ctor: new (..._args: never[]) => T): T | null {
-    for (const c of this._components) {
-      if (c instanceof ctor) return c as T;
+  getComponent<T extends Component>(ctor: new (..._args: never[]) => T): T | null 
+  {
+    for (const c of this._components) 
+    {
+      if (c instanceof ctor) 
+      {
+        return c as T;
+      }
     }
     return null;
   }
 
-  removeComponent(component: Component): void {
+  removeComponent(component: Component): void 
+  {
     const idx = this._components.indexOf(component);
-    if (idx === -1) return;
+    if (idx === -1) 
+    {
+      return;
+    }
 
     const scene = this.scene;
-    if (scene) component.__internalOnRemoved(scene);
+    if (scene) 
+    {
+      component.__internalOnRemoved(scene);
+    }
 
     this._components.splice(idx, 1);
     component.gameObject = null;
   }
 
-  destroy(): void {
+  destroy(): void 
+  {
     this.scene?.remove(this);
   }
 
   /** @internal */
-  __internalOnAddedToScene(scene: Scene): void {
+  __internalOnAddedToScene(scene: Scene): void 
+  {
     this.scene = scene;
-    for (const c of this._components) {
+    for (const c of this._components) 
+    {
       c.__internalOnAdded(scene);
       scene.__internalMarkComponentNeedsStart(c);
     }
   }
 
   /** @internal */
-  __internalOnRemovedFromScene(scene: Scene): void {
-    for (const c of this._components) {
+  __internalOnRemovedFromScene(scene: Scene): void 
+  {
+    for (const c of this._components) 
+    {
       c.__internalOnRemoved(scene);
     }
     this.scene = null;

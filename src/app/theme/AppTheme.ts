@@ -28,7 +28,8 @@ export const DefaultTheme: AppTheme = {
   canvasOutline: 'rgba(15,23,42,0.65)',
 };
 
-export function applyThemeToCssVars(theme: AppTheme = DefaultTheme): void {
+export function applyThemeToCssVars(theme: AppTheme = DefaultTheme): void 
+{
   const root = document.documentElement;
 
   root.style.setProperty('--c-bg', theme.bg);

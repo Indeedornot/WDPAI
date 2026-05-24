@@ -36,37 +36,56 @@ import { RunsClient } from './app/game/RunsClient';
 const CONTROLS_KEY = 'my-ts-app:controls:v1';
 const SETTINGS_KEY = 'my-ts-app:settings:v1';
 
-function loadControls(): ControlsConfig {
-  try {
+function loadControls(): ControlsConfig 
+{
+  try 
+  {
     const raw = window.localStorage.getItem(CONTROLS_KEY);
-    if (!raw) return structuredClone(DEFAULT_CONTROLS);
+    if (!raw) 
+    {
+      return structuredClone(DEFAULT_CONTROLS);
+    }
     return parseControlsConfig(JSON.parse(raw) as unknown);
-  } catch {
+  }
+  catch 
+  {
     return structuredClone(DEFAULT_CONTROLS);
   }
 }
 
-function saveControls(config: ControlsConfig): void {
+function saveControls(config: ControlsConfig): void 
+{
   window.localStorage.setItem(CONTROLS_KEY, JSON.stringify(config));
 }
 
-function loadAccessibleMode(): boolean {
-  try {
+function loadAccessibleMode(): boolean 
+{
+  try 
+  {
     const raw = window.localStorage.getItem(SETTINGS_KEY);
-    if (!raw) return false;
+    if (!raw) 
+    {
+      return false;
+    }
     const parsed = JSON.parse(raw) as any;
     return Boolean(parsed?.accessibleMode);
-  } catch {
+  }
+  catch 
+  {
     return false;
   }
 }
 
-function saveAccessibleMode(enabled: boolean): void {
+function saveAccessibleMode(enabled: boolean): void 
+{
   window.localStorage.setItem(SETTINGS_KEY, JSON.stringify({ accessibleMode: enabled }));
 }
 
 const app = document.querySelector<HTMLDivElement>('#app');
-if (!app) throw new Error('Missing #app');
+if (!app) 
+{
+  throw new Error('Missing #app');
+}
 
 applyThemeToCssVars(DefaultTheme);
 
@@ -86,17 +105,29 @@ app.innerHTML = `
 `;
 
 const canvas = document.querySelector<HTMLCanvasElement>('#game');
-if (!canvas) throw new Error('Missing #game canvas');
+if (!canvas) 
+{
+  throw new Error('Missing #game canvas');
+}
 
 const ctx = canvas.getContext('2d');
-if (!ctx) throw new Error('Canvas 2D context unavailable');
+if (!ctx) 
+{
+  throw new Error('Canvas 2D context unavailable');
+}
 
 const srRegion = document.querySelector<HTMLElement>('#sr-announce');
-if (!srRegion) throw new Error('Missing #sr-announce');
+if (!srRegion) 
+{
+  throw new Error('Missing #sr-announce');
+}
 const announcer = new Announcer(srRegion);
 
 const hudStatus = document.querySelector<HTMLDivElement>('#hud-status');
-if (!hudStatus) throw new Error('Missing #hud-status');
+if (!hudStatus) 
+{
+  throw new Error('Missing #hud-status');
+}
 
 const input = new Input(window);
 const camera = new Camera2D();
@@ -124,7 +155,8 @@ announcer.announce('Welcome. Press Start to begin.', 'polite');
 const accessibleOverlay = new AccessibleOverlay(scene, { getPaused: () => loop.paused });
 accessibleOverlay.mount(app);
 
-const applyAccessibleMode = (enabled: boolean) => {
+const applyAccessibleMode = (enabled: boolean) => 
+{
   accessibleOverlay.setEnabled(enabled);
   canvas.style.opacity = enabled ? '0.22' : '1';
   canvas.setAttribute('aria-hidden', enabled ? 'true' : 'false');
@@ -145,7 +177,8 @@ const saveManager = new SaveManager(scene, saveStorage, new SceneSerializer(), {
 saveManager.startAutoSave();
 
 const death = new DeathScreen({
-  onRestart: () => {
+  onRestart: () => 
+  {
     loop.pause();
     input.clear();
     ({ playerMove, playerShooter } = buildRun(scene, controls));
@@ -162,7 +195,8 @@ const gameSession = new GameSession({
   loop,
   input,
   hudStatus,
-  onDeath: (stats) => {
+  onDeath: (stats) => 
+  {
     runsClient.submitRun(stats);
     death.open(stats);
     announcer.announce('You died. Restart is available.', 'assertive');
@@ -171,17 +205,20 @@ const gameSession = new GameSession({
 gameSession.start();
 
 const menu = new PauseMenu({
-  onPause: () => {
+  onPause: () => 
+  {
     loop.pause();
     announcer.announce('Paused.', 'polite');
   },
-  onResume: () => {
+  onResume: () => 
+  {
     loop.resume();
     input.clear();
     announcer.announce('Resumed.', 'polite');
   },
   getControls: () => controls,
-  setControls: (next) => {
+  setControls: (next) => 
+  {
     controls = next;
     saveControls(next);
     playerMove.bindings = { ...DefaultMovementBindingsWASD, ...next.movement };
@@ -189,7 +226,8 @@ const menu = new PauseMenu({
     playerShooter.shootKey = next.shootKey;
   },
   getAccessibleMode: () => accessibleMode,
-  setAccessibleMode: (enabled) => {
+  setAccessibleMode: (enabled) => 
+  {
     accessibleMode = enabled;
     saveAccessibleMode(enabled);
     applyAccessibleMode(enabled);
@@ -198,45 +236,85 @@ const menu = new PauseMenu({
       'polite',
     );
   },
-  onSaveNow: async () => {
-    try {
+  onSaveNow: async () => 
+  {
+    try 
+    {
       await saveManager.saveNow();
       announcer.announce('Saved.', 'polite');
-    } catch {
+    }
+    catch 
+    {
       announcer.announce('Save failed.', 'assertive');
     }
   },
-  onLoadNow: async () => {
+  onLoadNow: async () => 
+  {
     let ok = false;
-    try {
+    try 
+    {
       ok = await saveManager.loadNow();
-    } catch {
+    }
+    catch 
+    {
       // loadNow failed; ok stays false
     }
-    if (!ok) return;
+    if (!ok) 
+    {
+      return;
+    }
 
     announcer.announce('Loaded last save.', 'polite');
 
-    for (const go of scene.getGameObjects()) {
-      if (go.tag !== 'Player') continue;
+    for (const go of scene.getGameObjects()) 
+    {
+      if (go.tag !== 'Player') 
+      {
+        continue;
+      }
       const move = go.getComponent(KeyboardMove2D);
-      if (move) move.bindings = { ...DefaultMovementBindingsWASD, ...controls.movement };
+      if (move) 
+      {
+        move.bindings = { ...DefaultMovementBindingsWASD, ...controls.movement };
+      }
       const shooter = go.getComponent(Shooter2D);
-      if (shooter) {
+      if (shooter) 
+      {
         shooter.aimBindings = { ...DefaultShootingBindingsArrows, ...controls.aim };
         shooter.shootKey = controls.shootKey;
       }
-      if (!go.getComponent(RunStats)) go.addComponent(new RunStats());
-      if (!go.getComponent(WrapAroundBounds2D)) go.addComponent(new WrapAroundBounds2D(MAP_BOUNDS));
-      if (move) playerMove = move;
-      if (shooter) playerShooter = shooter;
+      if (!go.getComponent(RunStats)) 
+      {
+        go.addComponent(new RunStats());
+      }
+      if (!go.getComponent(WrapAroundBounds2D)) 
+      {
+        go.addComponent(new WrapAroundBounds2D(MAP_BOUNDS));
+      }
+      if (move) 
+      {
+        playerMove = move;
+      }
+      if (shooter) 
+      {
+        playerShooter = shooter;
+      }
     }
 
-    for (const go of scene.getGameObjects()) {
-      if (go.tag !== 'Enemy') continue;
-      if (!go.getComponent(Health)) continue;
+    for (const go of scene.getGameObjects()) 
+    {
+      if (go.tag !== 'Enemy') 
+      {
+        continue;
+      }
+      if (!go.getComponent(Health)) 
+      {
+        continue;
+      }
       if (!go.getComponent(CountKillToPlayerStatsOnDeath2D))
+      {
         go.addComponent(new CountKillToPlayerStatsOnDeath2D());
+      }
     }
   },
   auth: {
@@ -244,19 +322,23 @@ const menu = new PauseMenu({
     isLoggedIn: () => auth.isLoggedIn(),
     getSessionExpiresAt: () => auth.sessionExpiresAt,
     isExpiringSoon: () => auth.isExpiringSoon(),
-    register: async (email, password) => {
+    register: async (email, password) => 
+    {
       const user = await auth.register(email, password);
       announcer.announce(`Registered. Signed in as ${user.email}.`, 'polite');
     },
-    login: async (email, password) => {
+    login: async (email, password) => 
+    {
       const user = await auth.login(email, password);
       announcer.announce(`Signed in as ${user.email}.`, 'polite');
     },
-    logout: async () => {
+    logout: async () => 
+    {
       await auth.logout();
       announcer.announce('Signed out.', 'polite');
     },
-    refreshSession: async () => {
+    refreshSession: async () => 
+    {
       const user = await auth.refreshSession();
       announcer.announce(`Token refreshed for ${user.email}.`, 'polite');
       return user;
@@ -283,13 +365,15 @@ const registerGate = new RegisterGate({
   auth: {
     isLoggedIn: () => auth.isLoggedIn(),
     getUser: () => auth.user,
-    register: async (email, password) => {
+    register: async (email, password) => 
+    {
       const user = await auth.register(email, password);
       announcer.announce(`Registered. Signed in as ${user.email}.`, 'polite');
       return user;
     },
   },
-  onRegistered: () => {
+  onRegistered: () => 
+  {
     input.clear();
     loop.resume();
     canvas.focus();
@@ -299,7 +383,8 @@ const registerGate = new RegisterGate({
 });
 registerGate.mount(app);
 
-auth.subscribe(() => {
+auth.subscribe(() => 
+{
   menu.refresh();
   registerGate.refresh();
 });
@@ -310,8 +395,10 @@ welcome = new WelcomeScreen({
   title: 'Arcade Survival — Demo',
   subtitle:
     'Create an account to play. Survive as long as you can, level up, and track your run stats.',
-  onStart: () => {
-    if (!auth.isLoggedIn()) {
+  onStart: () => 
+  {
+    if (!auth.isLoggedIn()) 
+    {
       registerGate.open();
       return;
     }
@@ -328,7 +415,8 @@ welcome.open();
   load: () => saveManager.loadNow(),
 };
 
-window.addEventListener('beforeunload', () => {
+window.addEventListener('beforeunload', () => 
+{
   loop.dispose();
   input.dispose();
   gameSession.stop();

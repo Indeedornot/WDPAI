@@ -25,7 +25,8 @@ export type DeathScreenOptions = {
   onRestart: () => void;
 };
 
-export class DeathScreen {
+export class DeathScreen 
+{
   private readonly _overlay: HTMLDivElement;
   private readonly _panel: HTMLDivElement;
   private _untrap: (() => void) | null = null;
@@ -36,10 +37,12 @@ export class DeathScreen {
 
   readonly options: DeathScreenOptions;
 
-  constructor(options: DeathScreenOptions) {
+  constructor(options: DeathScreenOptions) 
+  {
     this.options = options;
 
-    this._overlay = uiOverlay(() => {
+    this._overlay = uiOverlay(() => 
+    {
       // Don't close by background click.
     });
 
@@ -51,23 +54,33 @@ export class DeathScreen {
     this.render();
   }
 
-  mount(parent: HTMLElement): void {
+  mount(parent: HTMLElement): void 
+  {
     parent.appendChild(this._overlay);
   }
 
-  open(stats: DeathScreenStats): void {
+  open(stats: DeathScreenStats): void 
+  {
     this._stats = stats;
     this.render();
 
-    if (this._isOpen) return;
+    if (this._isOpen) 
+    {
+      return;
+    }
     this._isOpen = true;
     this._overlay.classList.remove('ui-hidden');
 
     this._untrap = trapFocus(this._panel, () => this._isOpen);
 
-    const blockKeys = (e: KeyboardEvent) => {
-      if (!this._isOpen) return;
-      if (e.code === 'Escape') {
+    const blockKeys = (e: KeyboardEvent) => 
+    {
+      if (!this._isOpen) 
+      {
+        return;
+      }
+      if (e.code === 'Escape') 
+      {
         e.preventDefault();
         e.stopImmediatePropagation();
       }
@@ -78,8 +91,12 @@ export class DeathScreen {
     focusFirstDescendant(this._panel);
   }
 
-  close(): void {
-    if (!this._isOpen) return;
+  close(): void 
+  {
+    if (!this._isOpen) 
+    {
+      return;
+    }
     this._isOpen = false;
     this._overlay.classList.add('ui-hidden');
 
@@ -90,7 +107,8 @@ export class DeathScreen {
     this._unblockKeys = null;
   }
 
-  private render(): void {
+  private render(): void 
+  {
     this._panel.innerHTML = '';
 
     const h = uiTitle('You Died');
@@ -104,7 +122,8 @@ export class DeathScreen {
     const body = uiBody();
 
     const stats = this._stats;
-    if (stats) {
+    if (stats) 
+    {
       const accuracy = stats.shotsFired <= 0 ? 0 : stats.shotsHit / stats.shotsFired;
 
       const rows: HTMLElement[] = [];
@@ -123,7 +142,8 @@ export class DeathScreen {
       uiButton({
         label: 'Restart',
         title: 'Restart the run',
-        onClick: () => {
+        onClick: () => 
+        {
           this.options.onRestart();
           this.close();
         },
@@ -136,7 +156,8 @@ export class DeathScreen {
   }
 }
 
-function formatSeconds(totalSeconds: number): string {
+function formatSeconds(totalSeconds: number): string 
+{
   const s = Math.max(0, Math.floor(totalSeconds));
   const mm = Math.floor(s / 60);
   const ss = s % 60;

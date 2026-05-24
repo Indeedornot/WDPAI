@@ -42,7 +42,8 @@ type RebindTarget =
   | { kind: 'movement'; dir: keyof ControlsConfig['movement'] }
   | { kind: 'aim'; dir: keyof ControlsConfig['aim'] };
 
-export class PauseMenu {
+export class PauseMenu 
+{
   private readonly _root: HTMLDivElement;
   private readonly _overlay: HTMLDivElement;
   private readonly _panel: HTMLDivElement;
@@ -57,7 +58,8 @@ export class PauseMenu {
 
   readonly options: PauseMenuOptions;
 
-  constructor(options: PauseMenuOptions) {
+  constructor(options: PauseMenuOptions) 
+  {
     this.options = options;
 
     this._accountSection = options.auth
@@ -66,13 +68,14 @@ export class PauseMenu {
 
     this._adminPanel = options.admin
       ? new AdminPanel(
-          options.admin,
-          () => {
-            this._view = 'options';
-            this.render();
-          },
-          () => this.render(),
-        )
+        options.admin,
+        () => 
+        {
+          this._view = 'options';
+          this.render();
+        },
+        () => this.render(),
+      )
       : null;
 
     this._root = document.createElement('div');
@@ -94,17 +97,26 @@ export class PauseMenu {
 
     this._overlay.appendChild(this._panel);
     const hudActions = document.querySelector<HTMLElement>('#hud-actions');
-    if (hudActions) hudActions.appendChild(cog);
-    else this._root.appendChild(cog);
+    if (hudActions) 
+    {
+      hudActions.appendChild(cog);
+    }
+    else 
+    {
+      this._root.appendChild(cog);
+    }
     this._root.appendChild(this._overlay);
 
-    window.addEventListener('keydown', (e) => {
-      if (this._rebindTarget) {
+    window.addEventListener('keydown', (e) => 
+    {
+      if (this._rebindTarget) 
+      {
         e.preventDefault();
         this.applyRebind(e.code);
         return;
       }
-      if (e.code === 'Escape') {
+      if (e.code === 'Escape') 
+      {
         e.preventDefault();
         this.toggle();
       }
@@ -113,16 +125,22 @@ export class PauseMenu {
     this.render();
   }
 
-  mount(parent: HTMLElement): void {
+  mount(parent: HTMLElement): void 
+  {
     parent.appendChild(this._root);
   }
 
-  refresh(): void {
+  refresh(): void 
+  {
     this.render();
   }
 
-  open(): void {
-    if (this._isOpen) return;
+  open(): void 
+  {
+    if (this._isOpen) 
+    {
+      return;
+    }
     this._isOpen = true;
     this.options.onPause();
     this._overlay.classList.remove('ui-hidden');
@@ -131,8 +149,12 @@ export class PauseMenu {
     focusFirstDescendant(this._panel);
   }
 
-  close(): void {
-    if (!this._isOpen) return;
+  close(): void 
+  {
+    if (!this._isOpen) 
+    {
+      return;
+    }
     this._isOpen = false;
     this._rebindTarget = null;
     this._view = 'main';
@@ -144,12 +166,20 @@ export class PauseMenu {
     this.render();
   }
 
-  toggle(): void {
-    if (this._isOpen) this.close();
-    else this.open();
+  toggle(): void 
+  {
+    if (this._isOpen) 
+    {
+      this.close();
+    }
+    else 
+    {
+      this.open();
+    }
   }
 
-  private render(): void {
+  private render(): void 
+  {
     const controls = this.options.getControls();
     const title = this._view === 'main' ? 'Paused' : this._view === 'options' ? 'Options' : 'Admin';
     const subtitle = this._rebindTarget ? 'Press a key…' : '';
@@ -162,26 +192,36 @@ export class PauseMenu {
 
     const sub = uiSubtitle(subtitle);
     sub.id = 'pause-subtitle';
-    if (subtitle) this._panel.setAttribute('aria-describedby', sub.id);
-    else this._panel.removeAttribute('aria-describedby');
+    if (subtitle) 
+    {
+      this._panel.setAttribute('aria-describedby', sub.id);
+    }
+    else 
+    {
+      this._panel.removeAttribute('aria-describedby');
+    }
 
     const body = uiBody();
 
-    if (this._view === 'main') {
+    if (this._view === 'main') 
+    {
       body.appendChild(uiButton({ label: 'Resume', onClick: () => this.close() }));
 
-      if (this.options.onSaveNow) {
+      if (this.options.onSaveNow) 
+      {
         body.appendChild(
           uiButton({ label: 'Save Now', onClick: () => void this.options.onSaveNow?.() }),
         );
       }
-      if (this.options.onLoadNow) {
+      if (this.options.onLoadNow) 
+      {
         body.appendChild(
           uiButton({ label: 'Load Last Save', onClick: () => void this.options.onLoadNow?.() }),
         );
       }
 
-      if (this.options.auth?.isLoggedIn()) {
+      if (this.options.auth?.isLoggedIn()) 
+      {
         const busy = this._accountSection?.isBusy ?? false;
         const logoutBtn = uiButton({
           label: busy ? 'Working…' : 'Log out',
@@ -194,14 +234,17 @@ export class PauseMenu {
       body.appendChild(
         uiButton({
           label: 'Options',
-          onClick: () => {
+          onClick: () => 
+          {
             this._view = 'options';
             this._rebindTarget = null;
             this.render();
           },
         }),
       );
-    } else if (this._view === 'options') {
+    }
+    else if (this._view === 'options') 
+    {
       body.appendChild(
         uiSection('Movement (WASD default)', this.bindingsRows('movement', controls.movement)),
       );
@@ -215,7 +258,8 @@ export class PauseMenu {
       body.appendChild(
         uiButton({
           label: 'Reset Controls',
-          onClick: () => {
+          onClick: () => 
+          {
             this.options.setControls(structuredClone(DEFAULT_CONTROLS));
             this._rebindTarget = null;
             this.render();
@@ -223,7 +267,8 @@ export class PauseMenu {
         }),
       );
 
-      if (this.options.getAccessibleMode && this.options.setAccessibleMode) {
+      if (this.options.getAccessibleMode && this.options.setAccessibleMode) 
+      {
         const enabled = this.options.getAccessibleMode();
         body.appendChild(
           uiSection('Accessibility', [
@@ -232,7 +277,8 @@ export class PauseMenu {
               uiPill(enabled ? 'On' : 'Off'),
               uiSmallButton({
                 label: enabled ? 'Disable' : 'Enable',
-                onClick: () => {
+                onClick: () => 
+                {
                   this.options.setAccessibleMode?.(!enabled);
                   this.render();
                 },
@@ -242,15 +288,18 @@ export class PauseMenu {
         );
       }
 
-      if (this._accountSection) {
+      if (this._accountSection) 
+      {
         body.appendChild(this._accountSection.render());
       }
 
-      if (this._adminPanel && this.options.admin?.isAdmin()) {
+      if (this._adminPanel && this.options.admin?.isAdmin()) 
+      {
         body.appendChild(
           uiButton({
             label: 'Admin Panel',
-            onClick: () => {
+            onClick: () => 
+            {
               this._view = 'admin';
               this._rebindTarget = null;
               void this._adminPanel!.loadUsers();
@@ -263,30 +312,40 @@ export class PauseMenu {
       body.appendChild(
         uiButton({
           label: 'Back',
-          onClick: () => {
+          onClick: () => 
+          {
             this._view = 'main';
             this._rebindTarget = null;
             this.render();
           },
         }),
       );
-    } else {
+    }
+    else 
+    {
       body.appendChild(this._adminPanel!.render());
     }
 
     this._panel.appendChild(h);
-    if (subtitle) this._panel.appendChild(sub);
+    if (subtitle) 
+    {
+      this._panel.appendChild(sub);
+    }
 
-    if (this._view === 'options') {
+    if (this._view === 'options') 
+    {
       const scroll = el('div', { className: 'ui-scroll' });
       scroll.appendChild(body);
       this._panel.appendChild(scroll);
-    } else {
+    }
+    else 
+    {
       this._panel.appendChild(body);
     }
   }
 
-  private bindingsRows(kind: 'movement' | 'aim', map: Record<string, string>): HTMLElement[] {
+  private bindingsRows(kind: 'movement' | 'aim', map: Record<string, string>): HTMLElement[] 
+  {
     return ['Up', 'Down', 'Left', 'Right'].map((dir) => this.rebindRow(kind, dir, map[dir] ?? ''));
   }
 
@@ -294,13 +353,21 @@ export class PauseMenu {
     kind: 'movement' | 'aim' | 'shootKey',
     label: string,
     code: string,
-  ): HTMLElement {
+  ): HTMLElement 
+  {
     const pill = uiPill(code || 'Unbound');
     const btn = uiSmallButton({
       label: this._rebindTarget ? 'Waiting…' : 'Rebind',
-      onClick: () => {
-        if (kind === 'shootKey') this._rebindTarget = { kind: 'shootKey' };
-        else this._rebindTarget = { kind, dir: label as keyof ControlsConfig[typeof kind] };
+      onClick: () => 
+      {
+        if (kind === 'shootKey') 
+        {
+          this._rebindTarget = { kind: 'shootKey' };
+        }
+        else 
+        {
+          this._rebindTarget = { kind, dir: label as keyof ControlsConfig[typeof kind] };
+        }
         this.render();
       },
     });
@@ -308,18 +375,27 @@ export class PauseMenu {
     return uiRow(label, pill, btn);
   }
 
-  private applyRebind(code: string): void {
+  private applyRebind(code: string): void 
+  {
     const t = this._rebindTarget;
-    if (!t) return;
+    if (!t) 
+    {
+      return;
+    }
 
     const current = this.options.getControls();
     let next: ControlsConfig;
 
-    if (t.kind === 'shootKey') {
+    if (t.kind === 'shootKey') 
+    {
       next = { ...current, shootKey: code };
-    } else if (t.kind === 'movement') {
+    }
+    else if (t.kind === 'movement') 
+    {
       next = { ...current, movement: { ...current.movement, [t.dir]: code } };
-    } else {
+    }
+    else 
+    {
       next = { ...current, aim: { ...current.aim, [t.dir]: code } };
     }
 

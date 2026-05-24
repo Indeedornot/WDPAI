@@ -16,7 +16,8 @@ export type WelcomeScreenOptions = {
   onStart: () => void | boolean;
 };
 
-export class WelcomeScreen {
+export class WelcomeScreen 
+{
   private readonly _overlay: HTMLDivElement;
   private readonly _panel: HTMLDivElement;
   private _untrap: (() => void) | null = null;
@@ -25,10 +26,12 @@ export class WelcomeScreen {
 
   readonly options: WelcomeScreenOptions;
 
-  constructor(options: WelcomeScreenOptions) {
+  constructor(options: WelcomeScreenOptions) 
+  {
     this.options = options;
 
-    this._overlay = uiOverlay(() => {
+    this._overlay = uiOverlay(() => 
+    {
       // Don’t close on background click; welcome is an explicit action.
     });
 
@@ -41,20 +44,30 @@ export class WelcomeScreen {
     this.render();
   }
 
-  mount(parent: HTMLElement): void {
+  mount(parent: HTMLElement): void 
+  {
     parent.appendChild(this._overlay);
   }
 
-  open(): void {
-    if (this._isOpen) return;
+  open(): void 
+  {
+    if (this._isOpen) 
+    {
+      return;
+    }
     this._isOpen = true;
     this._overlay.classList.remove('ui-hidden');
 
     this._untrap = trapFocus(this._panel, () => this._isOpen);
 
-    const blockKeys = (e: KeyboardEvent) => {
-      if (!this._isOpen) return;
-      if (e.code === 'Escape') {
+    const blockKeys = (e: KeyboardEvent) => 
+    {
+      if (!this._isOpen) 
+      {
+        return;
+      }
+      if (e.code === 'Escape') 
+      {
         // Avoid opening the pause hub behind the welcome dialog.
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -66,8 +79,12 @@ export class WelcomeScreen {
     focusFirstDescendant(this._panel);
   }
 
-  close(): void {
-    if (!this._isOpen) return;
+  close(): void 
+  {
+    if (!this._isOpen) 
+    {
+      return;
+    }
     this._isOpen = false;
     this._overlay.classList.add('ui-hidden');
     this._untrap?.();
@@ -77,7 +94,8 @@ export class WelcomeScreen {
     this._unblockKeys = null;
   }
 
-  private render(): void {
+  private render(): void 
+  {
     this._panel.innerHTML = '';
 
     const titleText = this.options.title ?? 'Arcade Survival — Demo';
@@ -113,9 +131,13 @@ export class WelcomeScreen {
     const startBtn = uiButton({
       label: 'Start',
       title: 'Start the game',
-      onClick: () => {
+      onClick: () => 
+      {
         const res = this.options.onStart();
-        if (res === false) return;
+        if (res === false) 
+        {
+          return;
+        }
         this.close();
       },
     });
@@ -125,7 +147,8 @@ export class WelcomeScreen {
       uiButton({
         label: 'Focus Game',
         title: 'Move keyboard focus to the game canvas (keyboard controls)',
-        onClick: () => {
+        onClick: () => 
+        {
           const canvas = document.querySelector<HTMLCanvasElement>('#game');
           canvas?.focus();
         },

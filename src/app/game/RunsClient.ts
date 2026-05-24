@@ -10,11 +10,13 @@ export type RunStatsPayload = {
   shotsHit: number;
 };
 
-export class RunsClient {
+export class RunsClient 
+{
   private readonly _http: HttpClient;
   private readonly _auth: AuthClient;
 
-  constructor(baseUrl: string, auth: AuthClient) {
+  constructor(baseUrl: string, auth: AuthClient) 
+  {
     this._auth = auth;
     this._http = new HttpClient(baseUrl, {
       credentials: 'include',
@@ -22,9 +24,14 @@ export class RunsClient {
     });
   }
 
-  submitRun(stats: RunStatsPayload): void {
-    if (!this._auth.isLoggedIn()) return;
-    void this._http.post.json('/runs', stats).catch(() => {
+  submitRun(stats: RunStatsPayload): void 
+  {
+    if (!this._auth.isLoggedIn()) 
+    {
+      return;
+    }
+    void this._http.post.json('/runs', stats).catch(() => 
+    {
       // Best-effort — run stats are non-critical.
     });
   }

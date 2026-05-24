@@ -56,11 +56,13 @@ type AuditOk = { ok: true; entries: AdminLoginAudit[] };
 type AuditErr = { ok: false; error: string; message?: string };
 type AuditResponse = AuditOk | AuditErr;
 
-export class AdminClient {
+export class AdminClient 
+{
   private readonly _http: HttpClient;
   private readonly _auth: AuthClient;
 
-  constructor(baseUrl: string, auth: AuthClient) {
+  constructor(baseUrl: string, auth: AuthClient) 
+  {
     this._auth = auth;
     this._http = new HttpClient(baseUrl, {
       credentials: 'include',
@@ -68,40 +70,62 @@ export class AdminClient {
     });
   }
 
-  isAdminUser(): boolean {
+  isAdminUser(): boolean 
+  {
     return !!this._auth.user && this._auth.user.role === 'admin';
   }
 
-  currentUser(): AuthUser | null {
+  currentUser(): AuthUser | null 
+  {
     return this._auth.user;
   }
 
-  async listUsers(): Promise<AdminUser[]> {
+  async listUsers(): Promise<AdminUser[]> 
+  {
     const body = await this._http.get.json<UsersResponse>('/admin/users');
-    if (!body.ok) throw new Error(body.message ?? body.error);
+    if (!body.ok) 
+    {
+      throw new Error(body.message ?? body.error);
+    }
     return body.users;
   }
 
-  async listSaves(userId: number): Promise<AdminSave[]> {
+  async listSaves(userId: number): Promise<AdminSave[]> 
+  {
     const body = await this._http.get.json<SavesResponse>('/admin/saves', { userId });
-    if (!body.ok) throw new Error(body.message ?? body.error);
+    if (!body.ok) 
+    {
+      throw new Error(body.message ?? body.error);
+    }
     return body.saves;
   }
 
-  async listRuns(userId: number): Promise<AdminRun[]> {
+  async listRuns(userId: number): Promise<AdminRun[]> 
+  {
     const body = await this._http.get.json<RunsResponse>('/admin/runs', { userId });
-    if (!body.ok) throw new Error(body.message ?? body.error);
+    if (!body.ok) 
+    {
+      throw new Error(body.message ?? body.error);
+    }
     return body.runs;
   }
 
-  async setBan(userId: number, banned: boolean, reason?: string): Promise<void> {
+  async setBan(userId: number, banned: boolean, reason?: string): Promise<void> 
+  {
     const body = await this._http.post.json<BanResponse>('/admin/ban', { userId, banned, reason });
-    if (!body.ok) throw new Error(body.message ?? body.error);
+    if (!body.ok) 
+    {
+      throw new Error(body.message ?? body.error);
+    }
   }
 
-  async listLoginAudit(): Promise<AdminLoginAudit[]> {
+  async listLoginAudit(): Promise<AdminLoginAudit[]> 
+  {
     const body = await this._http.get.json<AuditResponse>('/admin/login-audit');
-    if (!body.ok) throw new Error(body.message ?? body.error);
+    if (!body.ok) 
+    {
+      throw new Error(body.message ?? body.error);
+    }
     return body.entries;
   }
 }

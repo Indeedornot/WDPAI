@@ -32,25 +32,33 @@ export type ComponentSerializer<T extends Component> = {
   link?: (c: T, data: unknown, ctx: LoadContext) => void;
 };
 
-function readNumber(v: unknown, fallback: number): number {
+function readNumber(v: unknown, fallback: number): number 
+{
   return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
 }
 
-function readString(v: unknown, fallback: string): string {
+function readString(v: unknown, fallback: string): string 
+{
   return typeof v === 'string' ? v : fallback;
 }
 
-function readBoolean(v: unknown, fallback: boolean): boolean {
+function readBoolean(v: unknown, fallback: boolean): boolean 
+{
   return typeof v === 'boolean' ? v : fallback;
 }
 
-function readVec2(v: unknown, fallback: Vec2): Vec2 {
-  if (typeof v !== 'object' || v === null) return fallback;
+function readVec2(v: unknown, fallback: Vec2): Vec2 
+{
+  if (typeof v !== 'object' || v === null) 
+  {
+    return fallback;
+  }
   const rec = v as Record<string, unknown>;
   return new Vec2(readNumber(rec['x'], fallback.x), readNumber(rec['y'], fallback.y));
 }
 
-export function defaultComponentSerializers(): ComponentSerializer<any>[] {
+export function defaultComponentSerializers(): ComponentSerializer<any>[] 
+{
   return [
     {
       type: 'Mover2D',
@@ -59,7 +67,8 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
         velocity: { x: c.velocity.x, y: c.velocity.y },
         impulse: { x: c.impulse.x, y: c.impulse.y },
       }),
-      deserialize: (data) => {
+      deserialize: (data) => 
+      {
         const m = new Mover2D();
         const rec = (data ?? {}) as Record<string, unknown>;
         const v = readVec2(rec['velocity'], Vec2.zero());
@@ -73,7 +82,8 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
       type: 'Health',
       supports: (c): c is Health => c instanceof Health,
       serialize: (c) => ({ max: c.max, current: c.current }),
-      deserialize: (data) => {
+      deserialize: (data) => 
+      {
         const rec = (data ?? {}) as Record<string, unknown>;
         return new Health({
           max: readNumber(rec['max'], 100),
@@ -85,7 +95,8 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
       type: 'Lifetime',
       supports: (c): c is Lifetime => c instanceof Lifetime,
       serialize: (c) => ({ secondsRemaining: c.secondsRemaining, expireMode: c.expireMode }),
-      deserialize: (data) => {
+      deserialize: (data) => 
+      {
         const rec = (data ?? {}) as Record<string, unknown>;
         const secondsRemaining = readNumber(rec['secondsRemaining'], 1);
         const expireMode = readString(rec['expireMode'], 'destroy') as any;
@@ -98,7 +109,8 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
       type: 'Experience',
       supports: (c): c is Experience => c instanceof Experience,
       serialize: (c) => ({ level: c.level, xp: c.xp }),
-      deserialize: (data) => {
+      deserialize: (data) => 
+      {
         const rec = (data ?? {}) as Record<string, unknown>;
         return new Experience({
           level: readNumber(rec['level'], 1),
@@ -114,7 +126,8 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
         stickyProjectilesSeconds: c.stickyProjectilesSeconds,
         doubleShotSpreadRadians: c.doubleShotSpreadRadians,
       }),
-      deserialize: (data) => {
+      deserialize: (data) => 
+      {
         const rec = (data ?? {}) as Record<string, unknown>;
         const c = new PowerupController2D({
           doubleShotSpreadRadians: readNumber(rec['doubleShotSpreadRadians'], 0.22),
@@ -132,7 +145,8 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
         offset: { x: c.offset.x, y: c.offset.y },
         isTrigger: c.isTrigger,
       }),
-      deserialize: (data) => {
+      deserialize: (data) => 
+      {
         const rec = (data ?? {}) as Record<string, unknown>;
         const size = readVec2(rec['size'], new Vec2(50, 50));
         const offset = readVec2(rec['offset'], new Vec2(0, 0));
@@ -145,7 +159,8 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
       type: 'SpriteRenderer2D',
       supports: (c): c is SpriteRenderer2D => c instanceof SpriteRenderer2D,
       serialize: (c) => ({ size: { x: c.size.x, y: c.size.y }, color: c.color }),
-      deserialize: (data) => {
+      deserialize: (data) => 
+      {
         const rec = (data ?? {}) as Record<string, unknown>;
         return new SpriteRenderer2D({
           size: readVec2(rec['size'], new Vec2(64, 64)),
@@ -163,7 +178,8 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
         fillColor: c.fillColor,
         borderColor: c.borderColor,
       }),
-      deserialize: (data) => {
+      deserialize: (data) => 
+      {
         const rec = (data ?? {}) as Record<string, unknown>;
         return new HealthBarRenderer2D({
           size: readVec2(rec['size'], new Vec2(90, 12)),
@@ -196,7 +212,8 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
         projectileExpireMode: c.projectileExpireMode,
         projectileStickyTotalLifetimeSeconds: c.projectileStickyTotalLifetimeSeconds,
       }),
-      deserialize: (data) => {
+      deserialize: (data) => 
+      {
         const rec = (data ?? {}) as Record<string, unknown>;
         const s = new Shooter2D({
           shootKey: readString(rec['shootKey'], 'Space'),
@@ -227,7 +244,8 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
       type: 'KeyboardMove2D',
       supports: (c): c is KeyboardMove2D => c instanceof KeyboardMove2D,
       serialize: (c) => ({ speed: c.speed, bindings: c.bindings }),
-      deserialize: (data) => {
+      deserialize: (data) => 
+      {
         const rec = (data ?? {}) as Record<string, unknown>;
         return new KeyboardMove2D({
           speed: readNumber(rec['speed'], 250),
@@ -239,7 +257,8 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
       type: 'VelocityDamping2D',
       supports: (c): c is VelocityDamping2D => c instanceof VelocityDamping2D,
       serialize: (c) => ({ damping: c.damping, minSpeed: c.minSpeed }),
-      deserialize: (data) => {
+      deserialize: (data) => 
+      {
         const rec = (data ?? {}) as Record<string, unknown>;
         return new VelocityDamping2D({
           damping: readNumber(rec['damping'], 8),
@@ -255,7 +274,8 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
         victimTag: c.victimTag,
         oncePerContact: c.oncePerContact,
       }),
-      deserialize: (data) => {
+      deserialize: (data) => 
+      {
         const rec = (data ?? {}) as Record<string, unknown>;
         return new DamageOnCollision2D({
           damage: readNumber(rec['damage'], 10),
@@ -268,7 +288,8 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
       type: 'DestroyOnCollision2D',
       supports: (c): c is DestroyOnCollision2D => c instanceof DestroyOnCollision2D,
       serialize: (c) => ({ otherTag: c.otherTag }),
-      deserialize: (data) => {
+      deserialize: (data) => 
+      {
         const rec = (data ?? {}) as Record<string, unknown>;
         return new DestroyOnCollision2D({ otherTag: readString(rec['otherTag'], '') });
       },
@@ -284,7 +305,8 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
       type: 'GrantXpToPlayerOnDeath2D',
       supports: (c): c is GrantXpToPlayerOnDeath2D => c instanceof GrantXpToPlayerOnDeath2D,
       serialize: (c) => ({ playerTag: c.playerTag, xp: c.xp }),
-      deserialize: (data) => {
+      deserialize: (data) => 
+      {
         const rec = (data ?? {}) as Record<string, unknown>;
         return new GrantXpToPlayerOnDeath2D({
           playerTag: readString(rec['playerTag'], 'Player'),
@@ -297,7 +319,8 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
       type: 'DropPowerupOnDeath2D',
       supports: (c): c is DropPowerupOnDeath2D => c instanceof DropPowerupOnDeath2D,
       serialize: (c) => ({ chance: c.chance }),
-      deserialize: (data) => {
+      deserialize: (data) => 
+      {
         const rec = (data ?? {}) as Record<string, unknown>;
         const c = new DropPowerupOnDeath2D({ chance: readNumber(rec['chance'], 0.25) });
         c.enabled = false;
@@ -315,7 +338,8 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[] {
         applyToOther: c.applyToOther,
         otherForceMultiplier: c.otherForceMultiplier,
       }),
-      deserialize: (data) => {
+      deserialize: (data) => 
+      {
         const rec = (data ?? {}) as Record<string, unknown>;
         return new KnockbackOnCollision2D({
           otherTag: readString(rec['otherTag'], ''),

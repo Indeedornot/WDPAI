@@ -15,35 +15,48 @@ export type GameSessionOptions = {
   onDeath: (stats: RunStatsPayload) => void;
 };
 
-export class GameSession {
+export class GameSession 
+{
   private readonly _options: GameSessionOptions;
   private _isDead = false;
   private _timer: number | null = null;
 
-  constructor(options: GameSessionOptions) {
+  constructor(options: GameSessionOptions) 
+  {
     this._options = options;
   }
 
-  get isDead(): boolean {
+  get isDead(): boolean 
+  {
     return this._isDead;
   }
 
-  start(): void {
-    if (this._timer !== null) return;
+  start(): void 
+  {
+    if (this._timer !== null) 
+    {
+      return;
+    }
     this._timer = window.setInterval(() => this._tick(), 250);
   }
 
-  stop(): void {
-    if (this._timer === null) return;
+  stop(): void 
+  {
+    if (this._timer === null) 
+    {
+      return;
+    }
     window.clearInterval(this._timer);
     this._timer = null;
   }
 
-  reset(): void {
+  reset(): void 
+  {
     this._isDead = false;
   }
 
-  private _tick(): void {
+  private _tick(): void 
+  {
     const { scene, loop, input, hudStatus, onDeath } = this._options;
 
     let playerHp = 'n/a';
@@ -52,28 +65,43 @@ export class GameSession {
     let deadNow = false;
     let statsSnapshot: RunStatsPayload | null = null;
 
-    for (const go of scene.getGameObjects()) {
-      if (go.tag !== 'Player') continue;
+    for (const go of scene.getGameObjects()) 
+    {
+      if (go.tag !== 'Player') 
+      {
+        continue;
+      }
 
       const h = go.getComponent(Health);
-      if (h) {
+      if (h) 
+      {
         playerHp = `${Math.round(h.current)}/${Math.round(h.max)}`;
         deadNow = h.isDead;
       }
 
       const xp = go.getComponent(Experience);
-      if (xp) playerXp = `Lv ${xp.level} · XP ${xp.xp}/${xp.xpToNext}`;
+      if (xp) 
+      {
+        playerXp = `Lv ${xp.level} · XP ${xp.xp}/${xp.xpToNext}`;
+      }
 
       const pu = go.getComponent(PowerupController2D);
-      if (pu) {
+      if (pu) 
+      {
         const active: string[] = [];
-        if (pu.doubleShotSeconds > 0) active.push(`Double (${Math.ceil(pu.doubleShotSeconds)}s)`);
+        if (pu.doubleShotSeconds > 0) 
+        {
+          active.push(`Double (${Math.ceil(pu.doubleShotSeconds)}s)`);
+        }
         if (pu.stickyProjectilesSeconds > 0)
+        {
           active.push(`Sticky (${Math.ceil(pu.stickyProjectilesSeconds)}s)`);
+        }
         powerups = active.length ? ` · Powerups: ${active.join(', ')}` : '';
       }
 
-      if (deadNow) {
+      if (deadNow) 
+      {
         const stats = go.getComponent(RunStats);
         statsSnapshot = {
           timeSeconds: Math.floor(stats?.elapsedSeconds ?? 0),
@@ -86,7 +114,8 @@ export class GameSession {
       }
     }
 
-    if (deadNow && !this._isDead) {
+    if (deadNow && !this._isDead) 
+    {
       this._isDead = true;
       loop.pause();
       input.clear();

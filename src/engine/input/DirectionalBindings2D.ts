@@ -36,28 +36,60 @@ export const DefaultShootingBindingsArrows: ShootingBindings2D = {
   [ShootingDirection2D.Right]: 'ArrowRight',
 };
 
-export function getMovementVector(input: Input, bindings: MovementBindings2D): Vec2 {
+export function getMovementVector(input: Input, bindings: MovementBindings2D): Vec2 
+{
   const v = new Vec2(0, 0);
-  if (input.isKeyDown(bindings[MovementDirection2D.Left])) v.x -= 1;
-  if (input.isKeyDown(bindings[MovementDirection2D.Right])) v.x += 1;
+  if (input.isKeyDown(bindings[MovementDirection2D.Left])) 
+  {
+    v.x -= 1;
+  }
+  if (input.isKeyDown(bindings[MovementDirection2D.Right])) 
+  {
+    v.x += 1;
+  }
 
   // World coords: +Y is up.
-  if (input.isKeyDown(bindings[MovementDirection2D.Up])) v.y += 1;
-  if (input.isKeyDown(bindings[MovementDirection2D.Down])) v.y -= 1;
+  if (input.isKeyDown(bindings[MovementDirection2D.Up])) 
+  {
+    v.y += 1;
+  }
+  if (input.isKeyDown(bindings[MovementDirection2D.Down])) 
+  {
+    v.y -= 1;
+  }
 
-  if (v.length() > 0) v.normalize();
+  if (v.length() > 0) 
+  {
+    v.normalize();
+  }
   return v;
 }
 
-export function getShootingVector(input: Input, bindings: ShootingBindings2D): Vec2 {
+export function getShootingVector(input: Input, bindings: ShootingBindings2D): Vec2 
+{
   const v = new Vec2(0, 0);
-  if (input.isKeyDown(bindings[ShootingDirection2D.Left])) v.x -= 1;
-  if (input.isKeyDown(bindings[ShootingDirection2D.Right])) v.x += 1;
+  if (input.isKeyDown(bindings[ShootingDirection2D.Left])) 
+  {
+    v.x -= 1;
+  }
+  if (input.isKeyDown(bindings[ShootingDirection2D.Right])) 
+  {
+    v.x += 1;
+  }
 
   // World coords: +Y is up.
-  if (input.isKeyDown(bindings[ShootingDirection2D.Up])) v.y += 1;
-  if (input.isKeyDown(bindings[ShootingDirection2D.Down])) v.y -= 1;
+  if (input.isKeyDown(bindings[ShootingDirection2D.Up])) 
+  {
+    v.y += 1;
+  }
+  if (input.isKeyDown(bindings[ShootingDirection2D.Down])) 
+  {
+    v.y -= 1;
+  }
 
-  if (v.length() > 0) v.normalize();
+  if (v.length() > 0) 
+  {
+    v.normalize();
+  }
   return v;
 }

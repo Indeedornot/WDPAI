@@ -12,7 +12,8 @@ export type AdminPanelAdmin = {
   setBan: (userId: number, banned: boolean, reason?: string) => Promise<void>;
 };
 
-export class AdminPanel {
+export class AdminPanel 
+{
   private readonly _admin: AdminPanelAdmin;
   private readonly _onBack: () => void;
   private readonly _onNeedRender: () => void;
@@ -24,26 +25,31 @@ export class AdminPanel {
   private _audit: AdminLoginAudit[] = [];
   private _selectedUserId: number | null = null;
 
-  constructor(admin: AdminPanelAdmin, onBack: () => void, onNeedRender: () => void) {
+  constructor(admin: AdminPanelAdmin, onBack: () => void, onNeedRender: () => void) 
+  {
     this._admin = admin;
     this._onBack = onBack;
     this._onNeedRender = onNeedRender;
   }
 
-  resetState(): void {
+  resetState(): void 
+  {
     this._status = '';
     this._busy = false;
     this._audit = [];
   }
 
-  async loadUsers(): Promise<void> {
-    await this._runBusy('Failed to load users', async () => {
+  async loadUsers(): Promise<void> 
+  {
+    await this._runBusy('Failed to load users', async () => 
+    {
       await this._doLoadUsers();
       this._status = `Loaded ${this._users.length} user(s).`;
     });
   }
 
-  render(): HTMLDivElement {
+  render(): HTMLDivElement 
+  {
     const rows: HTMLElement[] = [];
 
     const user = this._admin.getUser();
@@ -56,10 +62,14 @@ export class AdminPanel {
     refreshBtn.disabled = this._busy;
     rows.push(uiRow('Users', refreshBtn));
 
-    if (this._users.length === 0) {
+    if (this._users.length === 0) 
+    {
       rows.push(uiHint('No users loaded yet.'));
-    } else {
-      for (const u of this._users) {
+    }
+    else 
+    {
+      for (const u of this._users) 
+      {
         const inspectSaves = uiSmallButton({
           label: this._busy ? 'Working…' : 'Inspect Saves',
           onClick: () => void this._inspectSaves(u.id),
@@ -107,23 +117,41 @@ export class AdminPanel {
 
     rows.push(uiSection('Login audit', this._buildAuditRows()));
 
-    if (this._status) rows.push(uiHint(this._status));
+    if (this._status) 
+    {
+      rows.push(uiHint(this._status));
+    }
 
     rows.push(uiButton({ label: 'Back', onClick: () => this._onBack() }));
 
     return uiSection('Admin', rows);
   }
 
-  private _buildSaveRows(): HTMLElement[] {
-    if (this._selectedUserId == null) return [uiHint('Pick a user to inspect their save slots.')];
-    if (this._saves.length === 0) return [uiHint('No saves found.')];
+  private _buildSaveRows(): HTMLElement[] 
+  {
+    if (this._selectedUserId == null) 
+    {
+      return [uiHint('Pick a user to inspect their save slots.')];
+    }
+    if (this._saves.length === 0) 
+    {
+      return [uiHint('No saves found.')];
+    }
     return this._saves.map((s) => uiRow(s.slot, uiPill(`v${s.version}`), uiPill(s.updatedAt)));
   }
 
-  private _buildRunRows(): HTMLElement[] {
-    if (this._selectedUserId == null) return [uiHint('Pick a user to inspect their runs.')];
-    if (this._runs.length === 0) return [uiHint('No runs found.')];
-    return this._runs.map((r) => {
+  private _buildRunRows(): HTMLElement[] 
+  {
+    if (this._selectedUserId == null) 
+    {
+      return [uiHint('Pick a user to inspect their runs.')];
+    }
+    if (this._runs.length === 0) 
+    {
+      return [uiHint('No runs found.')];
+    }
+    return this._runs.map((r) => 
+    {
       const accuracy = r.shotsFired <= 0 ? 0 : r.shotsHit / r.shotsFired;
       return uiRow(
         r.createdAt,
@@ -136,42 +164,63 @@ export class AdminPanel {
     });
   }
 
-  private _buildAuditRows(): HTMLElement[] {
-    if (this._audit.length === 0) return [uiHint('No audit events loaded yet.')];
-    return this._audit.map((entry) => {
+  private _buildAuditRows(): HTMLElement[] 
+  {
+    if (this._audit.length === 0) 
+    {
+      return [uiHint('No audit events loaded yet.')];
+    }
+    return this._audit.map((entry) => 
+    {
       const pills: HTMLElement[] = [uiPill(entry.email), uiPill(entry.reason)];
-      if (entry.ip) pills.push(uiPill(entry.ip));
+      if (entry.ip) 
+      {
+        pills.push(uiPill(entry.ip));
+      }
       return uiRow(entry.attempted_at, ...pills);
     });
   }
 
-  private async _runBusy(errorLabel: string, fn: () => Promise<void>): Promise<void> {
+  private async _runBusy(errorLabel: string, fn: () => Promise<void>): Promise<void> 
+  {
     this._busy = true;
     this._status = '';
     this._onNeedRender();
-    try {
+    try 
+    {
       await fn();
-    } catch (e) {
+    }
+    catch (e) 
+    {
       this._status = `${errorLabel}: ${e instanceof Error ? e.message : 'unknown_error'}`;
-    } finally {
+    }
+    finally 
+    {
       this._busy = false;
       this._onNeedRender();
     }
   }
 
-  private async _doLoadUsers(): Promise<void> {
+  private async _doLoadUsers(): Promise<void> 
+  {
     this._users = await this._admin.listUsers();
     this._audit = await this._admin.listLoginAudit();
   }
 
-  private async _toggleBan(userId: number, banned: boolean): Promise<void> {
+  private async _toggleBan(userId: number, banned: boolean): Promise<void> 
+  {
     let reason: string | undefined;
-    if (banned) {
+    if (banned) 
+    {
       const r = window.prompt('Ban reason (optional):', '');
-      if (r !== null) reason = r;
+      if (r !== null) 
+      {
+        reason = r;
+      }
     }
 
-    await this._runBusy('Failed', async () => {
+    await this._runBusy('Failed', async () => 
+    {
       await this._admin.setBan(userId, banned, reason);
       this._selectedUserId = null;
       this._saves = [];
@@ -180,8 +229,10 @@ export class AdminPanel {
     });
   }
 
-  private async _inspectSaves(userId: number): Promise<void> {
-    await this._runBusy('Failed to load saves', async () => {
+  private async _inspectSaves(userId: number): Promise<void> 
+  {
+    await this._runBusy('Failed to load saves', async () => 
+    {
       this._selectedUserId = userId;
       this._runs = [];
       this._saves = await this._admin.listSaves(userId);
@@ -189,8 +240,10 @@ export class AdminPanel {
     });
   }
 
-  private async _inspectRuns(userId: number): Promise<void> {
-    await this._runBusy('Failed to load runs', async () => {
+  private async _inspectRuns(userId: number): Promise<void> 
+  {
+    await this._runBusy('Failed to load runs', async () => 
+    {
       this._selectedUserId = userId;
       this._saves = [];
       this._runs = await this._admin.listRuns(userId);

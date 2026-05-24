@@ -8,11 +8,13 @@ export type HttpClientOptions = {
   headersProvider?: () => Record<string, string>;
 };
 
-export class HttpError extends Error {
+export class HttpError extends Error 
+{
   readonly status: number;
   readonly body: unknown;
 
-  constructor(status: number, message: string, body?: unknown) {
+  constructor(status: number, message: string, body?: unknown) 
+  {
     super(message);
     this.name = 'HttpError';
     this.status = status;
@@ -32,7 +34,8 @@ export type DeleteVerb = {
   json<T>(path: string, query?: QueryParams): Promise<T>;
 };
 
-export class HttpClient {
+export class HttpClient 
+{
   private readonly _baseUrl: string;
   private readonly _credentials: RequestCredentials | undefined;
   private readonly _staticHeaders: Record<string, string>;
@@ -42,7 +45,8 @@ export class HttpClient {
   readonly post: PostVerb;
   readonly delete: DeleteVerb;
 
-  constructor(baseUrl: string, options: HttpClientOptions = {}) {
+  constructor(baseUrl: string, options: HttpClientOptions = {}) 
+  {
     this._baseUrl = baseUrl.replace(/\/$/, '');
     this._credentials = options.credentials;
     this._staticHeaders = options.headers ?? {};
@@ -61,19 +65,28 @@ export class HttpClient {
     };
   }
 
-  private _buildUrl(path: string, query?: QueryParams): string {
+  private _buildUrl(path: string, query?: QueryParams): string 
+  {
     const base = `${this._baseUrl}${path}`;
-    if (!query) return base;
+    if (!query) 
+    {
+      return base;
+    }
 
     const params = new URLSearchParams();
-    for (const [k, v] of Object.entries(query)) {
-      if (v != null) params.set(k, String(v));
+    for (const [k, v] of Object.entries(query)) 
+    {
+      if (v != null) 
+      {
+        params.set(k, String(v));
+      }
     }
     const qs = params.toString();
     return qs ? `${base}?${qs}` : base;
   }
 
-  private _mergedHeaders(extra?: Record<string, string>): Record<string, string> {
+  private _mergedHeaders(extra?: Record<string, string>): Record<string, string> 
+  {
     return {
       ...this._staticHeaders,
       ...(this._headersProvider?.() ?? {}),
@@ -85,7 +98,8 @@ export class HttpClient {
     method: string,
     path: string,
     options: { query?: QueryParams; body?: unknown } = {},
-  ): Promise<T> {
+  ): Promise<T> 
+  {
     const hasBody = options.body !== undefined;
     const res = await fetch(this._buildUrl(path, options.query), {
       method,
@@ -95,7 +109,8 @@ export class HttpClient {
     });
 
     const data = (await res.json()) as unknown;
-    if (!res.ok) {
+    if (!res.ok) 
+    {
       const msg = isApiError(data) ? (data.message ?? data.error) : `http_error_${res.status}`;
       throw new HttpError(res.status, msg, data);
     }
@@ -104,7 +119,8 @@ export class HttpClient {
   }
 }
 
-function isApiError(v: unknown): v is { ok: false; error: string; message?: string } {
+function isApiError(v: unknown): v is { ok: false; error: string; message?: string } 
+{
   return (
     typeof v === 'object' &&
     v !== null &&

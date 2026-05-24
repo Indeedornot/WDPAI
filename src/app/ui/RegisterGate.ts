@@ -28,7 +28,8 @@ export type RegisterGateOptions = {
   onRegistered?: (user: AuthUser) => void;
 };
 
-export class RegisterGate {
+export class RegisterGate 
+{
   private readonly _overlay: HTMLDivElement;
   private readonly _panel: HTMLDivElement;
   private _untrap: (() => void) | null = null;
@@ -42,10 +43,12 @@ export class RegisterGate {
 
   readonly options: RegisterGateOptions;
 
-  constructor(options: RegisterGateOptions) {
+  constructor(options: RegisterGateOptions) 
+  {
     this.options = options;
 
-    this._overlay = uiOverlay(() => {
+    this._overlay = uiOverlay(() => 
+    {
       // Don't close by background click; registration is required.
     });
 
@@ -58,24 +61,35 @@ export class RegisterGate {
     this.render();
   }
 
-  mount(parent: HTMLElement): void {
+  mount(parent: HTMLElement): void 
+  {
     parent.appendChild(this._overlay);
   }
 
-  refresh(): void {
+  refresh(): void 
+  {
     this.render();
   }
 
-  open(): void {
-    if (this._isOpen) return;
+  open(): void 
+  {
+    if (this._isOpen) 
+    {
+      return;
+    }
     this._isOpen = true;
     this._overlay.classList.remove('ui-hidden');
 
     this._untrap = trapFocus(this._panel, () => this._isOpen);
 
-    const blockKeys = (e: KeyboardEvent) => {
-      if (!this._isOpen) return;
-      if (e.code === 'Escape') {
+    const blockKeys = (e: KeyboardEvent) => 
+    {
+      if (!this._isOpen) 
+      {
+        return;
+      }
+      if (e.code === 'Escape') 
+      {
         // Avoid opening the pause hub behind the gate.
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -87,8 +101,12 @@ export class RegisterGate {
     focusFirstDescendant(this._panel);
   }
 
-  close(): void {
-    if (!this._isOpen) return;
+  close(): void 
+  {
+    if (!this._isOpen) 
+    {
+      return;
+    }
     this._isOpen = false;
     this._overlay.classList.add('ui-hidden');
 
@@ -99,7 +117,8 @@ export class RegisterGate {
     this._unblockKeys = null;
   }
 
-  private render(): void {
+  private render(): void 
+  {
     this._panel.innerHTML = '';
 
     const titleText = this.options.title ?? 'Create an account';
@@ -119,12 +138,15 @@ export class RegisterGate {
     const loggedIn = auth.isLoggedIn();
     const user = auth.getUser();
 
-    if (loggedIn && user) {
+    if (loggedIn && user) 
+    {
       body.appendChild(uiSection('Account', [uiHint(`Signed in as ${user.email}.`)]));
       body.appendChild(
         uiButton({ label: 'Continue', title: 'Continue to the game', onClick: () => this.close() }),
       );
-    } else {
+    }
+    else 
+    {
       const rows: HTMLElement[] = [];
 
       rows.push(
@@ -132,7 +154,8 @@ export class RegisterGate {
           'Email',
           'email',
           this._email,
-          (v) => {
+          (v) => 
+          {
             this._email = v;
           },
           'email',
@@ -143,7 +166,8 @@ export class RegisterGate {
           'Password',
           'password',
           this._password,
-          (v) => {
+          (v) => 
+          {
             this._password = v;
           },
           'new-password',
@@ -157,7 +181,10 @@ export class RegisterGate {
       regBtn.disabled = this._busy;
       rows.push(uiRow('Actions', regBtn));
 
-      if (this._status) rows.push(uiHint(this._status));
+      if (this._status) 
+      {
+        rows.push(uiHint(this._status));
+      }
 
       body.appendChild(uiSection('Account', rows));
     }
@@ -167,22 +194,28 @@ export class RegisterGate {
     this._panel.appendChild(body);
   }
 
-  private async handleRegister(): Promise<void> {
+  private async handleRegister(): Promise<void> 
+  {
     const auth = this.options.auth;
 
     this._busy = true;
     this._status = '';
     this.render();
 
-    try {
+    try 
+    {
       const user = await auth.register(this._email.trim(), this._password);
       this._password = '';
       this._status = `Registered. Signed in as ${user.email}.`;
       this.options.onRegistered?.(user);
       this.close();
-    } catch (e) {
+    }
+    catch (e) 
+    {
       this._status = `Register failed: ${e instanceof Error ? e.message : 'unknown_error'}`;
-    } finally {
+    }
+    finally 
+    {
       this._busy = false;
       this.render();
     }

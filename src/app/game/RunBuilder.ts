@@ -39,7 +39,8 @@ export type RunResult = {
 
 export const MAP_BOUNDS = { minX: -1100, maxX: 1100, minY: -1100, maxY: 1100 };
 
-export function buildRun(scene: Scene, controls: ControlsConfig): RunResult {
+export function buildRun(scene: Scene, controls: ControlsConfig): RunResult 
+{
   scene.clearImmediate();
 
   const grid = new GameObject('Grid');
@@ -52,7 +53,8 @@ export function buildRun(scene: Scene, controls: ControlsConfig): RunResult {
   );
   scene.add(grid);
 
-  const spawnPowerup = (x: number, y: number): GameObject => {
+  const spawnPowerup = (x: number, y: number): GameObject => 
+  {
     const kinds = [
       { kind: 'doubleShot' as const, label: '2x', color: DefaultTheme.ok },
       { kind: 'stickyProjectiles' as const, label: 'S', color: DefaultTheme.accent },
@@ -77,7 +79,8 @@ export function buildRun(scene: Scene, controls: ControlsConfig): RunResult {
     return go;
   };
 
-  const spawnEnemy = (pos: Vec2, n: number): GameObject => {
+  const spawnEnemy = (pos: Vec2, n: number): GameObject => 
+  {
     const enemy = new GameObject(`Enemy${n}`);
     enemy.tag = 'Enemy';
     enemy.transform.position.set(pos.x, pos.y);

@@ -37,7 +37,8 @@ export type Shooter2DOptions = {
   projectileStickyTotalLifetimeSeconds?: number;
 };
 
-export class Shooter2D extends Component {
+export class Shooter2D extends Component 
+{
   shootKey: string;
   aimBindings: ShootingBindings2D;
   fallbackToMoveVelocity: boolean;
@@ -59,7 +60,8 @@ export class Shooter2D extends Component {
   private _cooldown = 0;
   private _direction = new Vec2(1, 0);
 
-  constructor(options: Shooter2DOptions = {}) {
+  constructor(options: Shooter2DOptions = {}) 
+  {
     super();
     this.shootKey = options.shootKey ?? 'Space';
     this.aimBindings = {
@@ -83,10 +85,14 @@ export class Shooter2D extends Component {
     this.projectileStickyTotalLifetimeSeconds = options.projectileStickyTotalLifetimeSeconds ?? 0;
   }
 
-  update(dt: number): void {
+  update(dt: number): void 
+  {
     const go = this.gameObject;
     const scene = this.scene;
-    if (!go || !scene) return;
+    if (!go || !scene) 
+    {
+      return;
+    }
 
     const stats = go.getComponent(RunStats);
 
@@ -95,25 +101,36 @@ export class Shooter2D extends Component {
     const input = scene.input;
 
     const aim = getShootingVector(input, this.aimBindings);
-    if (aim.length() > 1e-6) {
+    if (aim.length() > 1e-6) 
+    {
       this._direction = aim;
-    } else if (this.fallbackToMoveVelocity) {
+    }
+    else if (this.fallbackToMoveVelocity) 
+    {
       const mover = go.getComponent(Mover2D);
-      if (mover && mover.velocity.length() > 1e-3) {
+      if (mover && mover.velocity.length() > 1e-3) 
+      {
         this._direction = mover.velocity.clone().normalize();
       }
     }
 
-    if (this._cooldown > 0) return;
+    if (this._cooldown > 0) 
+    {
+      return;
+    }
 
-    if (!input.wasKeyPressed(this.shootKey)) return;
+    if (!input.wasKeyPressed(this.shootKey)) 
+    {
+      return;
+    }
 
     this._cooldown = 1 / Math.max(0.001, this.fireRatePerSecond);
 
     const shots = Math.max(1, Math.floor(this.shotsPerFire));
     const spread = this.spreadRadians;
 
-    for (let i = 0; i < shots; i++) {
+    for (let i = 0; i < shots; i++) 
+    {
       const t = shots === 1 ? 0.5 : i / (shots - 1);
       const angle = (t - 0.5) * spread;
       const dir = rotateUnitVector(this._direction, angle);
@@ -140,7 +157,10 @@ export class Shooter2D extends Component {
           oncePerContact: true,
         }),
       );
-      if (stats) dmg.stats = stats;
+      if (stats) 
+      {
+        dmg.stats = stats;
+      }
       projectile.addComponent(
         new KnockbackOnCollision2D({
           otherTag: this.projectileVictimTag,
@@ -163,7 +183,8 @@ export class Shooter2D extends Component {
 
       // Phase 2: if this was fired while "sticky" is active, ensure it disappears when the
       // effect would have ended (based on the player's remaining sticky time at fire-time).
-      if (this.projectileExpireMode === 'freeze' && this.projectileStickyTotalLifetimeSeconds > 0) {
+      if (this.projectileExpireMode === 'freeze' && this.projectileStickyTotalLifetimeSeconds > 0) 
+      {
         projectile.addComponent(
           new Lifetime({
             seconds: this.projectileStickyTotalLifetimeSeconds,
@@ -172,14 +193,21 @@ export class Shooter2D extends Component {
         );
       }
 
-      if (stats) stats.shotsFired += 1;
+      if (stats) 
+      {
+        stats.shotsFired += 1;
+      }
       scene.add(projectile);
     }
   }
 }
 
-function rotateUnitVector(v: Vec2, radians: number): Vec2 {
-  if (Math.abs(radians) <= 1e-8) return v.clone();
+function rotateUnitVector(v: Vec2, radians: number): Vec2 
+{
+  if (Math.abs(radians) <= 1e-8) 
+  {
+    return v.clone();
+  }
   const c = Math.cos(radians);
   const s = Math.sin(radians);
   return new Vec2(v.x * c - v.y * s, v.x * s + v.y * c);
