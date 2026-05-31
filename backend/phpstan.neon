@@ -1,0 +1,8 @@
+parameters:
+  level: 5
+  paths:
+    - src
+  treatPhpDocTypesAsCertain: false
+  ignoreErrors:
+    # password_hash() stubs report non-empty-string but PHP docs say string|false
+    - '#Call to function is_string\(\) with non-empty-string will always evaluate to true#'
