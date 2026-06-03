@@ -9,6 +9,9 @@ export type EnemySpawner2DOptions = {
   /** Seconds between spawns. */
   spawnEverySeconds?: number;
 
+  /** If provided, called each frame to compute the current spawn interval (overrides spawnEverySeconds). */
+  spawnIntervalProvider?: () => number;
+
   /** Hard cap on active enemies (by tag). */
   maxAlive?: number;
 
@@ -22,11 +25,12 @@ export type EnemySpawner2DOptions = {
   factory: (spawnPosition: Vec2, spawnIndex: number) => GameObject;
 };
 
-export class EnemySpawner2D extends Component 
+export class EnemySpawner2D extends Component
 {
   enemyTag: string;
   playerTag: string;
   spawnEverySeconds: number;
+  spawnIntervalProvider: (() => number) | null;
   maxAlive: number;
   spawnDistance: number;
   spawnDistanceJitter: number;
@@ -35,12 +39,13 @@ export class EnemySpawner2D extends Component
   private _elapsed = 0;
   private _spawnIndex = 0;
 
-  constructor(options: EnemySpawner2DOptions) 
+  constructor(options: EnemySpawner2DOptions)
   {
     super();
     this.enemyTag = options.enemyTag ?? 'Enemy';
     this.playerTag = options.playerTag ?? 'Player';
     this.spawnEverySeconds = options.spawnEverySeconds ?? 1.25;
+    this.spawnIntervalProvider = options.spawnIntervalProvider ?? null;
     this.maxAlive = options.maxAlive ?? 10;
     this.spawnDistance = options.spawnDistance ?? 650;
     this.spawnDistanceJitter = options.spawnDistanceJitter ?? 160;
@@ -56,15 +61,16 @@ export class EnemySpawner2D extends Component
     }
 
     this._elapsed += dt;
-    if (this.spawnEverySeconds <= 0) 
+    const interval = this.spawnIntervalProvider ? this.spawnIntervalProvider() : this.spawnEverySeconds;
+    if (interval <= 0)
     {
       return;
     }
 
     // Catch-up loop so spawning is stable even if a frame hitches.
-    while (this._elapsed >= this.spawnEverySeconds) 
+    while (this._elapsed >= interval)
     {
-      this._elapsed -= this.spawnEverySeconds;
+      this._elapsed -= interval;
 
       const alive = this.countAliveEnemies();
       if (alive >= this.maxAlive) 

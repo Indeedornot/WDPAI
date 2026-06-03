@@ -1,4 +1,6 @@
 import type { Component } from '../../engine/core/Component';
+import { ChasePlayer2D } from '../../engine/components/ChasePlayer2D';
+import { CountKillToPlayerStatsOnDeath2D } from '../../engine/components/CountKillToPlayerStatsOnDeath2D';
 import { DamageOnCollision2D } from '../../engine/components/DamageOnCollision2D';
 import { DestroyOnCollision2D } from '../../engine/components/DestroyOnCollision2D';
 import { DestroyWhenDead } from '../../engine/components/DestroyWhenDead';
@@ -11,8 +13,11 @@ import { KnockbackOnCollision2D } from '../../engine/components/KnockbackOnColli
 import { Lifetime } from '../../engine/components/Lifetime';
 import { Mover2D } from '../../engine/components/Mover2D';
 import { PowerupController2D } from '../../engine/components/PowerupController2D';
+import { RunStats } from '../../engine/components/RunStats';
 import { Shooter2D } from '../../engine/components/Shooter2D';
+import { Spin2D } from '../../engine/components/Spin2D';
 import { VelocityDamping2D } from '../../engine/components/VelocityDamping2D';
+import { WrapAroundBounds2D } from '../../engine/components/WrapAroundBounds2D';
 import { Vec2 } from '../../engine/math/Vec2';
 import { AabbCollider2D } from '../../engine/physics/AabbCollider2D';
 import { HealthBarRenderer2D } from '../../engine/render/HealthBarRenderer2D';
@@ -338,7 +343,7 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[]
         applyToOther: c.applyToOther,
         otherForceMultiplier: c.otherForceMultiplier,
       }),
-      deserialize: (data) => 
+      deserialize: (data) =>
       {
         const rec = (data ?? {}) as Record<string, unknown>;
         return new KnockbackOnCollision2D({
@@ -348,6 +353,81 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[]
           applyToSelf: rec['applyToSelf'] == null ? true : Boolean(rec['applyToSelf']),
           applyToOther: Boolean(rec['applyToOther']),
           otherForceMultiplier: readNumber(rec['otherForceMultiplier'], 1),
+        });
+      },
+    },
+    {
+      type: 'RunStats',
+      supports: (c): c is RunStats => c instanceof RunStats,
+      serialize: (c) => ({
+        elapsedSeconds: c.elapsedSeconds,
+        kills: c.kills,
+        shotsFired: c.shotsFired,
+        shotsHit: c.shotsHit,
+      }),
+      deserialize: (data) =>
+      {
+        const rec = (data ?? {}) as Record<string, unknown>;
+        const s = new RunStats();
+        s.elapsedSeconds = readNumber(rec['elapsedSeconds'], 0);
+        s.kills = readNumber(rec['kills'], 0);
+        s.shotsFired = readNumber(rec['shotsFired'], 0);
+        s.shotsHit = readNumber(rec['shotsHit'], 0);
+        return s;
+      },
+    },
+    {
+      type: 'WrapAroundBounds2D',
+      supports: (c): c is WrapAroundBounds2D => c instanceof WrapAroundBounds2D,
+      serialize: (c) => ({ minX: c.minX, maxX: c.maxX, minY: c.minY, maxY: c.maxY }),
+      deserialize: (data) =>
+      {
+        const rec = (data ?? {}) as Record<string, unknown>;
+        return new WrapAroundBounds2D({
+          minX: readNumber(rec['minX'], -1100),
+          maxX: readNumber(rec['maxX'], 1100),
+          minY: readNumber(rec['minY'], -1100),
+          maxY: readNumber(rec['maxY'], 1100),
+        });
+      },
+    },
+    {
+      type: 'Spin2D',
+      supports: (c): c is Spin2D => c instanceof Spin2D,
+      serialize: (c) => ({ radiansPerSecond: c.radiansPerSecond }),
+      deserialize: (data) =>
+      {
+        const rec = (data ?? {}) as Record<string, unknown>;
+        return new Spin2D({ radiansPerSecond: readNumber(rec['radiansPerSecond'], Math.PI) });
+      },
+    },
+    {
+      type: 'CountKillToPlayerStatsOnDeath2D',
+      supports: (c): c is CountKillToPlayerStatsOnDeath2D => c instanceof CountKillToPlayerStatsOnDeath2D,
+      serialize: (c) => ({ playerTag: c.playerTag }),
+      deserialize: (data) =>
+      {
+        const rec = (data ?? {}) as Record<string, unknown>;
+        return new CountKillToPlayerStatsOnDeath2D({ playerTag: readString(rec['playerTag'], 'Player') });
+      },
+    },
+    {
+      type: 'ChasePlayer2D',
+      supports: (c): c is ChasePlayer2D => c instanceof ChasePlayer2D,
+      serialize: (c) => ({
+        speed: c.speed,
+        targetTag: c.targetTag,
+        stopDistance: c.stopDistance,
+        reacquireSeconds: c.reacquireSeconds,
+      }),
+      deserialize: (data) =>
+      {
+        const rec = (data ?? {}) as Record<string, unknown>;
+        return new ChasePlayer2D({
+          speed: readNumber(rec['speed'], 160),
+          targetTag: readString(rec['targetTag'], 'Player'),
+          stopDistance: readNumber(rec['stopDistance'], 18),
+          reacquireSeconds: readNumber(rec['reacquireSeconds'], 0.25),
         });
       },
     },

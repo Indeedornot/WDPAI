@@ -36,7 +36,7 @@ export class SceneSerializer
 
   serialize(scene: Scene): SceneSnapshotV1 
   {
-    const objects = scene.getGameObjects().map((go) => this.serializeGameObject(go));
+    const objects = Array.from(scene.getGameObjects(), (go) => this.serializeGameObject(go));
 
     return {
       version: 1,

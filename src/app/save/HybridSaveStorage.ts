@@ -1,4 +1,5 @@
 import type { AuthClient } from '../auth/AuthClient';
+import { HttpError } from '../http/HttpClient';
 import type { SaveStorage } from './SaveStorage';
 
 /**
@@ -80,11 +81,7 @@ export class HybridSaveStorage implements SaveStorage
   }
 }
 
-function isUnauthorized(e: unknown): boolean 
+function isUnauthorized(e: unknown): boolean
 {
-  if (!(e instanceof Error)) 
-  {
-    return false;
-  }
-  return e.message.includes(' 401') || e.message.endsWith('401');
+  return e instanceof HttpError && e.status === 401;
 }

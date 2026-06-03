@@ -41,7 +41,8 @@ export class GrantXpToPlayerOnDeath2D extends Component
       return;
     }
 
-    const player = scene.getGameObjects().find((o) => o.active && o.tag === this.playerTag) ?? null;
+    let player = null;
+    for (const o of scene.getGameObjects()) { if (o.active && o.tag === this.playerTag) { player = o; break; } }
     if (!player) 
     {
       this._done = true;

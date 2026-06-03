@@ -22,9 +22,9 @@ export class Scene
     this.camera = camera;
   }
 
-  getGameObjects(): readonly GameObject[] 
+  getGameObjects(): ReadonlySet<GameObject>
   {
-    return Array.from(this._objects);
+    return this._objects;
   }
 
   clearImmediate(): void 
