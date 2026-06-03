@@ -5,19 +5,11 @@ declare(strict_types=1);
 namespace App\Auth;
 
 use App\Container\Attributes\Injectable;
-use PDO;
-use App\Auth\AuthSession;
+use App\Repository\BaseRepository;
 
 #[Injectable]
-final class TokenRepository
+final class TokenRepository extends BaseRepository
 {
-    private PDO $pdo;
-
-    public function __construct(PDO $pdo)
-    {
-        $this->pdo = $pdo;
-    }
-
     /**
      * Creates a new bearer token for a user.
      *
@@ -76,7 +68,7 @@ final class TokenRepository
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([':th' => $hash]);
-        $row = $stmt->fetch();
+        $row = $this->fetchRow($stmt);
         if (!$row) {
             return null;
         }

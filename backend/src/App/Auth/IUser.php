@@ -6,7 +6,9 @@ namespace App\Auth;
 
 interface IUser
 {
-    public string $email { get; }
-    public string $role { get; }
-    public int $id { get; }
+    public function id(): int;
+
+    public function email(): string;
+
+    public function role(): string;
 }

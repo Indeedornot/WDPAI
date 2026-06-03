@@ -5,25 +5,18 @@ declare(strict_types=1);
 namespace App\Save;
 
 use App\Container\Attributes\Injectable;
-use PDO;
+use App\Repository\BaseRepository;
 use RuntimeException;
 
 #[Injectable]
-final class PlayerSaveRepository
+final class PlayerSaveRepository extends BaseRepository
 {
-    private PDO $pdo;
-
-    public function __construct(PDO $pdo)
-    {
-        $this->pdo = $pdo;
-    }
-
     /** @return array{user_id:int,slot:string,version:int,payload:mixed,updated_at:string}|null */
     public function findByUserAndSlot(int $userId, string $slot): ?array
     {
         $stmt = $this->pdo->prepare('SELECT user_id, slot, version, payload, updated_at FROM player_saves WHERE user_id = :uid AND slot = :slot');
         $stmt->execute([':uid' => $userId, ':slot' => $slot]);
-        $row = $stmt->fetch();
+        $row = $this->fetchRow($stmt);
         if (!$row) {
             return null;
         }

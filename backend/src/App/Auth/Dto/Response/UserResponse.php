@@ -12,7 +12,7 @@ final class UserResponse
         public readonly string $role,
     ) {}
 
-    public static function fromUser(\App\Auth\Entity\User $user): self
+    public static function fromUser(\App\Auth\Entity\User|\App\Auth\AuthUser $user): self
     {
         return new self(
             id: $user->id,

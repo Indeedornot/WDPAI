@@ -31,10 +31,7 @@ final class AuthController extends Controller
 {
     public function register(RegisterInput $input, UserRepository $userRepo, TokenRepository $tokenRepo): Response
     {
-        $passwordHash = password_hash($input->password, PASSWORD_DEFAULT);
-        if (!is_string($passwordHash) || $passwordHash === '') {
-            throw new RuntimeException(AuthConstants::MSG_PASSWORD_HASH_FAILED);
-        }
+        $passwordHash = $this->hashPassword($input->password);
 
         try {
             $user = $userRepo->createPlayer($input->email, $passwordHash);
@@ -158,5 +155,15 @@ final class AuthController extends Controller
             httpOnly: false,
             sameSite: AuthConstants::COOKIE_SAME_SITE,
         ))->toArray();
+    }
+
+    /** @return non-empty-string */
+    private function hashPassword(string $password): string
+    {
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+        if (!is_string($hash)) {
+            throw new RuntimeException(AuthConstants::MSG_PASSWORD_HASH_FAILED);
+        }
+        return $hash;
     }
 }

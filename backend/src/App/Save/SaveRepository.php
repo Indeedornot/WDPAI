@@ -4,24 +4,17 @@ declare(strict_types=1);
 
 namespace App\Save;
 
-use PDO;
+use App\Repository\BaseRepository;
 use RuntimeException;
 
-final class SaveRepository
+final class SaveRepository extends BaseRepository
 {
-    private PDO $pdo;
-
-    public function __construct(PDO $pdo)
-    {
-        $this->pdo = $pdo;
-    }
-
     /** @return array{slot: string, version: int, payload: mixed, updated_at: string}|null */
     public function findBySlot(string $slot): ?array
     {
         $stmt = $this->pdo->prepare('SELECT slot, version, payload, updated_at FROM saves WHERE slot = :slot');
         $stmt->execute([':slot' => $slot]);
-        $row = $stmt->fetch();
+        $row = $this->fetchRow($stmt);
         if (!$row) {
             return null;
         }

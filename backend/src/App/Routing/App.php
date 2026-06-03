@@ -8,6 +8,7 @@ use App\Error\ApiErrorCode;
 use App\Error\FailureRepository;
 use App\Http\HttpStatus;
 use App\Kernel;
+use App\Routing\Middleware\ClientErrorLogger;
 use Throwable;
 
 final class App
@@ -52,6 +53,9 @@ final class App
             if (!$res) {
                 $res = Response::error(ApiErrorCode::NotFound, HttpStatus::NotFound);
             }
+
+            $errorLogger = new ClientErrorLogger();
+            $res = $errorLogger->process($req, $res);
 
             return $this->withCors($res, $req);
         } catch (Throwable $e) {

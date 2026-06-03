@@ -84,9 +84,11 @@ final class Response
         return new self($statusCode, ['Content-Type' => 'application/json; charset=utf-8'], $payload);
     }
 
-    /** @param array<string, mixed> $data */
-    public static function ok(array $data = [], HttpStatus|int $status = HttpStatus::Ok): self
+    public static function ok(mixed $data = [], HttpStatus|int $status = HttpStatus::Ok): self
     {
+        if (!is_array($data)) {
+            return self::json($data, $status);
+        }
         return self::json(array_merge(['ok' => true], $data), $status);
     }
 

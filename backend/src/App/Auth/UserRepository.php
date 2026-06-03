@@ -5,23 +5,16 @@ declare(strict_types=1);
 namespace App\Auth;
 
 use App\Container\Attributes\Injectable;
-use PDO;
+use App\Repository\BaseRepository;
 
 #[Injectable]
-final class UserRepository
+final class UserRepository extends BaseRepository
 {
-    private PDO $pdo;
-
-    public function __construct(PDO $pdo)
-    {
-        $this->pdo = $pdo;
-    }
-
     public function findByEmail(string $email): ?array
     {
         $stmt = $this->pdo->prepare('SELECT id, email, password_hash, role, banned_at, banned_reason FROM users WHERE email = :email');
         $stmt->execute([':email' => $email]);
-        $row = $stmt->fetch();
+        $row = $this->fetchRow($stmt);
         if (!$row) {
             return null;
         }
@@ -40,7 +33,7 @@ final class UserRepository
     {
         $stmt = $this->pdo->prepare('SELECT id, email, role, banned_at, banned_reason FROM users WHERE id = :id');
         $stmt->execute([':id' => $id]);
-        $row = $stmt->fetch();
+        $row = $this->fetchRow($stmt);
         if (!$row) {
             return null;
         }
