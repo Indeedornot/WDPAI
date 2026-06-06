@@ -62,12 +62,7 @@ final class Router
             throw new RuntimeException('Controller not found: ' . $controllerClass);
         }
 
-        // Prefer container resolution (allows singletons / DI). Fall back to direct construction.
-        try {
-            $controller = $kernel->container()->make($controllerClass);
-        } catch (\Throwable $e) {
-            $controller = new $controllerClass($kernel);
-        }
+        $controller = $kernel->container()->make($controllerClass);
         if (!method_exists($controller, $action->method)) {
             throw new RuntimeException('Controller method not found: ' . $controllerClass . '::' . $action->method);
         }
@@ -161,7 +156,7 @@ final class Router
         /** @var RequireAuth $cfg */
         $cfg = $attrs[0]->newInstance();
 
-        $auth = new AuthService($kernel->pdo());
+        $auth = $kernel->container()->get(AuthService::class);
         $user = $auth->authenticate($req);
         if ($user === null) {
             return Response::error(ApiErrorCode::Unauthorized, HttpStatus::Unauthorized, 'Missing or invalid token.');

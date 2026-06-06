@@ -44,6 +44,18 @@ final class AdminController extends Controller
     }
 
     #[RequireAuth(policy: PermissionPolicyGroup::Admin)]
+    public function latestRuns(AuthUser $user, AdminRepository $repo): Response
+    {
+        return Response::ok(['runs' => $repo->listLatestRuns()]);
+    }
+
+    #[RequireAuth(policy: PermissionPolicyGroup::Admin)]
+    public function saveSummary(AuthUser $user, AdminRepository $repo): Response
+    {
+        return Response::ok(['summary' => $repo->listSaveSummary()]);
+    }
+
+    #[RequireAuth(policy: PermissionPolicyGroup::Admin)]
     public function ban(BanUserInput $input, AuthUser $user, UserRepository $userRepo, TokenRepository $tokenRepo): Response
     {
         if ($input->userId === $user->id) {

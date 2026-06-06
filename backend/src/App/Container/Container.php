@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Container;
 
 use App\Container\Attributes\Injectable;
+use App\Logging\Logger;
+use App\Logging\LoggerFactory;
 use App\Kernel;
 use ReflectionClass;
 use RuntimeException;
@@ -38,7 +40,7 @@ final class Container
      * Get a registered service or attempt to auto-wire a class.
      * @return mixed
      */
-    public function get(string $id)
+    public function get(string $id, ?string $consumerClass = null)
     {
         if (array_key_exists($id, $this->instances)) {
             return $this->instances[$id];
@@ -68,14 +70,19 @@ final class Container
         $params = [];
         foreach ($ctor->getParameters() as $p) {
             $t = $p->getType();
-            if ($t && !$t->isBuiltin()) {
+            if ($t instanceof \ReflectionNamedType && !$t->isBuiltin()) {
                 $tn = $t->getName();
                 if ($tn === Kernel::class) {
                     $params[] = $this->kernel;
                     continue;
                 }
+                if ($tn === Logger::class) {
+                    $loggerName = $consumerClass ?? $id;
+                    $params[] = LoggerFactory::getLogger($loggerName);
+                    continue;
+                }
                 // recursive resolve
-                $params[] = $this->get($tn);
+                $params[] = $this->get($tn, $id);
                 continue;
             }
 
@@ -88,9 +95,8 @@ final class Container
         }
 
         $obj = $rc->newInstanceArgs($params);
-        if ($this->isSingleton($id)) {
-            $this->instances[$id] = $obj;
-        }
+        // Auto-wired #[Injectable] classes are treated as singletons unless explicitly scoped otherwise.
+        $this->instances[$id] = $obj;
         return $obj;
     }
 

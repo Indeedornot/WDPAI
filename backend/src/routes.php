@@ -34,6 +34,8 @@ function map_endpoints(App $app): void
     $app->get('/admin/saves', new ControllerAction(AdminController::class, 'saves'));
     $app->get('/admin/runs', new ControllerAction(AdminController::class, 'runs'));
     $app->get('/admin/login-audit', new ControllerAction(AdminController::class, 'loginAudit'));
+    $app->get('/admin/latest-runs', new ControllerAction(AdminController::class, 'latestRuns'));
+    $app->get('/admin/save-summary', new ControllerAction(AdminController::class, 'saveSummary'));
     $app->post('/admin/ban', new ControllerAction(AdminController::class, 'ban'));
 
     $app->get('/save', new ControllerAction(SaveController::class, 'get'));
