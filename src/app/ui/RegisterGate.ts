@@ -1,4 +1,5 @@
 import type { AuthUser } from '../auth/AuthClient';
+import type { Component } from './Component';
 import {
   focusFirstDescendant,
   trapFocus,
@@ -28,7 +29,7 @@ export type RegisterGateOptions = {
   onRegistered?: (user: AuthUser) => void;
 };
 
-export class RegisterGate 
+export class RegisterGate implements Component
 {
   private readonly _overlay: HTMLDivElement;
   private readonly _panel: HTMLDivElement;

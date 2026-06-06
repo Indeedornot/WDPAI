@@ -1,5 +1,10 @@
 import './style.css';
 
+import { Logger } from './app/logging/Logger';
+import type { AppEvents } from './app/services/EventBus';
+import { EventBus } from './app/services/EventBus';
+import { ErrorRecoveryLayer } from './app/error/ErrorRecoveryLayer';
+import { HttpClient } from './app/http/HttpClient';
 import { GameLoop } from './engine/core/GameLoop';
 import { Scene } from './engine/core/Scene';
 import { Input } from './engine/input/Input';
@@ -8,12 +13,8 @@ import {
   DefaultShootingBindingsArrows,
 } from './engine/input/DirectionalBindings2D';
 import { Camera2D } from './engine/render/Camera2D';
-import { CountKillToPlayerStatsOnDeath2D } from './engine/components/CountKillToPlayerStatsOnDeath2D';
-import { Health } from './engine/components/Health';
 import { KeyboardMove2D } from './engine/components/KeyboardMove2D';
-import { RunStats } from './engine/components/RunStats';
 import { Shooter2D } from './engine/components/Shooter2D';
-import { WrapAroundBounds2D } from './engine/components/WrapAroundBounds2D';
 import type { ControlsConfig } from './app/controls/ControlsConfig';
 import { DEFAULT_CONTROLS, parseControlsConfig } from './app/controls/ControlsConfig';
 import { PauseMenu } from './app/ui/PauseMenu';
@@ -29,9 +30,12 @@ import { AuthClient } from './app/auth/AuthClient';
 import { HybridSaveStorage } from './app/save/HybridSaveStorage';
 import { AdminClient } from './app/admin/AdminClient';
 import { RegisterGate } from './app/ui/RegisterGate';
-import { buildRun, MAP_BOUNDS } from './app/game/RunBuilder';
+import { SettingsPanel } from './app/ui/SettingsPanel';
+import { Tutorial } from './app/ui/Tutorial';
+import { buildRun } from './app/game/RunBuilder';
 import { GameSession } from './app/game/GameSession';
 import { RunsClient } from './app/game/RunsClient';
+import { Leaderboard } from './app/game/Leaderboard';
 
 const CONTROLS_KEY = 'my-ts-app:controls:v1';
 const SETTINGS_KEY = 'my-ts-app:settings:v1';
@@ -136,12 +140,26 @@ camera.zoom = 1;
 
 const scene = new Scene(input, camera);
 
+const logger = Logger.named('Main');
+const eventBus = new EventBus<AppEvents>();
+const errorRecovery = new ErrorRecoveryLayer();
+
 let accessibleMode = loadAccessibleMode();
 
 const backendUrl = (import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8080').toString();
 const auth = new AuthClient(backendUrl);
 const admin = new AdminClient(backendUrl, auth);
 const runsClient = new RunsClient(backendUrl, auth);
+
+const handleErrorsProcessed = () =>
+{
+  Logger.getInstance().clearLogs();
+  logger.info('Client error logs cleared by server');
+};
+
+HttpClient.onErrorsProcessedGlobal = handleErrorsProcessed;
+
+logger.info('App initialized', { backendUrl });
 
 let controls: ControlsConfig = loadControls();
 
@@ -176,8 +194,10 @@ const saveManager = new SaveManager(scene, saveStorage, new SceneSerializer(), {
 });
 saveManager.startAutoSave();
 
+const leaderboard = new Leaderboard();
+
 const death = new DeathScreen({
-  onRestart: () => 
+  onRestart: () =>
   {
     loop.pause();
     input.clear();
@@ -187,6 +207,7 @@ const death = new DeathScreen({
     canvas.focus();
     announcer.announce('Restarted.', 'polite');
   },
+  leaderboard,
 });
 death.mount(app);
 
@@ -195,7 +216,8 @@ const gameSession = new GameSession({
   loop,
   input,
   hudStatus,
-  onDeath: (stats) => 
+  leaderboard,
+  onDeath: (stats) =>
   {
     runsClient.submitRun(stats);
     death.open(stats);
@@ -248,72 +270,42 @@ const menu = new PauseMenu({
       announcer.announce('Save failed.', 'assertive');
     }
   },
-  onLoadNow: async () => 
+  onLoadNow: async () =>
   {
     let ok = false;
-    try 
+    try
     {
       ok = await saveManager.loadNow();
     }
-    catch 
+    catch
     {
       // loadNow failed; ok stays false
     }
-    if (!ok) 
+    if (!ok)
     {
       return;
     }
 
     announcer.announce('Loaded last save.', 'polite');
 
-    for (const go of scene.getGameObjects()) 
+    for (const go of scene.getGameObjects())
     {
-      if (go.tag !== 'Player') 
+      if (go.tag !== 'Player')
       {
         continue;
       }
       const move = go.getComponent(KeyboardMove2D);
-      if (move) 
+      if (move)
       {
         move.bindings = { ...DefaultMovementBindingsWASD, ...controls.movement };
+        playerMove = move;
       }
       const shooter = go.getComponent(Shooter2D);
-      if (shooter) 
+      if (shooter)
       {
         shooter.aimBindings = { ...DefaultShootingBindingsArrows, ...controls.aim };
         shooter.shootKey = controls.shootKey;
-      }
-      if (!go.getComponent(RunStats)) 
-      {
-        go.addComponent(new RunStats());
-      }
-      if (!go.getComponent(WrapAroundBounds2D)) 
-      {
-        go.addComponent(new WrapAroundBounds2D(MAP_BOUNDS));
-      }
-      if (move) 
-      {
-        playerMove = move;
-      }
-      if (shooter) 
-      {
         playerShooter = shooter;
-      }
-    }
-
-    for (const go of scene.getGameObjects()) 
-    {
-      if (go.tag !== 'Enemy') 
-      {
-        continue;
-      }
-      if (!go.getComponent(Health)) 
-      {
-        continue;
-      }
-      if (!go.getComponent(CountKillToPlayerStatsOnDeath2D))
-      {
-        go.addComponent(new CountKillToPlayerStatsOnDeath2D());
       }
     }
   },
@@ -353,8 +345,40 @@ const menu = new PauseMenu({
     listLoginAudit: () => admin.listLoginAudit(),
     setBan: (userId, banned, reason) => admin.setBan(userId, banned, reason),
   },
+  onSettings: () =>
+  {
+    settings.open();
+  },
+  onTutorial: () =>
+  {
+    tutorial.open();
+  },
 });
 menu.mount(app);
+
+const settings = new SettingsPanel({
+  onClose: () =>
+  {
+    canvas.focus();
+  },
+  onDifficultyChange: (difficulty) =>
+  {
+    logger.info('Difficulty changed', { difficulty });
+  },
+  onEffectsToggle: (enabled) =>
+  {
+    logger.info('Effects toggled', { enabled });
+  },
+});
+settings.mount(app);
+
+const tutorial = new Tutorial({
+  onClose: () =>
+  {
+    canvas.focus();
+  },
+});
+tutorial.mount(app);
 
 // eslint-disable-next-line prefer-const -- forward reference: registerGate.onRegistered calls welcome.close()
 let welcome: WelcomeScreen;
@@ -383,7 +407,12 @@ const registerGate = new RegisterGate({
 });
 registerGate.mount(app);
 
-auth.subscribe(() => 
+auth.subscribe(() =>
+{
+  eventBus.emit('auth:changed');
+});
+
+eventBus.on('auth:changed', () =>
 {
   menu.refresh();
   registerGate.refresh();
@@ -415,10 +444,11 @@ welcome.open();
   load: () => saveManager.loadNow(),
 };
 
-window.addEventListener('beforeunload', () => 
+window.addEventListener('beforeunload', () =>
 {
   loop.dispose();
   input.dispose();
   gameSession.stop();
   saveManager.stopAutoSave();
+  void errorRecovery.sendErrorsToBackend();
 });

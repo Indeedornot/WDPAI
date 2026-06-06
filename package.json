@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "test": "tsc && node --input-type=module --eval \"import('./src/test/run.ts').catch(e => { console.error(e); process.exit(1); })\"",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix"
   },

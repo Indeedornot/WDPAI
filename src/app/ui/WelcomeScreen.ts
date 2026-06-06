@@ -1,3 +1,4 @@
+import type { Component } from './Component';
 import {
   uiBody,
   uiButton,
@@ -16,7 +17,7 @@ export type WelcomeScreenOptions = {
   onStart: () => void | boolean;
 };
 
-export class WelcomeScreen 
+export class WelcomeScreen implements Component
 {
   private readonly _overlay: HTMLDivElement;
   private readonly _panel: HTMLDivElement;
@@ -44,9 +45,14 @@ export class WelcomeScreen
     this.render();
   }
 
-  mount(parent: HTMLElement): void 
+  mount(parent: HTMLElement): void
   {
     parent.appendChild(this._overlay);
+  }
+
+  refresh(): void
+  {
+    this.render();
   }
 
   open(): void 

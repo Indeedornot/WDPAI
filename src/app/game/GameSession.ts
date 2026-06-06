@@ -6,12 +6,14 @@ import { Experience } from '../../engine/components/Experience';
 import { PowerupController2D } from '../../engine/components/PowerupController2D';
 import { RunStats } from '../../engine/components/RunStats';
 import type { RunStatsPayload } from './RunsClient';
+import type { Leaderboard } from './Leaderboard';
 
 export type GameSessionOptions = {
   scene: Scene;
   loop: GameLoop;
   input: Input;
   hudStatus: HTMLDivElement;
+  leaderboard: Leaderboard;
   onDeath: (stats: RunStatsPayload) => void;
 };
 
@@ -55,9 +57,9 @@ export class GameSession
     this._isDead = false;
   }
 
-  private _tick(): void 
+  private _tick(): void
   {
-    const { scene, loop, input, hudStatus, onDeath } = this._options;
+    const { scene, loop, input, hudStatus, leaderboard, onDeath } = this._options;
 
     let playerHp = 'n/a';
     let playerXp = 'n/a';
@@ -114,14 +116,19 @@ export class GameSession
       }
     }
 
-    if (deadNow && !this._isDead) 
+    if (deadNow && !this._isDead)
     {
       this._isDead = true;
       loop.pause();
       input.clear();
-      onDeath(
-        statsSnapshot ?? { timeSeconds: 0, level: 1, xp: 0, kills: 0, shotsFired: 0, shotsHit: 0 },
-      );
+      const finalStats = statsSnapshot ?? { timeSeconds: 0, level: 1, xp: 0, kills: 0, shotsFired: 0, shotsHit: 0 };
+      leaderboard.addEntry({
+        email: 'anonymous',
+        timeSeconds: finalStats.timeSeconds,
+        kills: finalStats.kills,
+        level: finalStats.level,
+      });
+      onDeath(finalStats);
     }
 
     hudStatus.textContent = `Status: ${loop.paused ? 'Paused' : 'Running'} · Player HP: ${playerHp} · ${playerXp}${powerups}`;

@@ -1,5 +1,6 @@
 import type { ControlsConfig } from '../controls/ControlsConfig';
 import { DEFAULT_CONTROLS } from '../controls/ControlsConfig';
+import type { Component } from './Component';
 import {
   el,
   focusFirstDescendant,
@@ -30,6 +31,8 @@ export type PauseMenuOptions = {
 
   onSaveNow?: () => void | Promise<void>;
   onLoadNow?: () => void | Promise<void>;
+  onSettings?: () => void;
+  onTutorial?: () => void;
 
   auth?: AccountSectionAuth;
   admin?: AdminPanelAdmin;
@@ -42,7 +45,7 @@ type RebindTarget =
   | { kind: 'movement'; dir: keyof ControlsConfig['movement'] }
   | { kind: 'aim'; dir: keyof ControlsConfig['aim'] };
 
-export class PauseMenu 
+export class PauseMenu implements Component
 {
   private readonly _root: HTMLDivElement;
   private readonly _overlay: HTMLDivElement;
@@ -234,7 +237,7 @@ export class PauseMenu
       body.appendChild(
         uiButton({
           label: 'Options',
-          onClick: () => 
+          onClick: () =>
           {
             this._view = 'options';
             this._rebindTarget = null;
@@ -242,6 +245,34 @@ export class PauseMenu
           },
         }),
       );
+
+      if (this.options.onSettings)
+      {
+        body.appendChild(
+          uiButton({
+            label: 'Settings',
+            onClick: () =>
+            {
+              this.close();
+              this.options.onSettings?.();
+            },
+          }),
+        );
+      }
+
+      if (this.options.onTutorial)
+      {
+        body.appendChild(
+          uiButton({
+            label: 'How to Play',
+            onClick: () =>
+            {
+              this.close();
+              this.options.onTutorial?.();
+            },
+          }),
+        );
+      }
     }
     else if (this._view === 'options') 
     {

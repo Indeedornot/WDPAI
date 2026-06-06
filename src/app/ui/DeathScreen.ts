@@ -1,3 +1,5 @@
+import type { Component } from './Component';
+import type { Leaderboard } from '../game/Leaderboard';
 import {
   el,
   focusFirstDescendant,
@@ -23,9 +25,13 @@ export type DeathScreenStats = {
 
 export type DeathScreenOptions = {
   onRestart: () => void;
+  leaderboard: Leaderboard;
+  personalBestTime?: number;
+  totalPlayTime?: number;
+  runCount?: number;
 };
 
-export class DeathScreen 
+export class DeathScreen implements Component
 {
   private readonly _overlay: HTMLDivElement;
   private readonly _panel: HTMLDivElement;
@@ -54,9 +60,14 @@ export class DeathScreen
     this.render();
   }
 
-  mount(parent: HTMLElement): void 
+  mount(parent: HTMLElement): void
   {
     parent.appendChild(this._overlay);
+  }
+
+  refresh(): void
+  {
+    this.render();
   }
 
   open(stats: DeathScreenStats): void 
@@ -122,7 +133,7 @@ export class DeathScreen
     const body = uiBody();
 
     const stats = this._stats;
-    if (stats) 
+    if (stats)
     {
       const accuracy = stats.shotsFired <= 0 ? 0 : stats.shotsHit / stats.shotsFired;
 
@@ -136,6 +147,35 @@ export class DeathScreen
       rows.push(uiRow('Accuracy', el('span', { text: `${Math.round(accuracy * 100)}%` })));
 
       body.appendChild(uiSection('Run Stats', rows));
+
+      const personalBest = this.options.leaderboard.getPersonalBest();
+      if (personalBest && stats.timeSeconds > personalBest.timeSeconds)
+      {
+        const pbLabel = el('span', { text: '✨ New Personal Best!' });
+        pbLabel.style.fontWeight = 'bold';
+        pbLabel.style.color = '#fbbf24';
+        body.appendChild(pbLabel);
+        this.options.leaderboard.setPersonalBest({
+          email: 'anonymous',
+          timeSeconds: stats.timeSeconds,
+          kills: stats.kills,
+          level: stats.level,
+        });
+      }
+
+      const topEntries = this.options.leaderboard.getTop(5);
+      if (topEntries.length > 0)
+      {
+        const leaderboardRows: HTMLElement[] = topEntries.map((entry) =>
+          uiRow(
+            `#${entry.rank}`,
+            el('span', {
+              text: `${formatSeconds(entry.timeSeconds)} · Lvl ${entry.level} · ${entry.kills} kills`,
+            }),
+          ),
+        );
+        body.appendChild(uiSection('Top Scores', leaderboardRows));
+      }
     }
 
     body.appendChild(
