@@ -1,22 +1,7 @@
 import type { ControlsConfig } from '../controls/ControlsConfig';
 import { DEFAULT_CONTROLS } from '../controls/ControlsConfig';
 import type { Component } from './Component';
-import {
-  el,
-  focusFirstDescendant,
-  trapFocus,
-  uiBody,
-  uiButton,
-  uiCogButton,
-  uiOverlay,
-  uiPanel,
-  uiPill,
-  uiRow,
-  uiSection,
-  uiSmallButton,
-  uiSubtitle,
-  uiTitle,
-} from './components/UiKit';
+import { UiKit } from './components/UiKit';
 import { AccountSection, type AccountSectionAuth } from './components/AccountSection';
 import { AdminPanel, type AdminPanelAdmin } from './components/AdminPanel';
 
@@ -84,16 +69,16 @@ export class PauseMenu implements Component
     this._root = document.createElement('div');
     this._root.className = 'ui-root';
 
-    const cog = uiCogButton({
+    const cog = UiKit.cogButton({
       label: '⚙',
       title: 'Menu (Esc)',
       ariaLabel: 'Open menu',
       onClick: () => this.toggle(),
     });
 
-    this._overlay = uiOverlay(() => this.close());
+    this._overlay = UiKit.overlay(() => this.close());
 
-    this._panel = uiPanel();
+    this._panel = UiKit.panel();
     this._panel.setAttribute('role', 'dialog');
     this._panel.setAttribute('aria-modal', 'true');
     this._panel.setAttribute('aria-label', 'Pause menu');
@@ -147,9 +132,9 @@ export class PauseMenu implements Component
     this._isOpen = true;
     this.options.onPause();
     this._overlay.classList.remove('ui-hidden');
-    this._untrap = trapFocus(this._panel, () => this._isOpen);
+    this._untrap = UiKit.trapFocus(this._panel, () => this._isOpen);
     this.render();
-    focusFirstDescendant(this._panel);
+    UiKit.focusFirstDescendant(this._panel);
   }
 
   close(): void 
@@ -189,11 +174,11 @@ export class PauseMenu implements Component
 
     this._panel.innerHTML = '';
 
-    const h = uiTitle(title);
+    const h = UiKit.title(title);
     h.id = 'pause-title';
     this._panel.setAttribute('aria-labelledby', h.id);
 
-    const sub = uiSubtitle(subtitle);
+    const sub = UiKit.subtitle(subtitle);
     sub.id = 'pause-subtitle';
     if (subtitle) 
     {
@@ -204,29 +189,29 @@ export class PauseMenu implements Component
       this._panel.removeAttribute('aria-describedby');
     }
 
-    const body = uiBody();
+    const body = UiKit.body();
 
     if (this._view === 'main') 
     {
-      body.appendChild(uiButton({ label: 'Resume', onClick: () => this.close() }));
+      body.appendChild(UiKit.button({ label: 'Resume', onClick: () => this.close() }));
 
       if (this.options.onSaveNow) 
       {
         body.appendChild(
-          uiButton({ label: 'Save Now', onClick: () => void this.options.onSaveNow?.() }),
+          UiKit.button({ label: 'Save Now', onClick: () => void this.options.onSaveNow?.() }),
         );
       }
       if (this.options.onLoadNow) 
       {
         body.appendChild(
-          uiButton({ label: 'Load Last Save', onClick: () => void this.options.onLoadNow?.() }),
+          UiKit.button({ label: 'Load Last Save', onClick: () => void this.options.onLoadNow?.() }),
         );
       }
 
       if (this.options.auth?.isLoggedIn()) 
       {
         const busy = this._accountSection?.isBusy ?? false;
-        const logoutBtn = uiButton({
+        const logoutBtn = UiKit.button({
           label: busy ? 'Working…' : 'Log out',
           onClick: () => void this._accountSection?.triggerLogout(),
         });
@@ -235,7 +220,7 @@ export class PauseMenu implements Component
       }
 
       body.appendChild(
-        uiButton({
+        UiKit.button({
           label: 'Options',
           onClick: () =>
           {
@@ -249,7 +234,7 @@ export class PauseMenu implements Component
       if (this.options.onSettings)
       {
         body.appendChild(
-          uiButton({
+          UiKit.button({
             label: 'Settings',
             onClick: () =>
             {
@@ -263,7 +248,7 @@ export class PauseMenu implements Component
       if (this.options.onTutorial)
       {
         body.appendChild(
-          uiButton({
+          UiKit.button({
             label: 'How to Play',
             onClick: () =>
             {
@@ -277,17 +262,17 @@ export class PauseMenu implements Component
     else if (this._view === 'options') 
     {
       body.appendChild(
-        uiSection('Movement (WASD default)', this.bindingsRows('movement', controls.movement)),
+        UiKit.section('Movement (WASD default)', this.bindingsRows('movement', controls.movement)),
       );
       body.appendChild(
-        uiSection('Aim (Arrow keys default)', this.bindingsRows('aim', controls.aim)),
+        UiKit.section('Aim (Arrow keys default)', this.bindingsRows('aim', controls.aim)),
       );
       body.appendChild(
-        uiSection('Shoot', [this.rebindRow('shootKey', 'Shoot', controls.shootKey)]),
+        UiKit.section('Shoot', [this.rebindRow('shootKey', 'Shoot', controls.shootKey)]),
       );
 
       body.appendChild(
-        uiButton({
+        UiKit.button({
           label: 'Reset Controls',
           onClick: () => 
           {
@@ -302,11 +287,11 @@ export class PauseMenu implements Component
       {
         const enabled = this.options.getAccessibleMode();
         body.appendChild(
-          uiSection('Accessibility', [
-            uiRow(
+          UiKit.section('Accessibility', [
+            UiKit.row(
               'Accessible Mode',
-              uiPill(enabled ? 'On' : 'Off'),
-              uiSmallButton({
+              UiKit.pill(enabled ? 'On' : 'Off'),
+              UiKit.smallButton({
                 label: enabled ? 'Disable' : 'Enable',
                 onClick: () => 
                 {
@@ -327,7 +312,7 @@ export class PauseMenu implements Component
       if (this._adminPanel && this.options.admin?.isAdmin()) 
       {
         body.appendChild(
-          uiButton({
+          UiKit.button({
             label: 'Admin Panel',
             onClick: () => 
             {
@@ -341,7 +326,7 @@ export class PauseMenu implements Component
       }
 
       body.appendChild(
-        uiButton({
+        UiKit.button({
           label: 'Back',
           onClick: () => 
           {
@@ -365,7 +350,7 @@ export class PauseMenu implements Component
 
     if (this._view === 'options') 
     {
-      const scroll = el('div', { className: 'ui-scroll' });
+      const scroll = UiKit.el('div', { className: 'ui-scroll' });
       scroll.appendChild(body);
       this._panel.appendChild(scroll);
     }
@@ -386,8 +371,8 @@ export class PauseMenu implements Component
     code: string,
   ): HTMLElement 
   {
-    const pill = uiPill(code || 'Unbound');
-    const btn = uiSmallButton({
+    const pill = UiKit.pill(code || 'Unbound');
+    const btn = UiKit.smallButton({
       label: this._rebindTarget ? 'Waiting…' : 'Rebind',
       onClick: () => 
       {
@@ -403,7 +388,7 @@ export class PauseMenu implements Component
       },
     });
     btn.disabled = this._rebindTarget !== null;
-    return uiRow(label, pill, btn);
+    return UiKit.row(label, pill, btn);
   }
 
   private applyRebind(code: string): void 

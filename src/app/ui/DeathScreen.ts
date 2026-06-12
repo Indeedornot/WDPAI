@@ -1,19 +1,7 @@
 import type { Component } from './Component';
 import type { Leaderboard, LeaderboardEntry } from '../game/Leaderboard';
 import type { AchievementView } from '../game/RunsClient';
-import {
-  el,
-  focusFirstDescendant,
-  trapFocus,
-  uiBody,
-  uiButton,
-  uiOverlay,
-  uiPanel,
-  uiRow,
-  uiSection,
-  uiSubtitle,
-  uiTitle,
-} from './components/UiKit';
+import { UiKit } from './components/UiKit';
 
 export type DeathScreenStats = {
   timeSeconds: number;
@@ -55,12 +43,12 @@ export class DeathScreen implements Component
   {
     this.options = options;
 
-    this._overlay = uiOverlay(() => 
+    this._overlay = UiKit.overlay(() => 
     {
       // Don't close by background click.
     });
 
-    this._panel = uiPanel();
+    this._panel = UiKit.panel();
     this._panel.setAttribute('role', 'dialog');
     this._panel.setAttribute('aria-modal', 'true');
 
@@ -93,7 +81,7 @@ export class DeathScreen implements Component
     this._isOpen = true;
     this._overlay.classList.remove('ui-hidden');
 
-    this._untrap = trapFocus(this._panel, () => this._isOpen);
+    this._untrap = UiKit.trapFocus(this._panel, () => this._isOpen);
 
     const blockKeys = (e: KeyboardEvent) => 
     {
@@ -110,7 +98,7 @@ export class DeathScreen implements Component
     window.addEventListener('keydown', blockKeys, { capture: true });
     this._unblockKeys = () => window.removeEventListener('keydown', blockKeys, { capture: true });
 
-    focusFirstDescendant(this._panel);
+    UiKit.focusFirstDescendant(this._panel);
   }
 
   close(): void 
@@ -133,15 +121,15 @@ export class DeathScreen implements Component
   {
     this._panel.innerHTML = '';
 
-    const h = uiTitle('You Died');
+    const h = UiKit.title('You Died');
     h.id = 'death-title';
     this._panel.setAttribute('aria-labelledby', h.id);
 
-    const sub = uiSubtitle('Your run is over. Review stats, then restart.');
+    const sub = UiKit.subtitle('Your run is over. Review stats, then restart.');
     sub.id = 'death-sub';
     this._panel.setAttribute('aria-describedby', sub.id);
 
-    const body = uiBody();
+    const body = UiKit.body();
 
     const stats = this._stats;
     if (stats)
@@ -149,20 +137,20 @@ export class DeathScreen implements Component
       const accuracy = stats.shotsFired <= 0 ? 0 : stats.shotsHit / stats.shotsFired;
 
       const rows: HTMLElement[] = [];
-      rows.push(uiRow('Time', el('span', { text: `${DeathScreen.formatSeconds(stats.timeSeconds)}` })));
-      rows.push(uiRow('Level', el('span', { text: `${stats.level}` })));
-      rows.push(uiRow('XP', el('span', { text: `${stats.xp}` })));
-      rows.push(uiRow('Kills', el('span', { text: `${stats.kills}` })));
-      rows.push(uiRow('Shots fired', el('span', { text: `${stats.shotsFired}` })));
-      rows.push(uiRow('Shots hit', el('span', { text: `${stats.shotsHit}` })));
-      rows.push(uiRow('Accuracy', el('span', { text: `${Math.round(accuracy * 100)}%` })));
+      rows.push(UiKit.row('Time', UiKit.el('span', { text: `${DeathScreen.formatSeconds(stats.timeSeconds)}` })));
+      rows.push(UiKit.row('Level', UiKit.el('span', { text: `${stats.level}` })));
+      rows.push(UiKit.row('XP', UiKit.el('span', { text: `${stats.xp}` })));
+      rows.push(UiKit.row('Kills', UiKit.el('span', { text: `${stats.kills}` })));
+      rows.push(UiKit.row('Shots fired', UiKit.el('span', { text: `${stats.shotsFired}` })));
+      rows.push(UiKit.row('Shots hit', UiKit.el('span', { text: `${stats.shotsHit}` })));
+      rows.push(UiKit.row('Accuracy', UiKit.el('span', { text: `${Math.round(accuracy * 100)}%` })));
 
-      body.appendChild(uiSection('Run Stats', rows));
+      body.appendChild(UiKit.section('Run Stats', rows));
 
       const personalBest = this.options.leaderboard.getPersonalBest();
       if (personalBest && stats.timeSeconds > personalBest.timeSeconds)
       {
-        const pbLabel = el('span', { text: '✨ New Personal Best!' });
+        const pbLabel = UiKit.el('span', { text: '✨ New Personal Best!' });
         pbLabel.style.fontWeight = 'bold';
         pbLabel.style.color = '#fbbf24';
         body.appendChild(pbLabel);
@@ -181,27 +169,27 @@ export class DeathScreen implements Component
       if (topEntries.length > 0)
       {
         const leaderboardRows: HTMLElement[] = topEntries.map((entry) =>
-          uiRow(
+          UiKit.row(
             `#${entry.rank} ${entry.name}`,
-            el('span', {
+            UiKit.el('span', {
               text: `${DeathScreen.formatSeconds(entry.timeSeconds)} · Lvl ${entry.level} · ${entry.kills} kills`,
             }),
           ),
         );
-        body.appendChild(uiSection(useGlobal ? 'Top Scores (Global)' : 'Top Scores', leaderboardRows));
+        body.appendChild(UiKit.section(useGlobal ? 'Top Scores (Global)' : 'Top Scores', leaderboardRows));
       }
 
       if (this._achievements.length > 0)
       {
         const achievementRows: HTMLElement[] = this._achievements.map((a) =>
-          uiRow('🏆', el('span', { text: a.title })),
+          UiKit.row('🏆', UiKit.el('span', { text: a.title })),
         );
-        body.appendChild(uiSection('Achievements', achievementRows));
+        body.appendChild(UiKit.section('Achievements', achievementRows));
       }
     }
 
     body.appendChild(
-      uiButton({
+      UiKit.button({
         label: 'Restart',
         title: 'Restart the run',
         onClick: () => 

@@ -1,14 +1,5 @@
 import type { Component } from './Component';
-import {
-  uiBody,
-  uiButton,
-  uiOverlay,
-  uiPanel,
-  uiSubtitle,
-  uiTitle,
-  focusFirstDescendant,
-  trapFocus,
-} from './components/UiKit';
+import { UiKit } from './components/UiKit';
 
 export type WelcomeScreenOptions = {
   title?: string;
@@ -31,12 +22,12 @@ export class WelcomeScreen implements Component
   {
     this.options = options;
 
-    this._overlay = uiOverlay(() => 
+    this._overlay = UiKit.overlay(() => 
     {
       // Don’t close on background click; welcome is an explicit action.
     });
 
-    this._panel = uiPanel();
+    this._panel = UiKit.panel();
     this._panel.classList.add('ui-panel--welcome');
     this._panel.setAttribute('role', 'dialog');
     this._panel.setAttribute('aria-modal', 'true');
@@ -64,7 +55,7 @@ export class WelcomeScreen implements Component
     this._isOpen = true;
     this._overlay.classList.remove('ui-hidden');
 
-    this._untrap = trapFocus(this._panel, () => this._isOpen);
+    this._untrap = UiKit.trapFocus(this._panel, () => this._isOpen);
 
     const blockKeys = (e: KeyboardEvent) => 
     {
@@ -82,7 +73,7 @@ export class WelcomeScreen implements Component
     window.addEventListener('keydown', blockKeys, { capture: true });
     this._unblockKeys = () => window.removeEventListener('keydown', blockKeys, { capture: true });
 
-    focusFirstDescendant(this._panel);
+    UiKit.focusFirstDescendant(this._panel);
   }
 
   close(): void 
@@ -109,15 +100,15 @@ export class WelcomeScreen implements Component
       this.options.subtitle ??
       'A small top-down survival shooter. Survive, level up, and keep your accuracy high.';
 
-    const h = uiTitle(titleText);
+    const h = UiKit.title(titleText);
     h.id = 'welcome-title';
     this._panel.setAttribute('aria-labelledby', h.id);
 
-    const sub = uiSubtitle(subtitleText);
+    const sub = UiKit.subtitle(subtitleText);
     sub.id = 'welcome-sub';
     this._panel.setAttribute('aria-describedby', sub.id);
 
-    const body = uiBody();
+    const body = UiKit.body();
 
     const tutorial = document.createElement('div');
     tutorial.className = 'ui-tutorial';
@@ -134,7 +125,7 @@ export class WelcomeScreen implements Component
       </div>
     `.trim();
 
-    const startBtn = uiButton({
+    const startBtn = UiKit.button({
       label: 'Start',
       title: 'Start the game',
       onClick: () => 
@@ -150,7 +141,7 @@ export class WelcomeScreen implements Component
     body.appendChild(startBtn);
 
     body.appendChild(
-      uiButton({
+      UiKit.button({
         label: 'Focus Game',
         title: 'Move keyboard focus to the game canvas (keyboard controls)',
         onClick: () => 

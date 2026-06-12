@@ -1,20 +1,6 @@
 import type { AuthUser } from '../auth/AuthClient';
 import type { Component } from './Component';
-import {
-  focusFirstDescendant,
-  trapFocus,
-  uiBody,
-  uiButton,
-  uiHint,
-  uiInputRow,
-  uiOverlay,
-  uiPanel,
-  uiRow,
-  uiSection,
-  uiSmallButton,
-  uiSubtitle,
-  uiTitle,
-} from './components/UiKit';
+import { UiKit } from './components/UiKit';
 
 export type RegisterGateOptions = {
   title?: string;
@@ -48,12 +34,12 @@ export class RegisterGate implements Component
   {
     this.options = options;
 
-    this._overlay = uiOverlay(() => 
+    this._overlay = UiKit.overlay(() => 
     {
       // Don't close by background click; registration is required.
     });
 
-    this._panel = uiPanel();
+    this._panel = UiKit.panel();
     this._panel.setAttribute('role', 'dialog');
     this._panel.setAttribute('aria-modal', 'true');
     this._panel.setAttribute('aria-label', 'Registration required');
@@ -81,7 +67,7 @@ export class RegisterGate implements Component
     this._isOpen = true;
     this._overlay.classList.remove('ui-hidden');
 
-    this._untrap = trapFocus(this._panel, () => this._isOpen);
+    this._untrap = UiKit.trapFocus(this._panel, () => this._isOpen);
 
     const blockKeys = (e: KeyboardEvent) => 
     {
@@ -99,7 +85,7 @@ export class RegisterGate implements Component
     window.addEventListener('keydown', blockKeys, { capture: true });
     this._unblockKeys = () => window.removeEventListener('keydown', blockKeys, { capture: true });
 
-    focusFirstDescendant(this._panel);
+    UiKit.focusFirstDescendant(this._panel);
   }
 
   close(): void 
@@ -125,15 +111,15 @@ export class RegisterGate implements Component
     const titleText = this.options.title ?? 'Create an account';
     const subtitleText = this.options.subtitle ?? 'Registration is required before playing.';
 
-    const h = uiTitle(titleText);
+    const h = UiKit.title(titleText);
     h.id = 'register-title';
     this._panel.setAttribute('aria-labelledby', h.id);
 
-    const sub = uiSubtitle(subtitleText);
+    const sub = UiKit.subtitle(subtitleText);
     sub.id = 'register-sub';
     this._panel.setAttribute('aria-describedby', sub.id);
 
-    const body = uiBody();
+    const body = UiKit.body();
 
     const auth = this.options.auth;
     const loggedIn = auth.isLoggedIn();
@@ -141,9 +127,9 @@ export class RegisterGate implements Component
 
     if (loggedIn && user) 
     {
-      body.appendChild(uiSection('Account', [uiHint(`Signed in as ${user.email}.`)]));
+      body.appendChild(UiKit.section('Account', [UiKit.hint(`Signed in as ${user.email}.`)]));
       body.appendChild(
-        uiButton({ label: 'Continue', title: 'Continue to the game', onClick: () => this.close() }),
+        UiKit.button({ label: 'Continue', title: 'Continue to the game', onClick: () => this.close() }),
       );
     }
     else 
@@ -151,7 +137,7 @@ export class RegisterGate implements Component
       const rows: HTMLElement[] = [];
 
       rows.push(
-        uiInputRow(
+        UiKit.inputRow(
           'Email',
           'email',
           this._email,
@@ -163,7 +149,7 @@ export class RegisterGate implements Component
         ),
       );
       rows.push(
-        uiInputRow(
+        UiKit.inputRow(
           'Password',
           'password',
           this._password,
@@ -175,19 +161,19 @@ export class RegisterGate implements Component
         ),
       );
 
-      const regBtn = uiSmallButton({
+      const regBtn = UiKit.smallButton({
         label: this._busy ? 'Working…' : 'Register',
         onClick: () => void this.handleRegister(),
       });
       regBtn.disabled = this._busy;
-      rows.push(uiRow('Actions', regBtn));
+      rows.push(UiKit.row('Actions', regBtn));
 
       if (this._status) 
       {
-        rows.push(uiHint(this._status));
+        rows.push(UiKit.hint(this._status));
       }
 
-      body.appendChild(uiSection('Account', rows));
+      body.appendChild(UiKit.section('Account', rows));
     }
 
     this._panel.appendChild(h);

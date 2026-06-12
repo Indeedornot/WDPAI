@@ -1,15 +1,5 @@
 import type { Component } from './Component';
-import {
-  el,
-  focusFirstDescendant,
-  trapFocus,
-  uiBody,
-  uiButton,
-  uiOverlay,
-  uiPanel,
-  uiSection,
-  uiTitle,
-} from './components/UiKit';
+import { UiKit } from './components/UiKit';
 
 export type SettingsPanelOptions = {
   onClose: () => void;
@@ -34,12 +24,12 @@ export class SettingsPanel implements Component
   {
     this.options = options;
 
-    this._overlay = uiOverlay(() =>
+    this._overlay = UiKit.overlay(() =>
     {
       this.close();
     });
 
-    this._panel = uiPanel();
+    this._panel = UiKit.panel();
     this._panel.setAttribute('role', 'dialog');
     this._panel.setAttribute('aria-modal', 'true');
 
@@ -66,7 +56,7 @@ export class SettingsPanel implements Component
     this._isOpen = true;
     this._overlay.classList.remove('ui-hidden');
 
-    this._untrap = trapFocus(this._panel, () => this._isOpen);
+    this._untrap = UiKit.trapFocus(this._panel, () => this._isOpen);
 
     const blockKeys = (e: KeyboardEvent) =>
     {
@@ -84,7 +74,7 @@ export class SettingsPanel implements Component
     window.addEventListener('keydown', blockKeys, { capture: true });
     this._unblockKeys = () => window.removeEventListener('keydown', blockKeys, { capture: true });
 
-    focusFirstDescendant(this._panel);
+    UiKit.focusFirstDescendant(this._panel);
   }
 
   close(): void
@@ -109,11 +99,11 @@ export class SettingsPanel implements Component
   {
     this._panel.innerHTML = '';
 
-    const h = uiTitle('Settings');
+    const h = UiKit.title('Settings');
     h.id = 'settings-title';
     this._panel.setAttribute('aria-labelledby', h.id);
 
-    const body = uiBody();
+    const body = UiKit.body();
 
     const difficultyOptions = [
       {
@@ -136,7 +126,7 @@ export class SettingsPanel implements Component
     const difficultySection: HTMLElement[] = [];
     for (const option of difficultyOptions)
     {
-      const label = el('label', { text: option.label });
+      const label = UiKit.el('label', { text: option.label });
       const input = document.createElement('input');
       input.type = 'radio';
       input.name = 'difficulty';
@@ -148,14 +138,14 @@ export class SettingsPanel implements Component
         this.options.onDifficultyChange?.(option.value);
         this.render();
       });
-      const wrapper = el('div');
+      const wrapper = UiKit.el('div');
       wrapper.appendChild(input);
       wrapper.appendChild(label);
       difficultySection.push(wrapper);
     }
-    body.appendChild(uiSection('Difficulty', difficultySection));
+    body.appendChild(UiKit.section('Difficulty', difficultySection));
 
-    const effectsLabel = el('label', { text: 'Visual Effects' });
+    const effectsLabel = UiKit.el('label', { text: 'Visual Effects' });
     const effectsInput = document.createElement('input');
     effectsInput.type = 'checkbox';
     effectsInput.checked = this._effectsEnabled;
@@ -165,13 +155,13 @@ export class SettingsPanel implements Component
       this.options.onEffectsToggle?.(this._effectsEnabled);
       this.render();
     });
-    const effectsWrapper = el('div');
+    const effectsWrapper = UiKit.el('div');
     effectsWrapper.appendChild(effectsInput);
     effectsWrapper.appendChild(effectsLabel);
-    body.appendChild(uiSection('Display', [effectsWrapper]));
+    body.appendChild(UiKit.section('Display', [effectsWrapper]));
 
     body.appendChild(
-      uiButton({
+      UiKit.button({
         label: 'Close',
         title: 'Close settings',
         onClick: () =>
