@@ -32,7 +32,7 @@ import { AdminClient } from './app/admin/AdminClient';
 import { RegisterGate } from './app/ui/RegisterGate';
 import { SettingsPanel } from './app/ui/SettingsPanel';
 import { Tutorial } from './app/ui/Tutorial';
-import { buildRun } from './app/game/RunBuilder';
+import { RunBuilder } from './app/game/RunBuilder';
 import { GameSession } from './app/game/GameSession';
 import { RunsClient } from './app/game/RunsClient';
 import { Leaderboard } from './app/game/Leaderboard';
@@ -163,7 +163,7 @@ logger.info('App initialized', { backendUrl });
 
 let controls: ControlsConfig = loadControls();
 
-let { playerMove, playerShooter } = buildRun(scene, controls);
+let { playerMove, playerShooter } = RunBuilder.build(scene, controls);
 
 const loop = new GameLoop(canvas, ctx, scene, { clearColor: DefaultTheme.bg });
 loop.start();
@@ -201,7 +201,7 @@ const death = new DeathScreen({
   {
     loop.pause();
     input.clear();
-    ({ playerMove, playerShooter } = buildRun(scene, controls));
+    ({ playerMove, playerShooter } = RunBuilder.build(scene, controls));
     gameSession.reset();
     loop.resume();
     canvas.focus();
