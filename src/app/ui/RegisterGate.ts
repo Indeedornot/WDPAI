@@ -198,10 +198,22 @@ export class RegisterGate implements Component
   private validate(): string | null
   {
     const email = this._email.trim();
-    if (!email) return 'Email is required.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Enter a valid email address.';
-    if (!this._password) return 'Password is required.';
-    if (this._password.length < 8) return 'Password must be at least 8 characters.';
+    if (!email) 
+    {
+      return 'Email is required.';
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) 
+    {
+      return 'Enter a valid email address.';
+    }
+    if (!this._password) 
+    {
+      return 'Password is required.';
+    }
+    if (this._password.length < 8) 
+    {
+      return 'Password must be at least 8 characters.';
+    }
     return null;
   }
 

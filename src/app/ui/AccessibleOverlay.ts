@@ -112,7 +112,13 @@ export class AccessibleOverlay
     const objects = this.scene.getGameObjects();
 
     let player = null;
-    for (const o of objects) { if (o.tag === 'Player') { player = o; break; } }
+    for (const o of objects) 
+    {
+      if (o.tag === 'Player') 
+      {
+        player = o; break; 
+      } 
+    }
     const playerPos = player?.transform.position ?? new Vec2(0, 0);
 
     const rows: EntitySnapshot[] = [];

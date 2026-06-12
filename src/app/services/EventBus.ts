@@ -22,15 +22,24 @@ export class EventBus<TEvents extends Record<string, any> = Record<string, any>>
   off<K extends keyof TEvents>(event: K, handler: EventHandler<TEvents[K]>): void
   {
     const list = this.handlers.get(event);
-    if (!list) return;
+    if (!list) 
+    {
+      return;
+    }
     const idx = list.indexOf(handler);
-    if (idx >= 0) list.splice(idx, 1);
+    if (idx >= 0) 
+    {
+      list.splice(idx, 1);
+    }
   }
 
   emit<K extends keyof TEvents>(event: K, ...args: TEvents[K] extends void ? [] : [TEvents[K]]): void
   {
     const list = this.handlers.get(event);
-    if (!list) return;
+    if (!list) 
+    {
+      return;
+    }
     for (const handler of list)
     {
       (handler as (...a: any[]) => void)(...args);

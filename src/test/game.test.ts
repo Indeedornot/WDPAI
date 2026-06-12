@@ -149,7 +149,10 @@ TestRunner.describe('SpawnerBuilder', () =>
     for (let i = 0; i < 100; i++)
     {
       const variant = SpawnerBuilder.chooseVariant(0.5);
-      if (variant === 'standard') standardCount++;
+      if (variant === 'standard') 
+      {
+        standardCount++;
+      }
     }
     Assert.assertTrue(
       standardCount > 80,
@@ -163,7 +166,10 @@ TestRunner.describe('SpawnerBuilder', () =>
     for (let i = 0; i < 100; i++)
     {
       const variant = SpawnerBuilder.chooseVariant(1.2);
-      if (variant === 'fast') fastCount++;
+      if (variant === 'fast') 
+      {
+        fastCount++;
+      }
     }
     Assert.assertTrue(fastCount > 10, 'medium difficulty should spawn some fast enemies');
   });
@@ -174,7 +180,10 @@ TestRunner.describe('SpawnerBuilder', () =>
     for (let i = 0; i < 100; i++)
     {
       const variant = SpawnerBuilder.chooseVariant(2.0);
-      if (variant === 'armored') armoredCount++;
+      if (variant === 'armored') 
+      {
+        armoredCount++;
+      }
     }
     Assert.assertTrue(armoredCount > 10, 'high difficulty should spawn some armored enemies');
   });
