@@ -3,7 +3,7 @@ import { Mover2D } from './Mover2D';
 import {
   DefaultMovementBindingsWASD,
   type MovementBindings2D,
-  getMovementVector,
+  DirectionalInput2D,
 } from '../input/DirectionalBindings2D';
 
 export type KeyboardMove2DOptions = {
@@ -43,7 +43,7 @@ export class KeyboardMove2D extends Component
 
     const input = scene.input;
 
-    const dir = getMovementVector(input, this.bindings);
+    const dir = DirectionalInput2D.movementVector(input, this.bindings);
     mover.velocity.set(dir.x * this.speed, dir.y * this.speed);
   }
 }

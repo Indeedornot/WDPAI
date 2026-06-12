@@ -12,7 +12,7 @@ import { RunStats } from './RunStats';
 import {
   DefaultShootingBindingsArrows,
   type ShootingBindings2D,
-  getShootingVector,
+  DirectionalInput2D,
 } from '../input/DirectionalBindings2D';
 
 export type Shooter2DOptions = {
@@ -100,7 +100,7 @@ export class Shooter2D extends Component
 
     const input = scene.input;
 
-    const aim = getShootingVector(input, this.aimBindings);
+    const aim = DirectionalInput2D.shootingVector(input, this.aimBindings);
     if (aim.length() > 1e-6) 
     {
       this._direction = aim;

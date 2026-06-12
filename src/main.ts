@@ -16,12 +16,12 @@ import { Camera2D } from './engine/render/Camera2D';
 import { KeyboardMove2D } from './engine/components/KeyboardMove2D';
 import { Shooter2D } from './engine/components/Shooter2D';
 import type { ControlsConfig } from './app/controls/ControlsConfig';
-import { DEFAULT_CONTROLS, parseControlsConfig } from './app/controls/ControlsConfig';
+import { DEFAULT_CONTROLS, ControlsConfigParser } from './app/controls/ControlsConfig';
 import { PauseMenu } from './app/ui/PauseMenu';
 import { SaveManager } from './app/save/SaveManager';
 import { SceneSerializer } from './app/save/SceneSerializer';
 import { HttpSaveStorage, LocalStorageSaveStorage } from './app/save/SaveStorage';
-import { DefaultTheme, applyThemeToCssVars } from './app/theme/AppTheme';
+import { DefaultTheme, AppThemeApplier } from './app/theme/AppTheme';
 import { WelcomeScreen } from './app/ui/WelcomeScreen';
 import { DeathScreen } from './app/ui/DeathScreen';
 import { Announcer } from './app/a11y/Announcer';
@@ -49,7 +49,7 @@ function loadControls(): ControlsConfig
     {
       return structuredClone(DEFAULT_CONTROLS);
     }
-    return parseControlsConfig(JSON.parse(raw) as unknown);
+    return ControlsConfigParser.parse(JSON.parse(raw) as unknown);
   }
   catch 
   {
@@ -91,7 +91,7 @@ if (!app)
   throw new Error('Missing #app');
 }
 
-applyThemeToCssVars(DefaultTheme);
+AppThemeApplier.apply(DefaultTheme);
 
 app.innerHTML = `
   <div class="hud">
