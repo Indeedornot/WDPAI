@@ -58,8 +58,8 @@ export class HttpSaveStorage implements SaveStorage
       throw new Error(`Failed to load save: ${res.status}`);
     }
 
-    const body = (await res.json()) as any;
-    if (!body || body.ok !== true) 
+    const body = (await res.json()) as { ok?: boolean; snapshot?: unknown };
+    if (!body || body.ok !== true)
     {
       return null;
     }

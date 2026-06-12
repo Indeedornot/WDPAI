@@ -71,7 +71,7 @@ function loadAccessibleMode(): boolean
     {
       return false;
     }
-    const parsed = JSON.parse(raw) as any;
+    const parsed = JSON.parse(raw) as { accessibleMode?: unknown };
     return Boolean(parsed?.accessibleMode);
   }
   catch 
@@ -441,7 +441,8 @@ welcome = new WelcomeScreen({
 });
 welcome.mount(app);
 welcome.open();
-(window as any).__save = {
+type SaveDebugApi = { save: () => void; load: () => void };
+(window as unknown as { __save: SaveDebugApi }).__save = {
   save: () => saveManager.saveNow(),
   load: () => saveManager.loadNow(),
 };

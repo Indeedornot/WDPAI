@@ -4,9 +4,9 @@ export type AppEvents = {
 
 type EventHandler<T> = T extends void ? () => void : (data: T) => void;
 
-export class EventBus<TEvents extends Record<string, any> = Record<string, any>>
+export class EventBus<TEvents extends Record<string, unknown> = Record<string, unknown>>
 {
-  private handlers = new Map<keyof TEvents, Array<EventHandler<any>>>();
+  private handlers = new Map<keyof TEvents, Array<EventHandler<unknown>>>();
 
   on<K extends keyof TEvents>(event: K, handler: EventHandler<TEvents[K]>): void
   {
@@ -42,7 +42,7 @@ export class EventBus<TEvents extends Record<string, any> = Record<string, any>>
     }
     for (const handler of list)
     {
-      (handler as (...a: any[]) => void)(...args);
+      (handler as (...a: unknown[]) => void)(...args);
     }
   }
 

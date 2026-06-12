@@ -1,7 +1,8 @@
 import { Component } from '../core/Component';
+import type { GameObject } from '../core/GameObject';
 import { Health } from './Health';
 
-export type EnemyDeathEffectCallback = (gameObject: any) => void;
+export type EnemyDeathEffectCallback = (gameObject: GameObject) => void;
 
 export class EnemyDeathEffect extends Component
 {

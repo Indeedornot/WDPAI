@@ -73,7 +73,7 @@ export class Logger
     return cached;
   }
 
-  private _log(level: LogLevel, message: string, data?: any): void
+  private _log(level: LogLevel, message: string, data?: unknown): void
   {
     const entry: LogEntry = {
       timestamp: Date.now(),
@@ -109,22 +109,22 @@ export class Logger
     }
   }
 
-  debug(message: string, data?: any): void
+  debug(message: string, data?: unknown): void
   {
     this._log(LogLevels.Debug, message, data);
   }
 
-  info(message: string, data?: any): void
+  info(message: string, data?: unknown): void
   {
     this._log(LogLevels.Info, message, data);
   }
 
-  warn(message: string, data?: any): void
+  warn(message: string, data?: unknown): void
   {
     this._log(LogLevels.Warn, message, data);
   }
 
-  error(message: string, data?: any): void
+  error(message: string, data?: unknown): void
   {
     this._log(LogLevels.Error, message, data);
   }
