@@ -1,6 +1,5 @@
 import type { Component } from './Component';
 import {
-  el,
   focusFirstDescendant,
   trapFocus,
   uiBody,

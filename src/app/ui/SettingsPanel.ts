@@ -7,9 +7,7 @@ import {
   uiButton,
   uiOverlay,
   uiPanel,
-  uiRow,
   uiSection,
-  uiSubtitle,
   uiTitle,
 } from './components/UiKit';
 
