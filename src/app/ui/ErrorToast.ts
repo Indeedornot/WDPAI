@@ -17,7 +17,7 @@ export class ErrorToast
     this._el.className = 'error-toast';
     this._el.innerHTML = `
       <div class="error-toast-content">
-        <div class="error-toast-message">${escapeHtml(options.message)}</div>
+        <div class="error-toast-message">${ErrorToast.escapeHtml(options.message)}</div>
         <div class="error-toast-actions">
           ${options.onRetry ? '<button class="error-toast-retry">Retry</button>' : ''}
           <button class="error-toast-dismiss">Dismiss</button>
@@ -61,11 +61,11 @@ export class ErrorToast
     }
     this._el.remove();
   }
-}
 
-function escapeHtml(text: string): string
-{
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  private static escapeHtml(text: string): string
+  {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
 }

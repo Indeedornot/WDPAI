@@ -41,14 +41,14 @@ export class WrapAroundBounds2D extends Component
     const p = go.transform.position;
 
     // Wrap to [min, max) so going past one edge reappears on the other.
-    p.x = wrap(p.x, this.minX, w);
-    p.y = wrap(p.y, this.minY, h);
+    p.x = WrapAroundBounds2D.wrap(p.x, this.minX, w);
+    p.y = WrapAroundBounds2D.wrap(p.y, this.minY, h);
   }
-}
 
-function wrap(v: number, min: number, size: number): number 
-{
-  const x = v - min;
-  const m = ((x % size) + size) % size;
-  return min + m;
+  private static wrap(v: number, min: number, size: number): number
+  {
+    const x = v - min;
+    const m = ((x % size) + size) % size;
+    return min + m;
+  }
 }

@@ -1,6 +1,6 @@
 import type { AdminLoginAudit, AdminRun, AdminSave, AdminUser } from '../../admin/AdminClient';
 import type { AuthUser } from '../../auth/AuthClient';
-import { uiButton, uiHint, uiPill, uiRow, uiSection, uiSmallButton } from './UiKit';
+import { UiKit } from './UiKit';
 
 export type AdminPanelAdmin = {
   isAdmin: () => boolean;
@@ -53,113 +53,113 @@ export class AdminPanel
     const rows: HTMLElement[] = [];
 
     const user = this._admin.getUser();
-    rows.push(uiHint(user ? `Signed in as ${user.email} (${user.role})` : 'Not signed in.'));
+    rows.push(UiKit.hint(user ? `Signed in as ${user.email} (${user.role})` : 'Not signed in.'));
 
-    const refreshBtn = uiSmallButton({
+    const refreshBtn = UiKit.smallButton({
       label: this._busy ? 'Working…' : 'Refresh',
       onClick: () => void this.loadUsers(),
     });
     refreshBtn.disabled = this._busy;
-    rows.push(uiRow('Users', refreshBtn));
+    rows.push(UiKit.row('Users', refreshBtn));
 
     if (this._users.length === 0) 
     {
-      rows.push(uiHint('No users loaded yet.'));
+      rows.push(UiKit.hint('No users loaded yet.'));
     }
     else 
     {
       for (const u of this._users) 
       {
-        const inspectSaves = uiSmallButton({
+        const inspectSaves = UiKit.smallButton({
           label: this._busy ? 'Working…' : 'Inspect Saves',
           onClick: () => void this._inspectSaves(u.id),
         });
         inspectSaves.disabled = this._busy;
 
-        const inspectRuns = uiSmallButton({
+        const inspectRuns = UiKit.smallButton({
           label: this._busy ? 'Working…' : 'Inspect Runs',
           onClick: () => void this._inspectRuns(u.id),
         });
         inspectRuns.disabled = this._busy;
 
-        const banBtn = uiSmallButton({
+        const banBtn = UiKit.smallButton({
           label: this._busy ? 'Working…' : u.bannedAt ? 'Unban' : 'Ban',
           onClick: () => void this._toggleBan(u.id, !u.bannedAt),
         });
         banBtn.disabled = this._busy;
 
         const pills: HTMLElement[] = [
-          uiPill(u.email),
-          uiPill(u.role),
-          uiPill(u.bannedAt ? 'Banned' : 'Active'),
-          ...(u.bannedAt && u.bannedReason ? [uiPill(u.bannedReason)] : []),
+          UiKit.pill(u.email),
+          UiKit.pill(u.role),
+          UiKit.pill(u.bannedAt ? 'Banned' : 'Active'),
+          ...(u.bannedAt && u.bannedReason ? [UiKit.pill(u.bannedReason)] : []),
           inspectSaves,
           inspectRuns,
           banBtn,
         ];
-        rows.push(uiRow(`#${u.id}`, ...pills));
+        rows.push(UiKit.row(`#${u.id}`, ...pills));
       }
     }
 
     rows.push(
-      uiSection(
+      UiKit.section(
         this._selectedUserId != null ? `Saves for userId=${this._selectedUserId}` : 'Saves',
         this._buildSaveRows(),
       ),
     );
 
     rows.push(
-      uiSection(
+      UiKit.section(
         this._selectedUserId != null ? `Runs for userId=${this._selectedUserId}` : 'Runs',
         this._buildRunRows(),
       ),
     );
 
-    rows.push(uiSection('Login audit', this._buildAuditRows()));
+    rows.push(UiKit.section('Login audit', this._buildAuditRows()));
 
     if (this._status) 
     {
-      rows.push(uiHint(this._status));
+      rows.push(UiKit.hint(this._status));
     }
 
-    rows.push(uiButton({ label: 'Back', onClick: () => this._onBack() }));
+    rows.push(UiKit.button({ label: 'Back', onClick: () => this._onBack() }));
 
-    return uiSection('Admin', rows);
+    return UiKit.section('Admin', rows);
   }
 
   private _buildSaveRows(): HTMLElement[] 
   {
     if (this._selectedUserId == null) 
     {
-      return [uiHint('Pick a user to inspect their save slots.')];
+      return [UiKit.hint('Pick a user to inspect their save slots.')];
     }
     if (this._saves.length === 0) 
     {
-      return [uiHint('No saves found.')];
+      return [UiKit.hint('No saves found.')];
     }
-    return this._saves.map((s) => uiRow(s.slot, uiPill(`v${s.version}`), uiPill(s.updatedAt)));
+    return this._saves.map((s) => UiKit.row(s.slot, UiKit.pill(`v${s.version}`), UiKit.pill(s.updatedAt)));
   }
 
   private _buildRunRows(): HTMLElement[] 
   {
     if (this._selectedUserId == null) 
     {
-      return [uiHint('Pick a user to inspect their runs.')];
+      return [UiKit.hint('Pick a user to inspect their runs.')];
     }
     if (this._runs.length === 0) 
     {
-      return [uiHint('No runs found.')];
+      return [UiKit.hint('No runs found.')];
     }
     return this._runs.map((r) => 
     {
       const accuracy = r.shotsFired <= 0 ? 0 : r.shotsHit / r.shotsFired;
-      return uiRow(
+      return UiKit.row(
         r.createdAt,
-        uiPill(`t=${r.timeSeconds}s`),
-        uiPill(`Lv ${r.level}`),
-        uiPill(`XP ${r.xp}`),
-        uiPill(`Kills ${r.kills}`),
-        uiPill(`Acc ${Math.round(accuracy * 100)}%`),
+        UiKit.pill(`t=${r.timeSeconds}s`),
+        UiKit.pill(`Lv ${r.level}`),
+        UiKit.pill(`XP ${r.xp}`),
+        UiKit.pill(`Kills ${r.kills}`),
+        UiKit.pill(`Acc ${Math.round(accuracy * 100)}%`),
       );
     });
   }
@@ -168,16 +168,16 @@ export class AdminPanel
   {
     if (this._audit.length === 0) 
     {
-      return [uiHint('No audit events loaded yet.')];
+      return [UiKit.hint('No audit events loaded yet.')];
     }
     return this._audit.map((entry) => 
     {
-      const pills: HTMLElement[] = [uiPill(entry.email), uiPill(entry.reason)];
+      const pills: HTMLElement[] = [UiKit.pill(entry.email), UiKit.pill(entry.reason)];
       if (entry.ip) 
       {
-        pills.push(uiPill(entry.ip));
+        pills.push(UiKit.pill(entry.ip));
       }
-      return uiRow(entry.attempted_at, ...pills);
+      return UiKit.row(entry.attempted_at, ...pills);
     });
   }
 

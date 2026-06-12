@@ -1,12 +1,15 @@
+import type { RunStatsPayload } from '../game/RunsClient';
+
 export type AppEvents = {
   'auth:changed': void;
+  'player:died': RunStatsPayload;
 };
 
 type EventHandler<T> = T extends void ? () => void : (data: T) => void;
 
-export class EventBus<TEvents extends Record<string, any> = Record<string, any>>
+export class EventBus<TEvents extends Record<string, unknown> = Record<string, unknown>>
 {
-  private handlers = new Map<keyof TEvents, Array<EventHandler<any>>>();
+  private handlers = new Map<keyof TEvents, Array<EventHandler<unknown>>>();
 
   on<K extends keyof TEvents>(event: K, handler: EventHandler<TEvents[K]>): void
   {
@@ -22,18 +25,27 @@ export class EventBus<TEvents extends Record<string, any> = Record<string, any>>
   off<K extends keyof TEvents>(event: K, handler: EventHandler<TEvents[K]>): void
   {
     const list = this.handlers.get(event);
-    if (!list) return;
+    if (!list) 
+    {
+      return;
+    }
     const idx = list.indexOf(handler);
-    if (idx >= 0) list.splice(idx, 1);
+    if (idx >= 0) 
+    {
+      list.splice(idx, 1);
+    }
   }
 
   emit<K extends keyof TEvents>(event: K, ...args: TEvents[K] extends void ? [] : [TEvents[K]]): void
   {
     const list = this.handlers.get(event);
-    if (!list) return;
+    if (!list) 
+    {
+      return;
+    }
     for (const handler of list)
     {
-      (handler as (...a: any[]) => void)(...args);
+      (handler as (...a: unknown[]) => void)(...args);
     }
   }
 

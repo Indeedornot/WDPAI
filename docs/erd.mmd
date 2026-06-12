@@ -1,0 +1,60 @@
+%% WDPAI database ERD — render at https://mermaid.live or with mermaid-cli:
+%%   mmdc -i docs/erd.mmd -o docs/erd.svg
+erDiagram
+  users ||--|| user_profiles : "1:1"
+  users ||--o{ auth_tokens : "1:N"
+  users ||--o{ player_saves : "1:N"
+  users ||--o{ player_run_stats : "1:N"
+  users ||--o{ user_achievements : "N:M"
+  achievements ||--o{ user_achievements : "N:M"
+
+  users {
+    bigserial id PK
+    varchar email UK
+    varchar password_hash
+    varchar role "player|admin"
+    timestamptz created_at
+    timestamptz last_login_at
+    timestamptz banned_at
+    varchar banned_reason
+  }
+  user_profiles {
+    bigint user_id PK_FK
+    varchar display_name
+    timestamptz created_at
+  }
+  auth_tokens {
+    bigserial id PK
+    bigint user_id FK
+    char token_hash UK
+    timestamptz expires_at
+    timestamptz revoked_at
+  }
+  player_saves {
+    bigint user_id PK_FK
+    varchar slot PK
+    int version
+    jsonb payload
+    timestamptz updated_at
+  }
+  player_run_stats {
+    bigserial id PK
+    bigint user_id FK
+    int time_seconds
+    int level
+    int xp
+    int kills
+    int shots_fired
+    int shots_hit
+    timestamptz created_at
+  }
+  achievements {
+    bigserial id PK
+    varchar code UK
+    varchar title
+  }
+  user_achievements {
+    bigint user_id PK_FK
+    bigint achievement_id PK_FK
+    timestamptz earned_at
+  }

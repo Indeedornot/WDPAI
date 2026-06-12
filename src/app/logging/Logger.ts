@@ -3,11 +3,6 @@ import { LogLevels, type LogLevel, type LogEntry } from './LogLevel';
 const MAX_LOGS = 200;
 const STORAGE_KEY = 'app:logs';
 
-function encodeBase64(str: string): string
-{
-  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode(parseInt(p1, 16))));
-}
-
 export class Logger
 {
   private static _instance: Logger | null = null;
@@ -73,7 +68,7 @@ export class Logger
     return cached;
   }
 
-  private _log(level: LogLevel, message: string, data?: any): void
+  private _log(level: LogLevel, message: string, data?: unknown): void
   {
     const entry: LogEntry = {
       timestamp: Date.now(),
@@ -109,22 +104,22 @@ export class Logger
     }
   }
 
-  debug(message: string, data?: any): void
+  debug(message: string, data?: unknown): void
   {
     this._log(LogLevels.Debug, message, data);
   }
 
-  info(message: string, data?: any): void
+  info(message: string, data?: unknown): void
   {
     this._log(LogLevels.Info, message, data);
   }
 
-  warn(message: string, data?: any): void
+  warn(message: string, data?: unknown): void
   {
     this._log(LogLevels.Warn, message, data);
   }
 
-  error(message: string, data?: any): void
+  error(message: string, data?: unknown): void
   {
     this._log(LogLevels.Error, message, data);
   }
@@ -154,6 +149,12 @@ export class Logger
       return '';
     }
     const json = JSON.stringify(Logger._logs);
-    return encodeBase64(json);
+    return Logger.encodeBase64(json);
+  }
+
+  /** Unicode-safe base64 encoding for log export. */
+  private static encodeBase64(str: string): string
+  {
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode(parseInt(p1, 16))));
   }
 }

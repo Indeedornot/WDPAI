@@ -38,4 +38,10 @@ final class RunsController extends Controller
 
         return Response::ok();
     }
+
+    #[RequireAuth]
+    public function leaderboard(AuthUser $user, RunStatsRepository $repo): Response
+    {
+        return Response::ok(['leaderboard' => $repo->topRuns(10)]);
+    }
 }

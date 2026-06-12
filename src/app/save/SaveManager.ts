@@ -1,6 +1,7 @@
 import type { Scene } from '../../engine/core/Scene';
 import { SceneSerializer } from './SceneSerializer';
 import type { SaveStorage } from './SaveStorage';
+import type { SceneSnapshotV1 } from './types';
 
 export type SaveManagerOptions = {
   slot?: string;
@@ -69,13 +70,13 @@ export class SaveManager
       return false;
     }
 
-    const parsed = JSON.parse(raw) as any;
-    if (!parsed || parsed.version !== 1) 
+    const parsed = JSON.parse(raw) as { version?: unknown };
+    if (!parsed || parsed.version !== 1)
     {
       return false;
     }
 
-    this.serializer.restore(this.scene, parsed);
+    this.serializer.restore(this.scene, parsed as unknown as SceneSnapshotV1);
     return true;
   }
 }

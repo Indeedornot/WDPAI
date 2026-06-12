@@ -36,60 +36,64 @@ export const DefaultShootingBindingsArrows: ShootingBindings2D = {
   [ShootingDirection2D.Right]: 'ArrowRight',
 };
 
-export function getMovementVector(input: Input, bindings: MovementBindings2D): Vec2 
+/** Maps held keys to a normalized direction vector for movement and aiming. */
+export class DirectionalInput2D
 {
-  const v = new Vec2(0, 0);
-  if (input.isKeyDown(bindings[MovementDirection2D.Left])) 
+  static movementVector(input: Input, bindings: MovementBindings2D): Vec2
   {
-    v.x -= 1;
-  }
-  if (input.isKeyDown(bindings[MovementDirection2D.Right])) 
-  {
-    v.x += 1;
+    const v = new Vec2(0, 0);
+    if (input.isKeyDown(bindings[MovementDirection2D.Left]))
+    {
+      v.x -= 1;
+    }
+    if (input.isKeyDown(bindings[MovementDirection2D.Right]))
+    {
+      v.x += 1;
+    }
+
+    // World coords: +Y is up.
+    if (input.isKeyDown(bindings[MovementDirection2D.Up]))
+    {
+      v.y += 1;
+    }
+    if (input.isKeyDown(bindings[MovementDirection2D.Down]))
+    {
+      v.y -= 1;
+    }
+
+    if (v.length() > 0)
+    {
+      v.normalize();
+    }
+    return v;
   }
 
-  // World coords: +Y is up.
-  if (input.isKeyDown(bindings[MovementDirection2D.Up])) 
+  static shootingVector(input: Input, bindings: ShootingBindings2D): Vec2
   {
-    v.y += 1;
-  }
-  if (input.isKeyDown(bindings[MovementDirection2D.Down])) 
-  {
-    v.y -= 1;
-  }
+    const v = new Vec2(0, 0);
+    if (input.isKeyDown(bindings[ShootingDirection2D.Left]))
+    {
+      v.x -= 1;
+    }
+    if (input.isKeyDown(bindings[ShootingDirection2D.Right]))
+    {
+      v.x += 1;
+    }
 
-  if (v.length() > 0) 
-  {
-    v.normalize();
-  }
-  return v;
-}
+    // World coords: +Y is up.
+    if (input.isKeyDown(bindings[ShootingDirection2D.Up]))
+    {
+      v.y += 1;
+    }
+    if (input.isKeyDown(bindings[ShootingDirection2D.Down]))
+    {
+      v.y -= 1;
+    }
 
-export function getShootingVector(input: Input, bindings: ShootingBindings2D): Vec2 
-{
-  const v = new Vec2(0, 0);
-  if (input.isKeyDown(bindings[ShootingDirection2D.Left])) 
-  {
-    v.x -= 1;
+    if (v.length() > 0)
+    {
+      v.normalize();
+    }
+    return v;
   }
-  if (input.isKeyDown(bindings[ShootingDirection2D.Right])) 
-  {
-    v.x += 1;
-  }
-
-  // World coords: +Y is up.
-  if (input.isKeyDown(bindings[ShootingDirection2D.Up])) 
-  {
-    v.y += 1;
-  }
-  if (input.isKeyDown(bindings[ShootingDirection2D.Down])) 
-  {
-    v.y -= 1;
-  }
-
-  if (v.length() > 0) 
-  {
-    v.normalize();
-  }
-  return v;
 }

@@ -24,6 +24,7 @@ services:
       DATABASE_URL: postgres://game:game@db:5432/game
       CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
       BASE_PATH: ""
+      SEED_ON_START: "true"
     ports:
       - "8081:8080"
 

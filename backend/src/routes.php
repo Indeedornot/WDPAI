@@ -28,7 +28,9 @@ function map_endpoints(App $app): void
     $app->post('/auth/logout', new ControllerAction(AuthController::class, 'logout'));
 
     $app->get('/me', new ControllerAction(MeController::class, 'me'));
+    $app->get('/me/achievements', new ControllerAction(MeController::class, 'achievements'));
     $app->post('/runs', new ControllerAction(RunsController::class, 'create'));
+    $app->get('/runs/leaderboard', new ControllerAction(RunsController::class, 'leaderboard'));
 
     $app->get('/admin/users', new ControllerAction(AdminController::class, 'users'));
     $app->get('/admin/saves', new ControllerAction(AdminController::class, 'saves'));

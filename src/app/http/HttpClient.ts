@@ -193,20 +193,20 @@ export class HttpClient
     const data = (await res.json()) as unknown;
     if (!res.ok)
     {
-      const msg = isApiError(data) ? (data.message ?? data.error) : `http_error_${res.status}`;
+      const msg = HttpClient.isApiError(data) ? (data.message ?? data.error) : `http_error_${res.status}`;
       throw new HttpError(res.status, msg, data);
     }
 
     return data as T;
   }
-}
 
-function isApiError(v: unknown): v is { ok: false; error: string; message?: string } 
-{
-  return (
-    typeof v === 'object' &&
-    v !== null &&
-    (v as Record<string, unknown>)['ok'] === false &&
-    typeof (v as Record<string, unknown>)['error'] === 'string'
-  );
+  private static isApiError(v: unknown): v is { ok: false; error: string; message?: string }
+  {
+    return (
+      typeof v === 'object' &&
+      v !== null &&
+      (v as Record<string, unknown>)['ok'] === false &&
+      typeof (v as Record<string, unknown>)['error'] === 'string'
+    );
+  }
 }

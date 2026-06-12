@@ -2,22 +2,22 @@ import type { GameObject } from '../core/GameObject';
 import { Collider2D } from './Collider2D';
 import type { Collision2D } from './Collision2D';
 
-function overlaps(
-  a: { minX: number; minY: number; maxX: number; maxY: number },
-  b: { minX: number; minY: number; maxX: number; maxY: number },
-): boolean 
-{
-  return a.minX <= b.maxX && a.maxX >= b.minX && a.minY <= b.maxY && a.maxY >= b.minY;
-}
-
-function pairKey(aId: number, bId: number): string 
-{
-  return aId < bId ? `${aId}:${bId}` : `${bId}:${aId}`;
-}
-
-export class Physics2D 
+export class Physics2D
 {
   private readonly _previousPairs = new Set<string>();
+
+  private static overlaps(
+    a: { minX: number; minY: number; maxX: number; maxY: number },
+    b: { minX: number; minY: number; maxX: number; maxY: number },
+  ): boolean
+  {
+    return a.minX <= b.maxX && a.maxX >= b.minX && a.minY <= b.maxY && a.maxY >= b.minY;
+  }
+
+  private static pairKey(aId: number, bId: number): string
+  {
+    return aId < bId ? `${aId}:${bId}` : `${bId}:${aId}`;
+  }
 
   reset(): void 
   {
@@ -68,12 +68,12 @@ export class Physics2D
           continue;
         }
 
-        if (!overlaps(aabbA, b.getWorldAabb())) 
+        if (!Physics2D.overlaps(aabbA, b.getWorldAabb()))
         {
           continue;
         }
 
-        const key = pairKey(a.id, b.id);
+        const key = Physics2D.pairKey(a.id, b.id);
         currentPairs.add(key);
 
         const isNew = !this._previousPairs.has(key);

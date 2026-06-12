@@ -28,7 +28,7 @@ export class TestRunner
 
   static it(name: string, fn: TestFn): void
   {
-    this._tests.push({
+    TestRunner._tests.push({
       name,
       fn,
       suite: this._currentSuite,
@@ -43,27 +43,27 @@ export class TestRunner
   async run(): Promise<TestResult>
   {
     const result: TestResult = {
-      total: this._tests.length,
+      total: TestRunner._tests.length,
       passed: 0,
       failed: 0,
       errors: [],
     };
 
-    for (const test of this._tests)
+    for (const test of TestRunner._tests)
     {
       try
       {
         await test.fn();
         result.passed++;
-        this._log(`✓ ${test.suite} > ${test.name}`);
+        TestRunner._log(`✓ ${test.suite} > ${test.name}`);
       }
       catch (e)
       {
         result.failed++;
         const message = e instanceof Error ? e.message : String(e);
         result.errors.push({ test: `${test.suite} > ${test.name}`, message });
-        this._log(`✗ ${test.suite} > ${test.name}`);
-        this._log(`  ${message}`);
+        TestRunner._log(`✗ ${test.suite} > ${test.name}`);
+        TestRunner._log(`  ${message}`);
       }
     }
 

@@ -12,6 +12,7 @@ use App\Auth\UserRepository;
 use App\Auth\TokenRepository;
 use App\Auth\LoginAuditRepository;
 use App\Kernel;
+use PDO;
 
 final class Bootstrap
 {
@@ -55,17 +56,25 @@ final class Bootstrap
         $corsOrigins = Helpers::parseCsvList($envString('CORS_ORIGINS', ''));
 
         $basePath = rtrim($envString('BASE_PATH', ''), '/');
+        $requireHttps = strtolower(trim($envString('REQUIRE_HTTPS', 'false'))) === 'true';
 
         $config = new AppConfig(
             new DbConfig($dsn, $dbUser, $dbPassword),
             new CorsConfig($corsOrigins),
-            new RoutingConfig($basePath),
+            new RoutingConfig($basePath, $requireHttps),
         );
 
         $kernel = new Kernel($config);
 
         // Register common singleton services in the container.
         $container = $kernel->container();
+        // PDO is a non-builtin constructor dependency of every #[Injectable]
+        // repository/service (AuthService, RunStatsRepository, ...). It is not
+        // itself #[Injectable], so it must be registered explicitly or the
+        // container cannot autowire anything that needs the database.
+        $container->registerSingleton(PDO::class, function($c) use ($kernel) {
+            return $kernel->pdo();
+        });
         $container->registerSingleton(UserRepository::class, function($c) use ($kernel) {
             return new UserRepository($kernel->pdo());
         });

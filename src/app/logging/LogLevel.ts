@@ -12,5 +12,5 @@ export interface LogEntry {
   level: LogLevel;
   name: string;
   message: string;
-  data?: any;
+  data?: unknown;
 }

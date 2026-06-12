@@ -17,7 +17,7 @@ TestRunner.describe('DifficultyScaler', () =>
   TestRunner.it('should increase level every 30 seconds', () =>
   {
     const scaler = new DifficultyScaler();
-    scaler['_startTime'] = Date.now() - 60000;
+    scaler['startTime'] = Date.now() - 60000;
 
     const difficulty = scaler.getCurrentDifficulty();
     Assert.assertEquals(difficulty.level, 3, 'level should be 3 after 60 seconds');
@@ -26,7 +26,7 @@ TestRunner.describe('DifficultyScaler', () =>
   TestRunner.it('should cap intensity at 2', () =>
   {
     const scaler = new DifficultyScaler();
-    scaler['_startTime'] = Date.now() - 500000;
+    scaler['startTime'] = Date.now() - 500000;
 
     const difficulty = scaler.getCurrentDifficulty();
     Assert.assertTrue(
@@ -42,7 +42,7 @@ TestRunner.describe('DifficultyScaler', () =>
   TestRunner.it('should track elapsed time correctly', () =>
   {
     const scaler = new DifficultyScaler();
-    scaler['_startTime'] = Date.now() - 5000;
+    scaler['startTime'] = Date.now() - 5000;
 
     const elapsed = scaler.getElapsedSeconds();
     Assert.assertTrue(elapsed >= 4.9 && elapsed <= 5.1, 'elapsed time should be ~5 seconds');
@@ -51,7 +51,7 @@ TestRunner.describe('DifficultyScaler', () =>
   TestRunner.it('should reset start time on reset', () =>
   {
     const scaler = new DifficultyScaler();
-    scaler['_startTime'] = Date.now() - 100000;
+    scaler['startTime'] = Date.now() - 100000;
 
     scaler.reset();
     const elapsed = scaler.getElapsedSeconds();
@@ -65,13 +65,13 @@ TestRunner.describe('Leaderboard', () =>
   {
     const leaderboard = new Leaderboard();
     leaderboard.addEntry({
-      email: 'player1@test.com',
+      name: 'player1@test.com',
       timeSeconds: 120,
       kills: 10,
       level: 5,
     });
     leaderboard.addEntry({
-      email: 'player2@test.com',
+      name: 'player2@test.com',
       timeSeconds: 180,
       kills: 15,
       level: 6,
@@ -88,7 +88,7 @@ TestRunner.describe('Leaderboard', () =>
   {
     const leaderboard = new Leaderboard();
     leaderboard.setPersonalBest({
-      email: 'player@test.com',
+      name: 'player@test.com',
       timeSeconds: 250,
       kills: 20,
       level: 7,
@@ -97,7 +97,7 @@ TestRunner.describe('Leaderboard', () =>
     const pb = leaderboard.getPersonalBest();
     Assert.assertNotNull(pb, 'personal best should exist');
     Assert.assertEquals(pb!.timeSeconds, 250, 'personal best time should match');
-    Assert.assertTrue(pb!.isPersonalBest, 'should be marked as personal best');
+    Assert.assertTrue(pb!.isPersonalBest === true, 'should be marked as personal best');
   });
 
   TestRunner.it('should return top N entries', () =>
@@ -106,7 +106,7 @@ TestRunner.describe('Leaderboard', () =>
     for (let i = 0; i < 10; i++)
     {
       leaderboard.addEntry({
-        email: `player${i}@test.com`,
+        name: `player${i}@test.com`,
         timeSeconds: 100 + i * 10,
         kills: 5 + i,
         level: 2 + i,
@@ -123,13 +123,13 @@ TestRunner.describe('Leaderboard', () =>
   {
     const leaderboard = new Leaderboard();
     leaderboard.addEntry({
-      email: 'player@test.com',
+      name: 'player@test.com',
       timeSeconds: 100,
       kills: 10,
       level: 5,
     });
     leaderboard.setPersonalBest({
-      email: 'player@test.com',
+      name: 'player@test.com',
       timeSeconds: 100,
       kills: 10,
       level: 5,
@@ -149,7 +149,10 @@ TestRunner.describe('SpawnerBuilder', () =>
     for (let i = 0; i < 100; i++)
     {
       const variant = SpawnerBuilder.chooseVariant(0.5);
-      if (variant === 'standard') standardCount++;
+      if (variant === 'standard') 
+      {
+        standardCount++;
+      }
     }
     Assert.assertTrue(
       standardCount > 80,
@@ -163,7 +166,10 @@ TestRunner.describe('SpawnerBuilder', () =>
     for (let i = 0; i < 100; i++)
     {
       const variant = SpawnerBuilder.chooseVariant(1.2);
-      if (variant === 'fast') fastCount++;
+      if (variant === 'fast') 
+      {
+        fastCount++;
+      }
     }
     Assert.assertTrue(fastCount > 10, 'medium difficulty should spawn some fast enemies');
   });
@@ -174,7 +180,10 @@ TestRunner.describe('SpawnerBuilder', () =>
     for (let i = 0; i < 100; i++)
     {
       const variant = SpawnerBuilder.chooseVariant(2.0);
-      if (variant === 'armored') armoredCount++;
+      if (variant === 'armored') 
+      {
+        armoredCount++;
+      }
     }
     Assert.assertTrue(armoredCount > 10, 'high difficulty should spawn some armored enemies');
   });

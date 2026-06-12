@@ -12,7 +12,7 @@ import { RunStats } from './RunStats';
 import {
   DefaultShootingBindingsArrows,
   type ShootingBindings2D,
-  getShootingVector,
+  DirectionalInput2D,
 } from '../input/DirectionalBindings2D';
 
 export type Shooter2DOptions = {
@@ -100,7 +100,7 @@ export class Shooter2D extends Component
 
     const input = scene.input;
 
-    const aim = getShootingVector(input, this.aimBindings);
+    const aim = DirectionalInput2D.shootingVector(input, this.aimBindings);
     if (aim.length() > 1e-6) 
     {
       this._direction = aim;
@@ -133,7 +133,7 @@ export class Shooter2D extends Component
     {
       const t = shots === 1 ? 0.5 : i / (shots - 1);
       const angle = (t - 0.5) * spread;
-      const dir = rotateUnitVector(this._direction, angle);
+      const dir = Shooter2D.rotateUnitVector(this._direction, angle);
 
       const spawnOffset = dir.scaled(55);
       const spawnPos = Vec2.add(go.transform.position, spawnOffset);
@@ -200,15 +200,15 @@ export class Shooter2D extends Component
       scene.add(projectile);
     }
   }
-}
 
-function rotateUnitVector(v: Vec2, radians: number): Vec2 
-{
-  if (Math.abs(radians) <= 1e-8) 
+  private static rotateUnitVector(v: Vec2, radians: number): Vec2
   {
-    return v.clone();
+    if (Math.abs(radians) <= 1e-8)
+    {
+      return v.clone();
+    }
+    const c = Math.cos(radians);
+    const s = Math.sin(radians);
+    return new Vec2(v.x * c - v.y * s, v.x * s + v.y * c);
   }
-  const c = Math.cos(radians);
-  const s = Math.sin(radians);
-  return new Vec2(v.x * c - v.y * s, v.x * s + v.y * c);
 }
