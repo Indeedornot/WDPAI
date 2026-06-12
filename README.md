@@ -95,52 +95,70 @@ on startup. A complete dump (schema + sample data) is exported to
 
 ```mermaid
 erDiagram
-  users ||--|| user_profiles : "1:1"
-  users ||--o{ auth_tokens : "1:N"
-  users ||--o{ player_saves : "1:N"
-  users ||--o{ player_run_stats : "1:N"
-  users ||--o{ user_achievements : "N:M"
-  achievements ||--o{ user_achievements : "N:M"
+  users ||--|| user_profiles : "has"
+  users ||--o{ auth_tokens : "generates"
+  users ||--o{ player_saves : "owns"
+  users ||--o{ player_run_stats : "tracks"
+  
+  %% Correct Many-to-Many junction mapping
+  users ||--o{ user_achievements : "earns"
+  achievements ||--o{ user_achievements : "awarded_to"
 
   users {
     bigserial id PK
-    varchar   email UK
-    varchar   password_hash
-    varchar   role "player|admin"
-    timestamptz banned_at
+    varchar email UK
+    varchar password_hash
+    varchar role "player_or_admin"
+    timestamp created_at
+    timestamp last_login_at
+    timestamp banned_at
+    varchar banned_reason
   }
+  
   user_profiles {
-    bigint  user_id PK_FK
+    bigint user_id PK, FK
     varchar display_name
+    timestamp created_at
   }
+  
   auth_tokens {
     bigserial id PK
-    bigint    user_id FK
-    char      token_hash UK
-    timestamptz expires_at
-    timestamptz revoked_at
+    bigint user_id FK
+    char token_hash UK
+    timestamp expires_at
+    timestamp revoked_at
   }
+  
   player_saves {
-    bigint  user_id PK_FK
+    bigint user_id PK, FK
     varchar slot PK
-    jsonb   payload
+    int version
+    jsonb payload
+    timestamp updated_at
   }
+  
   player_run_stats {
     bigserial id PK
-    bigint    user_id FK
-    int       time_seconds
-    int       kills
-    int       shots_fired
-    int       shots_hit
+    bigint user_id FK
+    int time_seconds
+    int level
+    int xp
+    int kills
+    int shots_fired
+    int shots_hit
+    timestamp created_at
   }
+  
   achievements {
     bigserial id PK
-    varchar   code UK
-    varchar   title
+    varchar code UK
+    varchar title
   }
+  
   user_achievements {
-    bigint user_id PK_FK
-    bigint achievement_id PK_FK
+    bigint user_id PK, FK
+    bigint achievement_id PK, FK
+    timestamp earned_at
   }
 ```
 
