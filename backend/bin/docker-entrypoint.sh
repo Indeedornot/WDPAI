@@ -29,5 +29,10 @@ fi
 echo "[backend] running migrations..."
 php bin/migrate.php
 
+if [ "${SEED_ON_START:-false}" = "true" ]; then
+  echo "[backend] seeding sample data..."
+  php bin/seed.php
+fi
+
 echo "[backend] starting PHP server on :8080"
 exec php -S 0.0.0.0:8080 -t public
