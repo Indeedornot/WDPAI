@@ -59,26 +59,33 @@ export type AnyComponentSerializer = {
  */
 export function defineComponentSerializer<T extends Component>(
   serializer: ComponentSerializer<T>,
-): AnyComponentSerializer {
+): AnyComponentSerializer 
+{
   return serializer as unknown as AnyComponentSerializer;
 }
 
 /** Safe readers for untrusted snapshot data, grouped as static helpers. */
-export class SnapshotRead {
-  static number(v: unknown, fallback: number): number {
+export class SnapshotRead 
+{
+  static number(v: unknown, fallback: number): number 
+  {
     return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
   }
 
-  static string(v: unknown, fallback: string): string {
+  static string(v: unknown, fallback: string): string 
+  {
     return typeof v === 'string' ? v : fallback;
   }
 
-  static boolean(v: unknown, fallback: boolean): boolean {
+  static boolean(v: unknown, fallback: boolean): boolean 
+  {
     return typeof v === 'boolean' ? v : fallback;
   }
 
-  static vec2(v: unknown, fallback: Vec2): Vec2 {
-    if (typeof v !== 'object' || v === null) {
+  static vec2(v: unknown, fallback: Vec2): Vec2 
+  {
+    if (typeof v !== 'object' || v === null) 
+    {
       return fallback;
     }
     const rec = v as Record<string, unknown>;
@@ -86,12 +93,14 @@ export class SnapshotRead {
   }
 
   /** Returns v when it is one of the allowed literals, otherwise the fallback. */
-  static literal<T extends string>(v: unknown, allowed: readonly T[], fallback: T): T {
+  static literal<T extends string>(v: unknown, allowed: readonly T[], fallback: T): T 
+  {
     return typeof v === 'string' && (allowed as readonly string[]).includes(v) ? (v as T) : fallback;
   }
 
   /** Coerces unknown snapshot data into a plain record for keyed access. */
-  static record(v: unknown): Record<string, unknown> {
+  static record(v: unknown): Record<string, unknown> 
+  {
     return typeof v === 'object' && v !== null ? (v as Record<string, unknown>) : {};
   }
 }
