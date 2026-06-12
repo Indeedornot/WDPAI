@@ -1,7 +1,7 @@
 export interface LeaderboardEntry
 {
   rank: number;
-  email: string;
+  name: string;
   timeSeconds: number;
   kills: number;
   level: number;
@@ -15,11 +15,7 @@ export class Leaderboard
 
   addEntry(entry: Omit<LeaderboardEntry, 'rank'>): void
   {
-    const ranked: LeaderboardEntry = {
-      ...entry,
-      rank: this.entries.length + 1,
-    };
-    this.entries.push(ranked);
+    this.entries.push({ ...entry, rank: 0 });
     this.entries.sort((a, b) => b.timeSeconds - a.timeSeconds);
     this.rerank();
   }

@@ -65,13 +65,13 @@ TestRunner.describe('Leaderboard', () =>
   {
     const leaderboard = new Leaderboard();
     leaderboard.addEntry({
-      email: 'player1@test.com',
+      name: 'player1@test.com',
       timeSeconds: 120,
       kills: 10,
       level: 5,
     });
     leaderboard.addEntry({
-      email: 'player2@test.com',
+      name: 'player2@test.com',
       timeSeconds: 180,
       kills: 15,
       level: 6,
@@ -88,7 +88,7 @@ TestRunner.describe('Leaderboard', () =>
   {
     const leaderboard = new Leaderboard();
     leaderboard.setPersonalBest({
-      email: 'player@test.com',
+      name: 'player@test.com',
       timeSeconds: 250,
       kills: 20,
       level: 7,
@@ -106,7 +106,7 @@ TestRunner.describe('Leaderboard', () =>
     for (let i = 0; i < 10; i++)
     {
       leaderboard.addEntry({
-        email: `player${i}@test.com`,
+        name: `player${i}@test.com`,
         timeSeconds: 100 + i * 10,
         kills: 5 + i,
         level: 2 + i,
@@ -123,13 +123,13 @@ TestRunner.describe('Leaderboard', () =>
   {
     const leaderboard = new Leaderboard();
     leaderboard.addEntry({
-      email: 'player@test.com',
+      name: 'player@test.com',
       timeSeconds: 100,
       kills: 10,
       level: 5,
     });
     leaderboard.setPersonalBest({
-      email: 'player@test.com',
+      name: 'player@test.com',
       timeSeconds: 100,
       kills: 10,
       level: 5,

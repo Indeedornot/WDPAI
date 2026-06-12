@@ -208,6 +208,8 @@ const death = new DeathScreen({
     announcer.announce('Restarted.', 'polite');
   },
   leaderboard,
+  loadLeaderboard: () => runsClient.fetchLeaderboard(),
+  loadAchievements: () => runsClient.fetchAchievements(),
 });
 death.mount(app);
 

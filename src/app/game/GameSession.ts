@@ -123,7 +123,7 @@ export class GameSession
       input.clear();
       const finalStats = statsSnapshot ?? { timeSeconds: 0, level: 1, xp: 0, kills: 0, shotsFired: 0, shotsHit: 0 };
       leaderboard.addEntry({
-        email: 'anonymous',
+        name: 'You',
         timeSeconds: finalStats.timeSeconds,
         kills: finalStats.kills,
         level: finalStats.level,

@@ -1,5 +1,6 @@
 import type { Component } from './Component';
-import type { Leaderboard } from '../game/Leaderboard';
+import type { Leaderboard, LeaderboardEntry } from '../game/Leaderboard';
+import type { AchievementView } from '../game/RunsClient';
 import {
   el,
   focusFirstDescendant,
@@ -29,6 +30,9 @@ export type DeathScreenOptions = {
   personalBestTime?: number;
   totalPlayTime?: number;
   runCount?: number;
+  /** Optional remote data sources (used when the player is logged in). */
+  loadLeaderboard?: () => Promise<LeaderboardEntry[]>;
+  loadAchievements?: () => Promise<AchievementView[]>;
 };
 
 export class DeathScreen implements Component
@@ -40,6 +44,10 @@ export class DeathScreen implements Component
   private _unblockKeys: (() => void) | null = null;
 
   private _stats: DeathScreenStats | null = null;
+  private _globalEntries: LeaderboardEntry[] = [];
+  private _achievements: AchievementView[] = [];
+  /** Bumped on each open() so stale async responses are ignored. */
+  private _loadToken = 0;
 
   readonly options: DeathScreenOptions;
 
@@ -70,12 +78,15 @@ export class DeathScreen implements Component
     this.render();
   }
 
-  open(stats: DeathScreenStats): void 
+  open(stats: DeathScreenStats): void
   {
     this._stats = stats;
+    this._globalEntries = [];
+    this._achievements = [];
     this.render();
+    this.loadRemote();
 
-    if (this._isOpen) 
+    if (this._isOpen)
     {
       return;
     }
@@ -156,25 +167,36 @@ export class DeathScreen implements Component
         pbLabel.style.color = '#fbbf24';
         body.appendChild(pbLabel);
         this.options.leaderboard.setPersonalBest({
-          email: 'anonymous',
+          name: 'You',
           timeSeconds: stats.timeSeconds,
           kills: stats.kills,
           level: stats.level,
         });
       }
 
-      const topEntries = this.options.leaderboard.getTop(5);
+      // Prefer the global (server) leaderboard when available; otherwise show
+      // the local session scores.
+      const useGlobal = this._globalEntries.length > 0;
+      const topEntries = useGlobal ? this._globalEntries.slice(0, 5) : this.options.leaderboard.getTop(5);
       if (topEntries.length > 0)
       {
         const leaderboardRows: HTMLElement[] = topEntries.map((entry) =>
           uiRow(
-            `#${entry.rank}`,
+            `#${entry.rank} ${entry.name}`,
             el('span', {
               text: `${formatSeconds(entry.timeSeconds)} · Lvl ${entry.level} · ${entry.kills} kills`,
             }),
           ),
         );
-        body.appendChild(uiSection('Top Scores', leaderboardRows));
+        body.appendChild(uiSection(useGlobal ? 'Top Scores (Global)' : 'Top Scores', leaderboardRows));
+      }
+
+      if (this._achievements.length > 0)
+      {
+        const achievementRows: HTMLElement[] = this._achievements.map((a) =>
+          uiRow('🏆', el('span', { text: a.title })),
+        );
+        body.appendChild(uiSection('Achievements', achievementRows));
       }
     }
 
@@ -193,6 +215,42 @@ export class DeathScreen implements Component
     this._panel.appendChild(h);
     this._panel.appendChild(sub);
     this._panel.appendChild(body);
+  }
+
+  /**
+   * Fetch the global leaderboard and earned achievements (best-effort).
+   * Uses a load token so a slow response from a previous run can't overwrite
+   * the current screen.
+   */
+  private loadRemote(): void
+  {
+    const { loadLeaderboard, loadAchievements } = this.options;
+    if (!loadLeaderboard && !loadAchievements)
+    {
+      return;
+    }
+
+    const token = ++this._loadToken;
+
+    void Promise.allSettled([
+      loadLeaderboard?.() ?? Promise.resolve([]),
+      loadAchievements?.() ?? Promise.resolve([]),
+    ]).then(([lb, ach]) =>
+    {
+      if (token !== this._loadToken)
+      {
+        return;
+      }
+      if (lb.status === 'fulfilled')
+      {
+        this._globalEntries = lb.value;
+      }
+      if (ach.status === 'fulfilled')
+      {
+        this._achievements = ach.value as AchievementView[];
+      }
+      this.render();
+    });
   }
 }
 
