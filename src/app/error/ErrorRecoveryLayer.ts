@@ -59,8 +59,8 @@ export class ErrorRecoveryLayer
     const errorEvent = typeof error === 'string'
       ? this.createErrorEvent('AppError', error)
       : error instanceof Error
-      ? this.createErrorEvent('Error', error.message)
-      : error;
+        ? this.createErrorEvent('Error', error.message)
+        : error;
 
     this.errors.push(errorEvent);
     this.logger.error(errorEvent.message, { type: errorEvent.type });

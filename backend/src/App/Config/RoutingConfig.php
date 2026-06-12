@@ -8,6 +8,7 @@ final class RoutingConfig
 {
     public function __construct(
         public readonly string $basePath,
+        public readonly bool $requireHttps = false,
     ) {
     }
 

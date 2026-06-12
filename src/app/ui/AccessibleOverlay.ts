@@ -1,10 +1,7 @@
 import type { Scene } from '../../engine/core/Scene';
+import type { GameLoop } from '../../engine/core/GameLoop';
 import { Vec2 } from '../../engine/math/Vec2';
 import { Health } from '../../engine/components/Health';
-
-export type AccessibleOverlayOptions = {
-  getPaused: () => boolean;
-};
 
 type EntitySnapshot = {
   name: string;
@@ -26,12 +23,12 @@ export class AccessibleOverlay
   private _timer: number | null = null;
 
   readonly scene: Scene;
-  readonly options: AccessibleOverlayOptions;
+  private readonly _loop: GameLoop;
 
-  constructor(scene: Scene, options: AccessibleOverlayOptions) 
+  constructor(scene: Scene, loop: GameLoop)
   {
     this.scene = scene;
-    this.options = options;
+    this._loop = loop;
 
     this._root = document.createElement('div');
     this._root.className = 'a11y-root ui-hidden';
@@ -112,7 +109,13 @@ export class AccessibleOverlay
     const objects = this.scene.getGameObjects();
 
     let player = null;
-    for (const o of objects) { if (o.tag === 'Player') { player = o; break; } }
+    for (const o of objects) 
+    {
+      if (o.tag === 'Player') 
+      {
+        player = o; break; 
+      } 
+    }
     const playerPos = player?.transform.position ?? new Vec2(0, 0);
 
     const rows: EntitySnapshot[] = [];
@@ -154,7 +157,7 @@ export class AccessibleOverlay
     const hpText = playerRow?.hp
       ? `${Math.round(playerRow.hp.current)}/${Math.round(playerRow.hp.max)}`
       : 'n/a';
-    this._meta.textContent = `Status: ${this.options.getPaused() ? 'Paused' : 'Running'} · Player HP: ${hpText} · Enemies: ${enemies.length}`;
+    this._meta.textContent = `Status: ${this._loop.paused ? 'Paused' : 'Running'} · Player HP: ${hpText} · Enemies: ${enemies.length}`;
 
     enemies.sort((a, b) => (a.distanceToPlayer ?? 0) - (b.distanceToPlayer ?? 0));
 

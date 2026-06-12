@@ -86,10 +86,19 @@ final class Response
 
     public static function ok(mixed $data = [], HttpStatus|int $status = HttpStatus::Ok): self
     {
-        if (!is_array($data)) {
-            return self::json($data, $status);
+        if (is_array($data)) {
+            return self::json(array_merge(['ok' => true], $data), $status);
         }
-        return self::json(array_merge(['ok' => true], $data), $status);
+        // DTOs/objects (e.g. AuthSessionResponse, CsrfTokenResponse) must also
+        // carry the {ok:true} envelope the client checks for.
+        if (is_object($data)) {
+            $encoded = json_encode($data);
+            $decoded = $encoded === false ? null : json_decode($encoded, true);
+            if (is_array($decoded)) {
+                return self::json(array_merge(['ok' => true], $decoded), $status);
+            }
+        }
+        return self::json($data, $status);
     }
 
     /** @param array<string, mixed> $extra */

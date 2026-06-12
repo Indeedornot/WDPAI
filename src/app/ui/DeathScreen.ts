@@ -1,18 +1,8 @@
 import type { Component } from './Component';
-import type { Leaderboard } from '../game/Leaderboard';
-import {
-  el,
-  focusFirstDescendant,
-  trapFocus,
-  uiBody,
-  uiButton,
-  uiOverlay,
-  uiPanel,
-  uiRow,
-  uiSection,
-  uiSubtitle,
-  uiTitle,
-} from './components/UiKit';
+import type { Leaderboard, LeaderboardEntry } from '../game/Leaderboard';
+import type { AchievementView, RunsClient } from '../game/RunsClient';
+import type { GameController } from '../game/GameController';
+import { UiKit } from './components/UiKit';
 
 export type DeathScreenStats = {
   timeSeconds: number;
@@ -24,11 +14,9 @@ export type DeathScreenStats = {
 };
 
 export type DeathScreenOptions = {
-  onRestart: () => void;
+  game: GameController;
   leaderboard: Leaderboard;
-  personalBestTime?: number;
-  totalPlayTime?: number;
-  runCount?: number;
+  runs: RunsClient;
 };
 
 export class DeathScreen implements Component
@@ -40,6 +28,10 @@ export class DeathScreen implements Component
   private _unblockKeys: (() => void) | null = null;
 
   private _stats: DeathScreenStats | null = null;
+  private _globalEntries: LeaderboardEntry[] = [];
+  private _achievements: AchievementView[] = [];
+  /** Bumped on each open() so stale async responses are ignored. */
+  private _loadToken = 0;
 
   readonly options: DeathScreenOptions;
 
@@ -47,12 +39,12 @@ export class DeathScreen implements Component
   {
     this.options = options;
 
-    this._overlay = uiOverlay(() => 
+    this._overlay = UiKit.overlay(() => 
     {
       // Don't close by background click.
     });
 
-    this._panel = uiPanel();
+    this._panel = UiKit.panel();
     this._panel.setAttribute('role', 'dialog');
     this._panel.setAttribute('aria-modal', 'true');
 
@@ -70,19 +62,22 @@ export class DeathScreen implements Component
     this.render();
   }
 
-  open(stats: DeathScreenStats): void 
+  open(stats: DeathScreenStats): void
   {
     this._stats = stats;
+    this._globalEntries = [];
+    this._achievements = [];
     this.render();
+    this.loadRemote();
 
-    if (this._isOpen) 
+    if (this._isOpen)
     {
       return;
     }
     this._isOpen = true;
     this._overlay.classList.remove('ui-hidden');
 
-    this._untrap = trapFocus(this._panel, () => this._isOpen);
+    this._untrap = UiKit.trapFocus(this._panel, () => this._isOpen);
 
     const blockKeys = (e: KeyboardEvent) => 
     {
@@ -99,7 +94,7 @@ export class DeathScreen implements Component
     window.addEventListener('keydown', blockKeys, { capture: true });
     this._unblockKeys = () => window.removeEventListener('keydown', blockKeys, { capture: true });
 
-    focusFirstDescendant(this._panel);
+    UiKit.focusFirstDescendant(this._panel);
   }
 
   close(): void 
@@ -122,15 +117,15 @@ export class DeathScreen implements Component
   {
     this._panel.innerHTML = '';
 
-    const h = uiTitle('You Died');
+    const h = UiKit.title('You Died');
     h.id = 'death-title';
     this._panel.setAttribute('aria-labelledby', h.id);
 
-    const sub = uiSubtitle('Your run is over. Review stats, then restart.');
+    const sub = UiKit.subtitle('Your run is over. Review stats, then restart.');
     sub.id = 'death-sub';
     this._panel.setAttribute('aria-describedby', sub.id);
 
-    const body = uiBody();
+    const body = UiKit.body();
 
     const stats = this._stats;
     if (stats)
@@ -138,53 +133,64 @@ export class DeathScreen implements Component
       const accuracy = stats.shotsFired <= 0 ? 0 : stats.shotsHit / stats.shotsFired;
 
       const rows: HTMLElement[] = [];
-      rows.push(uiRow('Time', el('span', { text: `${formatSeconds(stats.timeSeconds)}` })));
-      rows.push(uiRow('Level', el('span', { text: `${stats.level}` })));
-      rows.push(uiRow('XP', el('span', { text: `${stats.xp}` })));
-      rows.push(uiRow('Kills', el('span', { text: `${stats.kills}` })));
-      rows.push(uiRow('Shots fired', el('span', { text: `${stats.shotsFired}` })));
-      rows.push(uiRow('Shots hit', el('span', { text: `${stats.shotsHit}` })));
-      rows.push(uiRow('Accuracy', el('span', { text: `${Math.round(accuracy * 100)}%` })));
+      rows.push(UiKit.row('Time', UiKit.el('span', { text: `${DeathScreen.formatSeconds(stats.timeSeconds)}` })));
+      rows.push(UiKit.row('Level', UiKit.el('span', { text: `${stats.level}` })));
+      rows.push(UiKit.row('XP', UiKit.el('span', { text: `${stats.xp}` })));
+      rows.push(UiKit.row('Kills', UiKit.el('span', { text: `${stats.kills}` })));
+      rows.push(UiKit.row('Shots fired', UiKit.el('span', { text: `${stats.shotsFired}` })));
+      rows.push(UiKit.row('Shots hit', UiKit.el('span', { text: `${stats.shotsHit}` })));
+      rows.push(UiKit.row('Accuracy', UiKit.el('span', { text: `${Math.round(accuracy * 100)}%` })));
 
-      body.appendChild(uiSection('Run Stats', rows));
+      body.appendChild(UiKit.section('Run Stats', rows));
 
       const personalBest = this.options.leaderboard.getPersonalBest();
       if (personalBest && stats.timeSeconds > personalBest.timeSeconds)
       {
-        const pbLabel = el('span', { text: '✨ New Personal Best!' });
+        const pbLabel = UiKit.el('span', { text: '✨ New Personal Best!' });
         pbLabel.style.fontWeight = 'bold';
         pbLabel.style.color = '#fbbf24';
         body.appendChild(pbLabel);
         this.options.leaderboard.setPersonalBest({
-          email: 'anonymous',
+          name: 'You',
           timeSeconds: stats.timeSeconds,
           kills: stats.kills,
           level: stats.level,
         });
       }
 
-      const topEntries = this.options.leaderboard.getTop(5);
+      // Prefer the global (server) leaderboard when available; otherwise show
+      // the local session scores.
+      const useGlobal = this._globalEntries.length > 0;
+      const topEntries = useGlobal ? this._globalEntries.slice(0, 5) : this.options.leaderboard.getTop(5);
       if (topEntries.length > 0)
       {
         const leaderboardRows: HTMLElement[] = topEntries.map((entry) =>
-          uiRow(
-            `#${entry.rank}`,
-            el('span', {
-              text: `${formatSeconds(entry.timeSeconds)} · Lvl ${entry.level} · ${entry.kills} kills`,
+          UiKit.row(
+            `#${entry.rank} ${entry.name}`,
+            UiKit.el('span', {
+              text: `${DeathScreen.formatSeconds(entry.timeSeconds)} · Lvl ${entry.level} · ${entry.kills} kills`,
             }),
           ),
         );
-        body.appendChild(uiSection('Top Scores', leaderboardRows));
+        body.appendChild(UiKit.section(useGlobal ? 'Top Scores (Global)' : 'Top Scores', leaderboardRows));
+      }
+
+      if (this._achievements.length > 0)
+      {
+        const achievementRows: HTMLElement[] = this._achievements.map((a) =>
+          UiKit.row('🏆', UiKit.el('span', { text: a.title })),
+        );
+        body.appendChild(UiKit.section('Achievements', achievementRows));
       }
     }
 
     body.appendChild(
-      uiButton({
+      UiKit.button({
         label: 'Restart',
         title: 'Restart the run',
-        onClick: () => 
+        onClick: () =>
         {
-          this.options.onRestart();
+          this.options.game.restart();
           this.close();
         },
       }),
@@ -194,12 +200,43 @@ export class DeathScreen implements Component
     this._panel.appendChild(sub);
     this._panel.appendChild(body);
   }
-}
 
-function formatSeconds(totalSeconds: number): string 
-{
-  const s = Math.max(0, Math.floor(totalSeconds));
-  const mm = Math.floor(s / 60);
-  const ss = s % 60;
-  return `${mm}:${ss.toString().padStart(2, '0')}`;
+  /**
+   * Fetch the global leaderboard and earned achievements (best-effort).
+   * Uses a load token so a slow response from a previous run can't overwrite
+   * the current screen.
+   */
+  private loadRemote(): void
+  {
+    const { runs } = this.options;
+    const token = ++this._loadToken;
+
+    void Promise.allSettled([
+      runs.fetchLeaderboard(),
+      runs.fetchAchievements(),
+    ]).then(([lb, ach]) =>
+    {
+      if (token !== this._loadToken)
+      {
+        return;
+      }
+      if (lb.status === 'fulfilled')
+      {
+        this._globalEntries = lb.value;
+      }
+      if (ach.status === 'fulfilled')
+      {
+        this._achievements = ach.value as AchievementView[];
+      }
+      this.render();
+    });
+  }
+
+  private static formatSeconds(totalSeconds: number): string
+  {
+    const s = Math.max(0, Math.floor(totalSeconds));
+    const mm = Math.floor(s / 60);
+    const ss = s % 60;
+    return `${mm}:${ss.toString().padStart(2, '0')}`;
+  }
 }

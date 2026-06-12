@@ -148,9 +148,13 @@ export class SpawnerBuilder
   {
     const roll = Math.random();
     if (difficulty > 1.5 && roll < 0.2)
+    {
       return 'armored';
+    }
     if (difficulty > 1.0 && roll < 0.25)
+    {
       return 'fast';
+    }
     return 'standard';
   }
 }

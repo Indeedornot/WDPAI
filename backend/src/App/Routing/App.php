@@ -13,6 +13,11 @@ use Throwable;
 
 final class App
 {
+    // X-Client-Errors is sent by the frontend HttpClient to ship buffered logs;
+    // X-Client-Errors-Processed is read back from the response.
+    private const CORS_ALLOW_HEADERS = 'Content-Type, Authorization, X-CSRF-Token, X-Client-Errors';
+    private const CORS_EXPOSE_HEADERS = 'X-Client-Errors-Processed';
+
     private Kernel $kernel;
     private Router $router;
 
@@ -88,7 +93,8 @@ final class App
         if (in_array('*', $cors->allowedOrigins, true)) {
             return $res
                 ->withHeader('Access-Control-Allow-Origin', '*')
-                ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token')
+                ->withHeader('Access-Control-Allow-Headers', self::CORS_ALLOW_HEADERS)
+                ->withHeader('Access-Control-Expose-Headers', self::CORS_EXPOSE_HEADERS)
                 ->withHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
         }
 
@@ -97,7 +103,8 @@ final class App
                 ->withHeader('Access-Control-Allow-Origin', $req->origin)
                 ->withHeader('Vary', 'Origin')
                 ->withHeader('Access-Control-Allow-Credentials', 'true')
-                ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token')
+                ->withHeader('Access-Control-Allow-Headers', self::CORS_ALLOW_HEADERS)
+                ->withHeader('Access-Control-Expose-Headers', self::CORS_EXPOSE_HEADERS)
                 ->withHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
         }
 
@@ -113,7 +120,7 @@ final class App
             return null;
         }
 
-        if (str_starts_with($req->path, '/auth/') && !$req->secure) {
+        if ($this->kernel->config->routing->requireHttps && str_starts_with($req->path, '/auth/') && !$req->secure) {
             return Response::error(ApiErrorCode::Forbidden, HttpStatus::Forbidden, 'HTTPS required.');
         }
 

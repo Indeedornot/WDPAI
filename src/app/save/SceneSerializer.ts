@@ -2,36 +2,26 @@ import { GameObject } from '../../engine/core/GameObject';
 import type { Scene } from '../../engine/core/Scene';
 import type { Component } from '../../engine/core/Component';
 import { Vec2 } from '../../engine/math/Vec2';
-import type { SceneSnapshotV1, GameObjectSnapshot, ComponentSnapshot } from './types';
+import type { SceneSnapshotV1, GameObjectSnapshot, ComponentSnapshot, Vec2Snapshot } from './types';
 import {
   defaultComponentSerializers,
-  type ComponentSerializer,
+  SnapshotRead,
+  type AnyComponentSerializer,
   type LoadContext,
 } from './ComponentSerializers';
 
-function vec2ToSnapshot(v: Vec2): { x: number; y: number } 
+export class SceneSerializer
 {
-  return { x: v.x, y: v.y };
-}
+  readonly serializers: AnyComponentSerializer[];
 
-function snapshotToVec2(v: any, fallback: Vec2): Vec2 
-{
-  if (!v || typeof v !== 'object') 
-  {
-    return fallback;
-  }
-  const x = typeof v.x === 'number' ? v.x : fallback.x;
-  const y = typeof v.y === 'number' ? v.y : fallback.y;
-  return new Vec2(x, y);
-}
-
-export class SceneSerializer 
-{
-  readonly serializers: ComponentSerializer<any>[];
-
-  constructor(serializers: ComponentSerializer<any>[] = defaultComponentSerializers()) 
+  constructor(serializers: AnyComponentSerializer[] = defaultComponentSerializers())
   {
     this.serializers = serializers;
+  }
+
+  private static vec2ToSnapshot(v: Vec2): Vec2Snapshot
+  {
+    return { x: v.x, y: v.y };
   }
 
   serialize(scene: Scene): SceneSnapshotV1 
@@ -42,7 +32,7 @@ export class SceneSerializer
       version: 1,
       savedAt: Date.now(),
       camera: {
-        position: vec2ToSnapshot(scene.camera.position),
+        position: SceneSerializer.vec2ToSnapshot(scene.camera.position),
         zoom: scene.camera.zoom,
       },
       objects,
@@ -80,7 +70,7 @@ export class SceneSerializer
     // Second pass: add components.
     const linkQueue: Array<{
       component: Component;
-      serializer: ComponentSerializer<any>;
+      serializer: AnyComponentSerializer;
       data: unknown;
     }> = [];
     for (const o of snapshot.objects) 
@@ -117,7 +107,7 @@ export class SceneSerializer
     }
 
     // Camera
-    const camPos = snapshotToVec2(snapshot.camera.position, new Vec2(0, 0));
+    const camPos = SnapshotRead.vec2(snapshot.camera.position, new Vec2(0, 0));
     scene.camera.position.set(camPos.x, camPos.y);
     scene.camera.zoom = typeof snapshot.camera.zoom === 'number' ? snapshot.camera.zoom : 1;
 
@@ -143,9 +133,9 @@ export class SceneSerializer
       tag: go.tag,
       active: go.active,
       transform: {
-        position: vec2ToSnapshot(go.transform.position),
+        position: SceneSerializer.vec2ToSnapshot(go.transform.position),
         rotation: go.transform.rotation,
-        scale: vec2ToSnapshot(go.transform.scale),
+        scale: SceneSerializer.vec2ToSnapshot(go.transform.scale),
       },
       components,
     };
@@ -166,7 +156,7 @@ export class SceneSerializer
 
   private deserializeComponent(snapshot: ComponentSnapshot): {
     component: Component | null;
-    serializer: ComponentSerializer<any> | null;
+    serializer: AnyComponentSerializer | null;
   } 
   {
     const serializer = this.serializers.find((s) => s.type === snapshot.type);

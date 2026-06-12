@@ -1,12 +1,12 @@
 import type { AuthUser } from '../../auth/AuthClient';
-import { uiHint, uiInputRow, uiPill, uiRow, uiSection, uiSmallButton } from './UiKit';
+import { UiKit } from './UiKit';
 
 export type AccountSectionAuth = {
   getUser: () => AuthUser | null;
   isLoggedIn: () => boolean;
   getSessionExpiresAt: () => string | null;
   isExpiringSoon: () => boolean;
-  register: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<AuthUser>;
   login: (email: string, password: string) => Promise<void>;
   refreshSession: () => Promise<AuthUser>;
   logout: () => Promise<void>;
@@ -41,32 +41,32 @@ export class AccountSection
     {
       const expiresAt = this._auth.getSessionExpiresAt();
 
-      const refreshBtn = uiSmallButton({
+      const refreshBtn = UiKit.smallButton({
         label: this._busy ? 'Working…' : 'Refresh token',
         onClick: () => void this._handleRefreshSession(),
       });
       refreshBtn.disabled = this._busy;
 
-      const logoutBtn = uiSmallButton({
+      const logoutBtn = UiKit.smallButton({
         label: this._busy ? 'Working…' : 'Log out',
         onClick: () => void this._handleLogout(),
       });
       logoutBtn.disabled = this._busy;
 
       const pills: HTMLElement[] = [
-        uiPill(user.email),
-        uiPill(user.role),
-        ...(expiresAt ? [uiPill(`Expires ${new Date(expiresAt).toLocaleString()}`)] : []),
-        ...(this._auth.isExpiringSoon() ? [uiPill('Refresh recommended')] : []),
+        UiKit.pill(user.email),
+        UiKit.pill(user.role),
+        ...(expiresAt ? [UiKit.pill(`Expires ${new Date(expiresAt).toLocaleString()}`)] : []),
+        ...(this._auth.isExpiringSoon() ? [UiKit.pill('Refresh recommended')] : []),
         refreshBtn,
         logoutBtn,
       ];
-      rows.push(uiRow('Signed in', ...pills));
+      rows.push(UiKit.row('Signed in', ...pills));
     }
     else 
     {
       rows.push(
-        uiInputRow(
+        UiKit.inputRow(
           'Email',
           'email',
           this._email,
@@ -78,7 +78,7 @@ export class AccountSection
         ),
       );
       rows.push(
-        uiInputRow(
+        UiKit.inputRow(
           'Password',
           'password',
           this._password,
@@ -90,27 +90,27 @@ export class AccountSection
         ),
       );
 
-      const loginBtn = uiSmallButton({
+      const loginBtn = UiKit.smallButton({
         label: this._busy ? 'Working…' : 'Log in',
         onClick: () => void this._handleLogin(),
       });
       loginBtn.disabled = this._busy;
 
-      const regBtn = uiSmallButton({
+      const regBtn = UiKit.smallButton({
         label: this._busy ? 'Working…' : 'Register',
         onClick: () => void this._handleRegister(),
       });
       regBtn.disabled = this._busy;
 
-      rows.push(uiRow('Actions', loginBtn, regBtn));
+      rows.push(UiKit.row('Actions', loginBtn, regBtn));
     }
 
     if (this._status) 
     {
-      rows.push(uiHint(this._status));
+      rows.push(UiKit.hint(this._status));
     }
 
-    return uiSection('Account', rows);
+    return UiKit.section('Account', rows);
   }
 
   async triggerLogout(): Promise<void> 

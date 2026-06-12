@@ -1,32 +1,13 @@
-import type { AuthUser } from '../auth/AuthClient';
 import type { Component } from './Component';
-import {
-  focusFirstDescendant,
-  trapFocus,
-  uiBody,
-  uiButton,
-  uiHint,
-  uiInputRow,
-  uiOverlay,
-  uiPanel,
-  uiRow,
-  uiSection,
-  uiSmallButton,
-  uiSubtitle,
-  uiTitle,
-} from './components/UiKit';
+import type { AccountController } from '../auth/AccountController';
+import type { StartController } from '../game/StartController';
+import { UiKit } from './components/UiKit';
 
 export type RegisterGateOptions = {
   title?: string;
   subtitle?: string;
-
-  auth: {
-    isLoggedIn: () => boolean;
-    getUser: () => AuthUser | null;
-    register: (email: string, password: string) => Promise<AuthUser>;
-  };
-
-  onRegistered?: (user: AuthUser) => void;
+  auth: AccountController;
+  start: StartController;
 };
 
 export class RegisterGate implements Component
@@ -48,12 +29,12 @@ export class RegisterGate implements Component
   {
     this.options = options;
 
-    this._overlay = uiOverlay(() => 
+    this._overlay = UiKit.overlay(() => 
     {
       // Don't close by background click; registration is required.
     });
 
-    this._panel = uiPanel();
+    this._panel = UiKit.panel();
     this._panel.setAttribute('role', 'dialog');
     this._panel.setAttribute('aria-modal', 'true');
     this._panel.setAttribute('aria-label', 'Registration required');
@@ -81,7 +62,7 @@ export class RegisterGate implements Component
     this._isOpen = true;
     this._overlay.classList.remove('ui-hidden');
 
-    this._untrap = trapFocus(this._panel, () => this._isOpen);
+    this._untrap = UiKit.trapFocus(this._panel, () => this._isOpen);
 
     const blockKeys = (e: KeyboardEvent) => 
     {
@@ -99,7 +80,7 @@ export class RegisterGate implements Component
     window.addEventListener('keydown', blockKeys, { capture: true });
     this._unblockKeys = () => window.removeEventListener('keydown', blockKeys, { capture: true });
 
-    focusFirstDescendant(this._panel);
+    UiKit.focusFirstDescendant(this._panel);
   }
 
   close(): void 
@@ -125,15 +106,15 @@ export class RegisterGate implements Component
     const titleText = this.options.title ?? 'Create an account';
     const subtitleText = this.options.subtitle ?? 'Registration is required before playing.';
 
-    const h = uiTitle(titleText);
+    const h = UiKit.title(titleText);
     h.id = 'register-title';
     this._panel.setAttribute('aria-labelledby', h.id);
 
-    const sub = uiSubtitle(subtitleText);
+    const sub = UiKit.subtitle(subtitleText);
     sub.id = 'register-sub';
     this._panel.setAttribute('aria-describedby', sub.id);
 
-    const body = uiBody();
+    const body = UiKit.body();
 
     const auth = this.options.auth;
     const loggedIn = auth.isLoggedIn();
@@ -141,9 +122,9 @@ export class RegisterGate implements Component
 
     if (loggedIn && user) 
     {
-      body.appendChild(uiSection('Account', [uiHint(`Signed in as ${user.email}.`)]));
+      body.appendChild(UiKit.section('Account', [UiKit.hint(`Signed in as ${user.email}.`)]));
       body.appendChild(
-        uiButton({ label: 'Continue', title: 'Continue to the game', onClick: () => this.close() }),
+        UiKit.button({ label: 'Continue', title: 'Continue to the game', onClick: () => this.close() }),
       );
     }
     else 
@@ -151,7 +132,7 @@ export class RegisterGate implements Component
       const rows: HTMLElement[] = [];
 
       rows.push(
-        uiInputRow(
+        UiKit.inputRow(
           'Email',
           'email',
           this._email,
@@ -163,7 +144,7 @@ export class RegisterGate implements Component
         ),
       );
       rows.push(
-        uiInputRow(
+        UiKit.inputRow(
           'Password',
           'password',
           this._password,
@@ -175,19 +156,19 @@ export class RegisterGate implements Component
         ),
       );
 
-      const regBtn = uiSmallButton({
+      const regBtn = UiKit.smallButton({
         label: this._busy ? 'Working…' : 'Register',
         onClick: () => void this.handleRegister(),
       });
       regBtn.disabled = this._busy;
-      rows.push(uiRow('Actions', regBtn));
+      rows.push(UiKit.row('Actions', regBtn));
 
       if (this._status) 
       {
-        rows.push(uiHint(this._status));
+        rows.push(UiKit.hint(this._status));
       }
 
-      body.appendChild(uiSection('Account', rows));
+      body.appendChild(UiKit.section('Account', rows));
     }
 
     this._panel.appendChild(h);
@@ -195,20 +176,50 @@ export class RegisterGate implements Component
     this._panel.appendChild(body);
   }
 
-  private async handleRegister(): Promise<void> 
+  private validate(): string | null
+  {
+    const email = this._email.trim();
+    if (!email) 
+    {
+      return 'Email is required.';
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) 
+    {
+      return 'Enter a valid email address.';
+    }
+    if (!this._password) 
+    {
+      return 'Password is required.';
+    }
+    if (this._password.length < 8) 
+    {
+      return 'Password must be at least 8 characters.';
+    }
+    return null;
+  }
+
+  private async handleRegister(): Promise<void>
   {
     const auth = this.options.auth;
+
+    const validationError = this.validate();
+    if (validationError)
+    {
+      this._status = validationError;
+      this.render();
+      return;
+    }
 
     this._busy = true;
     this._status = '';
     this.render();
 
-    try 
+    try
     {
       const user = await auth.register(this._email.trim(), this._password);
       this._password = '';
       this._status = `Registered. Signed in as ${user.email}.`;
-      this.options.onRegistered?.(user);
+      this.options.start.completeRegistration();
       this.close();
     }
     catch (e) 

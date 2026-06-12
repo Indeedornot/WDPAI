@@ -1,18 +1,9 @@
 import type { Component } from './Component';
-import {
-  el,
-  focusFirstDescendant,
-  trapFocus,
-  uiBody,
-  uiButton,
-  uiOverlay,
-  uiPanel,
-  uiSubtitle,
-  uiTitle,
-} from './components/UiKit';
+import type { ScreenNavigator } from './ScreenNavigator';
+import { UiKit } from './components/UiKit';
 
 export type TutorialOptions = {
-  onClose: () => void;
+  navigator: ScreenNavigator;
 };
 
 export class Tutorial implements Component
@@ -29,12 +20,12 @@ export class Tutorial implements Component
   {
     this.options = options;
 
-    this._overlay = uiOverlay(() =>
+    this._overlay = UiKit.overlay(() =>
     {
       this.close();
     });
 
-    this._panel = uiPanel();
+    this._panel = UiKit.panel();
     this._panel.setAttribute('role', 'dialog');
     this._panel.setAttribute('aria-modal', 'true');
 
@@ -61,7 +52,7 @@ export class Tutorial implements Component
     this._isOpen = true;
     this._overlay.classList.remove('ui-hidden');
 
-    this._untrap = trapFocus(this._panel, () => this._isOpen);
+    this._untrap = UiKit.trapFocus(this._panel, () => this._isOpen);
 
     const blockKeys = (e: KeyboardEvent) =>
     {
@@ -79,7 +70,7 @@ export class Tutorial implements Component
     window.addEventListener('keydown', blockKeys, { capture: true });
     this._unblockKeys = () => window.removeEventListener('keydown', blockKeys, { capture: true });
 
-    focusFirstDescendant(this._panel);
+    UiKit.focusFirstDescendant(this._panel);
   }
 
   close(): void
@@ -97,22 +88,22 @@ export class Tutorial implements Component
     this._unblockKeys?.();
     this._unblockKeys = null;
 
-    this.options.onClose();
+    this.options.navigator.focusGame();
   }
 
   private render(): void
   {
     this._panel.innerHTML = '';
 
-    const h = uiTitle('How to Play');
+    const h = UiKit.title('How to Play');
     h.id = 'tutorial-title';
     this._panel.setAttribute('aria-labelledby', h.id);
 
-    const sub = uiSubtitle('Master the basics and survive as long as possible.');
+    const sub = UiKit.subtitle('Master the basics and survive as long as possible.');
     sub.id = 'tutorial-sub';
     this._panel.setAttribute('aria-describedby', sub.id);
 
-    const body = uiBody();
+    const body = UiKit.body();
 
     const content = document.createElement('div');
     content.style.cssText = 'display: grid; gap: 1rem; font-size: 0.9rem; line-height: 1.5;';
@@ -160,7 +151,7 @@ export class Tutorial implements Component
     body.appendChild(content);
 
     body.appendChild(
-      uiButton({
+      UiKit.button({
         label: 'Got it!',
         title: 'Close tutorial',
         onClick: () =>

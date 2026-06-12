@@ -28,20 +28,24 @@ export const DefaultTheme: AppTheme = {
   canvasOutline: 'rgba(15,23,42,0.65)',
 };
 
-export function applyThemeToCssVars(theme: AppTheme = DefaultTheme): void 
+/** Applies an AppTheme to the document's CSS custom properties. */
+export class AppThemeApplier
 {
-  const root = document.documentElement;
+  static apply(theme: AppTheme = DefaultTheme): void
+  {
+    const root = document.documentElement;
 
-  root.style.setProperty('--c-bg', theme.bg);
-  root.style.setProperty('--c-surface', theme.surface);
-  root.style.setProperty('--c-text', theme.text);
-  root.style.setProperty('--c-muted-text', theme.mutedText);
+    root.style.setProperty('--c-bg', theme.bg);
+    root.style.setProperty('--c-surface', theme.surface);
+    root.style.setProperty('--c-text', theme.text);
+    root.style.setProperty('--c-muted-text', theme.mutedText);
 
-  root.style.setProperty('--c-primary', theme.primary);
-  root.style.setProperty('--c-accent', theme.accent);
-  root.style.setProperty('--c-ok', theme.ok);
+    root.style.setProperty('--c-primary', theme.primary);
+    root.style.setProperty('--c-accent', theme.accent);
+    root.style.setProperty('--c-ok', theme.ok);
 
-  root.style.setProperty('--c-canvas-grid', theme.canvasGrid);
-  root.style.setProperty('--c-canvas-axis', theme.canvasAxis);
-  root.style.setProperty('--c-canvas-outline', theme.canvasOutline);
+    root.style.setProperty('--c-canvas-grid', theme.canvasGrid);
+    root.style.setProperty('--c-canvas-axis', theme.canvasAxis);
+    root.style.setProperty('--c-canvas-outline', theme.canvasOutline);
+  }
 }

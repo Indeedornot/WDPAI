@@ -41,169 +41,172 @@ export type RunResult = {
 
 export const MAP_BOUNDS = { minX: -1100, maxX: 1100, minY: -1100, maxY: 1100 };
 
-export function buildRun(scene: Scene, controls: ControlsConfig): RunResult
+export class RunBuilder
 {
-  scene.clearImmediate();
+  static build(scene: Scene, controls: ControlsConfig): RunResult
+  {
+    scene.clearImmediate();
 
-  const grid = new GameObject('Grid');
-  grid.addComponent(
-    new DebugGridRenderer2D({
-      step: 100,
-      color: DefaultTheme.canvasGrid,
-      axisColor: DefaultTheme.canvasAxis,
-    }),
-  );
-  scene.add(grid);
+    const grid = new GameObject('Grid');
+    grid.addComponent(
+      new DebugGridRenderer2D({
+        step: 100,
+        color: DefaultTheme.canvasGrid,
+        axisColor: DefaultTheme.canvasAxis,
+      }),
+    );
+    scene.add(grid);
 
-  const difficultyScaler = new DifficultyScaler();
-  const spawnPowerup = SpawnerBuilder.createPowerupSpawner();
+    const difficultyScaler = new DifficultyScaler();
+    const spawnPowerup = SpawnerBuilder.createPowerupSpawner();
 
-  // Player
-  const player = new GameObject('Player');
-  player.tag = 'Player';
-  player.transform.position.set(200, -200);
-  player.addComponent(
-    new SpriteRenderer2D({
-      size: new Vec2(80, 80),
-      color: DefaultTheme.accent,
-      strokeColor: DefaultTheme.canvasOutline,
-      shape: 'rect',
-      label: 'P',
-    }),
-  );
-  player.addComponent(new AabbCollider2D(new Vec2(80, 80)));
-  player.addComponent(new Health({ max: 100 }));
-  player.addComponent(
-    new HealthBarRenderer2D({
-      offset: new Vec2(0, -70),
-      fillColor: DefaultTheme.ok,
-      borderColor: DefaultTheme.canvasOutline,
-    }),
-  );
-  player.addComponent(new Mover2D());
-  player.addComponent(new VelocityDamping2D({ damping: 10 }));
-  player.addComponent(new Experience({ level: 1, xp: 0 }));
-  player.addComponent(new PowerupController2D());
-  player.addComponent(new RunStats());
-  player.addComponent(new WrapAroundBounds2D(MAP_BOUNDS));
-  const playerMove = player.addComponent(new KeyboardMove2D({ speed: 320 }));
-  player.addComponent(new Spin2D({ radiansPerSecond: Math.PI * 0.6 }));
-  player.addComponent(
-    new KnockbackOnCollision2D({
-      otherTag: 'Enemy',
-      force: 420,
-      applyToSelf: true,
-      applyToOther: true,
-      otherForceMultiplier: 0.8,
-    }),
-  );
-  const playerShooter = player.addComponent(
-    new Shooter2D({
-      fallbackToMoveVelocity: false,
-      projectileVictimTag: 'Enemy',
-      projectileDamage: 15,
-      fireRatePerSecond: 7,
-      projectileColor: DefaultTheme.ok,
-    }),
-  );
+    // Player
+    const player = new GameObject('Player');
+    player.tag = 'Player';
+    player.transform.position.set(200, -200);
+    player.addComponent(
+      new SpriteRenderer2D({
+        size: new Vec2(80, 80),
+        color: DefaultTheme.accent,
+        strokeColor: DefaultTheme.canvasOutline,
+        shape: 'rect',
+        label: 'P',
+      }),
+    );
+    player.addComponent(new AabbCollider2D(new Vec2(80, 80)));
+    player.addComponent(new Health({ max: 100 }));
+    player.addComponent(
+      new HealthBarRenderer2D({
+        offset: new Vec2(0, -70),
+        fillColor: DefaultTheme.ok,
+        borderColor: DefaultTheme.canvasOutline,
+      }),
+    );
+    player.addComponent(new Mover2D());
+    player.addComponent(new VelocityDamping2D({ damping: 10 }));
+    player.addComponent(new Experience({ level: 1, xp: 0 }));
+    player.addComponent(new PowerupController2D());
+    player.addComponent(new RunStats());
+    player.addComponent(new WrapAroundBounds2D(MAP_BOUNDS));
+    const playerMove = player.addComponent(new KeyboardMove2D({ speed: 320 }));
+    player.addComponent(new Spin2D({ radiansPerSecond: Math.PI * 0.6 }));
+    player.addComponent(
+      new KnockbackOnCollision2D({
+        otherTag: 'Enemy',
+        force: 420,
+        applyToSelf: true,
+        applyToOther: true,
+        otherForceMultiplier: 0.8,
+      }),
+    );
+    const playerShooter = player.addComponent(
+      new Shooter2D({
+        fallbackToMoveVelocity: false,
+        projectileVictimTag: 'Enemy',
+        projectileDamage: 15,
+        fireRatePerSecond: 7,
+        projectileColor: DefaultTheme.ok,
+      }),
+    );
 
-  playerMove.bindings = { ...DefaultMovementBindingsWASD, ...controls.movement };
-  playerShooter.aimBindings = { ...DefaultShootingBindingsArrows, ...controls.aim };
-  playerShooter.shootKey = controls.shootKey;
-  scene.add(player);
+    playerMove.bindings = { ...DefaultMovementBindingsWASD, ...controls.movement };
+    playerShooter.aimBindings = { ...DefaultShootingBindingsArrows, ...controls.aim };
+    playerShooter.shootKey = controls.shootKey;
+    scene.add(player);
 
-  // Two static starter enemies
-  const target = new GameObject('Target');
-  target.tag = 'Enemy';
-  target.transform.position.set(500, -320);
-  target.addComponent(
-    new SpriteRenderer2D({
-      size: new Vec2(60, 60),
-      color: DefaultTheme.primary,
-      strokeColor: DefaultTheme.canvasOutline,
-      shape: 'circle',
-      label: 'E',
-    }),
-  );
-  target.addComponent(new AabbCollider2D(new Vec2(60, 60)));
-  target.addComponent(new Health({ max: 60 }));
-  target.addComponent(
-    new HealthBarRenderer2D({
-      offset: new Vec2(0, -55),
-      fillColor: DefaultTheme.primary,
-      borderColor: DefaultTheme.canvasOutline,
-    }),
-  );
-  target.addComponent(new GrantXpToPlayerOnDeath2D({ xp: 12 }));
-  target.addComponent(new CountKillToPlayerStatsOnDeath2D());
-  target.addComponent(new DropPowerupOnDeath2D({ chance: 0.35, factory: spawnPowerup }));
-  target.addComponent(new DestroyWhenDead());
-  target.addComponent(
-    new DamageOnCollision2D({ damage: 12, victimTag: 'Player', oncePerContact: true }),
-  );
-  target.addComponent(new Mover2D());
-  target.addComponent(new VelocityDamping2D({ damping: 6 }));
-  target.addComponent(new ChasePlayer2D({ speed: 150, stopDistance: 34 }));
-  scene.add(target);
+    // Two static starter enemies
+    const target = new GameObject('Target');
+    target.tag = 'Enemy';
+    target.transform.position.set(500, -320);
+    target.addComponent(
+      new SpriteRenderer2D({
+        size: new Vec2(60, 60),
+        color: DefaultTheme.primary,
+        strokeColor: DefaultTheme.canvasOutline,
+        shape: 'circle',
+        label: 'E',
+      }),
+    );
+    target.addComponent(new AabbCollider2D(new Vec2(60, 60)));
+    target.addComponent(new Health({ max: 60 }));
+    target.addComponent(
+      new HealthBarRenderer2D({
+        offset: new Vec2(0, -55),
+        fillColor: DefaultTheme.primary,
+        borderColor: DefaultTheme.canvasOutline,
+      }),
+    );
+    target.addComponent(new GrantXpToPlayerOnDeath2D({ xp: 12 }));
+    target.addComponent(new CountKillToPlayerStatsOnDeath2D());
+    target.addComponent(new DropPowerupOnDeath2D({ chance: 0.35, factory: spawnPowerup }));
+    target.addComponent(new DestroyWhenDead());
+    target.addComponent(
+      new DamageOnCollision2D({ damage: 12, victimTag: 'Player', oncePerContact: true }),
+    );
+    target.addComponent(new Mover2D());
+    target.addComponent(new VelocityDamping2D({ damping: 6 }));
+    target.addComponent(new ChasePlayer2D({ speed: 150, stopDistance: 34 }));
+    scene.add(target);
 
-  const enemy2 = new GameObject('Enemy2');
-  enemy2.tag = 'Enemy';
-  enemy2.transform.position.set(650, -160);
-  enemy2.addComponent(
-    new SpriteRenderer2D({
-      size: new Vec2(50, 50),
-      color: DefaultTheme.primary,
-      strokeColor: DefaultTheme.canvasOutline,
-      shape: 'diamond',
-      label: 'E',
-    }),
-  );
-  enemy2.addComponent(new AabbCollider2D(new Vec2(50, 50)));
-  enemy2.addComponent(new Health({ max: 40 }));
-  enemy2.addComponent(
-    new HealthBarRenderer2D({
-      offset: new Vec2(0, -50),
-      fillColor: DefaultTheme.primary,
-      borderColor: DefaultTheme.canvasOutline,
-    }),
-  );
-  enemy2.addComponent(new GrantXpToPlayerOnDeath2D({ xp: 10 }));
-  enemy2.addComponent(new CountKillToPlayerStatsOnDeath2D());
-  enemy2.addComponent(new DropPowerupOnDeath2D({ chance: 0.3, factory: spawnPowerup }));
-  enemy2.addComponent(new DestroyWhenDead());
-  enemy2.addComponent(new Mover2D());
-  enemy2.addComponent(new VelocityDamping2D({ damping: 6 }));
-  enemy2.addComponent(new ChasePlayer2D({ speed: 190, stopDistance: 28 }));
-  enemy2.addComponent(
-    new DamageOnCollision2D({ damage: 10, victimTag: 'Player', oncePerContact: true }),
-  );
-  scene.add(enemy2);
+    const enemy2 = new GameObject('Enemy2');
+    enemy2.tag = 'Enemy';
+    enemy2.transform.position.set(650, -160);
+    enemy2.addComponent(
+      new SpriteRenderer2D({
+        size: new Vec2(50, 50),
+        color: DefaultTheme.primary,
+        strokeColor: DefaultTheme.canvasOutline,
+        shape: 'diamond',
+        label: 'E',
+      }),
+    );
+    enemy2.addComponent(new AabbCollider2D(new Vec2(50, 50)));
+    enemy2.addComponent(new Health({ max: 40 }));
+    enemy2.addComponent(
+      new HealthBarRenderer2D({
+        offset: new Vec2(0, -50),
+        fillColor: DefaultTheme.primary,
+        borderColor: DefaultTheme.canvasOutline,
+      }),
+    );
+    enemy2.addComponent(new GrantXpToPlayerOnDeath2D({ xp: 10 }));
+    enemy2.addComponent(new CountKillToPlayerStatsOnDeath2D());
+    enemy2.addComponent(new DropPowerupOnDeath2D({ chance: 0.3, factory: spawnPowerup }));
+    enemy2.addComponent(new DestroyWhenDead());
+    enemy2.addComponent(new Mover2D());
+    enemy2.addComponent(new VelocityDamping2D({ damping: 6 }));
+    enemy2.addComponent(new ChasePlayer2D({ speed: 190, stopDistance: 28 }));
+    enemy2.addComponent(
+      new DamageOnCollision2D({ damage: 10, victimTag: 'Player', oncePerContact: true }),
+    );
+    scene.add(enemy2);
 
-  const BASE_SPAWN_INTERVAL = 1.1;
+    const BASE_SPAWN_INTERVAL = 1.1;
 
-  const spawner = new GameObject('EnemySpawner');
-  spawner.addComponent(
-    new EnemySpawner2D({
-      spawnEverySeconds: BASE_SPAWN_INTERVAL,
-      spawnIntervalProvider: () => BASE_SPAWN_INTERVAL / difficultyScaler.getCurrentDifficulty().spawnRateMultiplier,
-      maxAlive: 12,
-      spawnDistance: 720,
-      spawnDistanceJitter: 220,
-      factory: (p, n) =>
-      {
-        const difficulty = difficultyScaler.getCurrentDifficulty();
-        const variant = SpawnerBuilder.chooseVariant(difficulty.level);
-        const config = {
-          variant,
-          healthMultiplier: difficulty.enemyHealthMultiplier,
-          speedMultiplier: difficulty.enemySpeedMultiplier,
-          xpMultiplier: 1,
-        };
-        return SpawnerBuilder.createEnemy(p, n, spawnPowerup, config);
-      },
-    }),
-  );
-  scene.add(spawner);
+    const spawner = new GameObject('EnemySpawner');
+    spawner.addComponent(
+      new EnemySpawner2D({
+        spawnEverySeconds: BASE_SPAWN_INTERVAL,
+        spawnIntervalProvider: () => BASE_SPAWN_INTERVAL / difficultyScaler.getCurrentDifficulty().spawnRateMultiplier,
+        maxAlive: 12,
+        spawnDistance: 720,
+        spawnDistanceJitter: 220,
+        factory: (p, n) =>
+        {
+          const difficulty = difficultyScaler.getCurrentDifficulty();
+          const variant = SpawnerBuilder.chooseVariant(difficulty.level);
+          const config = {
+            variant,
+            healthMultiplier: difficulty.enemyHealthMultiplier,
+            speedMultiplier: difficulty.enemySpeedMultiplier,
+            xpMultiplier: 1,
+          };
+          return SpawnerBuilder.createEnemy(p, n, spawnPowerup, config);
+        },
+      }),
+    );
+    scene.add(spawner);
 
-  return { player, playerMove, playerShooter, difficultyScaler };
+    return { player, playerMove, playerShooter, difficultyScaler };
+  }
 }

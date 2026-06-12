@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Auth\AuthUser;
 use App\Routing\Attributes\RequireAuth;
 use App\Routing\Response;
+use App\Run\RunStatsRepository;
 
 final class MeController extends Controller
 {
@@ -19,5 +20,11 @@ final class MeController extends Controller
                 'role' => $user->role,
             ],
         ]);
+    }
+
+    #[RequireAuth]
+    public function achievements(AuthUser $user, RunStatsRepository $repo): Response
+    {
+        return Response::ok(['achievements' => $repo->listAchievementsByUser($user->id)]);
     }
 }
