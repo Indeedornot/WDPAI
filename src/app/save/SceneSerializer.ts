@@ -61,7 +61,7 @@ export class SceneSerializer
     {
       const go = new GameObject(o.name);
       // Force id to match snapshot (not truly immutable at runtime).
-      (go as any).id = o.id;
+      (go as { id: string }).id = o.id;
 
       go.tag = o.tag;
       go.active = o.active;

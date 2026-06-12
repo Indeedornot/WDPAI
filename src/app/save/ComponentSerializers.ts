@@ -163,13 +163,26 @@ export function defaultComponentSerializers(): ComponentSerializer<any>[]
     {
       type: 'SpriteRenderer2D',
       supports: (c): c is SpriteRenderer2D => c instanceof SpriteRenderer2D,
-      serialize: (c) => ({ size: { x: c.size.x, y: c.size.y }, color: c.color }),
+      serialize: (c) => ({ 
+        size: { x: c.size.x, y: c.size.y }, 
+        fillColor: c.fillColor,
+        strokeColor: c.strokeColor,
+        strokeWidth: c.strokeWidth,
+        label: c.label,
+        labelColor: c.labelColor,
+        shape: c.shape,
+      }),
       deserialize: (data) => 
       {
         const rec = (data ?? {}) as Record<string, unknown>;
         return new SpriteRenderer2D({
           size: readVec2(rec['size'], new Vec2(64, 64)),
           color: readString(rec['color'], '#7dd3fc'),
+          shape: readString(rec['shape'], 'rect') as any,
+          strokeColor: readString(rec['strokeColor'], 'rgba(255,255,255,0.85)'),
+          strokeWidth: readNumber(rec['strokeWidth'], 2),
+          label: readString(rec['label'], ''),
+          labelColor: readString(rec['labelColor'], 'rgba(0,0,0,0.86)'),
         });
       },
     },
