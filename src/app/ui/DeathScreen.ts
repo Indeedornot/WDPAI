@@ -149,7 +149,7 @@ export class DeathScreen implements Component
       const accuracy = stats.shotsFired <= 0 ? 0 : stats.shotsHit / stats.shotsFired;
 
       const rows: HTMLElement[] = [];
-      rows.push(uiRow('Time', el('span', { text: `${formatSeconds(stats.timeSeconds)}` })));
+      rows.push(uiRow('Time', el('span', { text: `${DeathScreen.formatSeconds(stats.timeSeconds)}` })));
       rows.push(uiRow('Level', el('span', { text: `${stats.level}` })));
       rows.push(uiRow('XP', el('span', { text: `${stats.xp}` })));
       rows.push(uiRow('Kills', el('span', { text: `${stats.kills}` })));
@@ -184,7 +184,7 @@ export class DeathScreen implements Component
           uiRow(
             `#${entry.rank} ${entry.name}`,
             el('span', {
-              text: `${formatSeconds(entry.timeSeconds)} · Lvl ${entry.level} · ${entry.kills} kills`,
+              text: `${DeathScreen.formatSeconds(entry.timeSeconds)} · Lvl ${entry.level} · ${entry.kills} kills`,
             }),
           ),
         );
@@ -252,12 +252,12 @@ export class DeathScreen implements Component
       this.render();
     });
   }
-}
 
-function formatSeconds(totalSeconds: number): string 
-{
-  const s = Math.max(0, Math.floor(totalSeconds));
-  const mm = Math.floor(s / 60);
-  const ss = s % 60;
-  return `${mm}:${ss.toString().padStart(2, '0')}`;
+  private static formatSeconds(totalSeconds: number): string
+  {
+    const s = Math.max(0, Math.floor(totalSeconds));
+    const mm = Math.floor(s / 60);
+    const ss = s % 60;
+    return `${mm}:${ss.toString().padStart(2, '0')}`;
+  }
 }

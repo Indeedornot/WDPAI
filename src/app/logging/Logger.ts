@@ -3,11 +3,6 @@ import { LogLevels, type LogLevel, type LogEntry } from './LogLevel';
 const MAX_LOGS = 200;
 const STORAGE_KEY = 'app:logs';
 
-function encodeBase64(str: string): string
-{
-  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode(parseInt(p1, 16))));
-}
-
 export class Logger
 {
   private static _instance: Logger | null = null;
@@ -154,6 +149,12 @@ export class Logger
       return '';
     }
     const json = JSON.stringify(Logger._logs);
-    return encodeBase64(json);
+    return Logger.encodeBase64(json);
+  }
+
+  /** Unicode-safe base64 encoding for log export. */
+  private static encodeBase64(str: string): string
+  {
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode(parseInt(p1, 16))));
   }
 }

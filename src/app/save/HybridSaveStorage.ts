@@ -32,7 +32,7 @@ export class HybridSaveStorage implements SaveStorage
     }
     catch (e) 
     {
-      if (isUnauthorized(e)) 
+      if (HybridSaveStorage.isUnauthorized(e))
       {
         this._auth.clearSession();
       }
@@ -52,7 +52,7 @@ export class HybridSaveStorage implements SaveStorage
     }
     catch (e) 
     {
-      if (isUnauthorized(e)) 
+      if (HybridSaveStorage.isUnauthorized(e))
       {
         this._auth.clearSession();
       }
@@ -72,16 +72,16 @@ export class HybridSaveStorage implements SaveStorage
     }
     catch (e) 
     {
-      if (isUnauthorized(e)) 
+      if (HybridSaveStorage.isUnauthorized(e))
       {
         this._auth.clearSession();
       }
       await this._local.remove(slot);
     }
   }
-}
 
-function isUnauthorized(e: unknown): boolean
-{
-  return e instanceof HttpError && e.status === 401;
+  private static isUnauthorized(e: unknown): boolean
+  {
+    return e instanceof HttpError && e.status === 401;
+  }
 }
