@@ -1,6 +1,7 @@
 import type { Component } from './Component';
 import type { Leaderboard, LeaderboardEntry } from '../game/Leaderboard';
-import type { AchievementView } from '../game/RunsClient';
+import type { AchievementView, RunsClient } from '../game/RunsClient';
+import type { GameController } from '../game/GameController';
 import { UiKit } from './components/UiKit';
 
 export type DeathScreenStats = {
@@ -13,14 +14,9 @@ export type DeathScreenStats = {
 };
 
 export type DeathScreenOptions = {
-  onRestart: () => void;
+  game: GameController;
   leaderboard: Leaderboard;
-  personalBestTime?: number;
-  totalPlayTime?: number;
-  runCount?: number;
-  /** Optional remote data sources (used when the player is logged in). */
-  loadLeaderboard?: () => Promise<LeaderboardEntry[]>;
-  loadAchievements?: () => Promise<AchievementView[]>;
+  runs: RunsClient;
 };
 
 export class DeathScreen implements Component
@@ -192,9 +188,9 @@ export class DeathScreen implements Component
       UiKit.button({
         label: 'Restart',
         title: 'Restart the run',
-        onClick: () => 
+        onClick: () =>
         {
-          this.options.onRestart();
+          this.options.game.restart();
           this.close();
         },
       }),
@@ -212,17 +208,12 @@ export class DeathScreen implements Component
    */
   private loadRemote(): void
   {
-    const { loadLeaderboard, loadAchievements } = this.options;
-    if (!loadLeaderboard && !loadAchievements)
-    {
-      return;
-    }
-
+    const { runs } = this.options;
     const token = ++this._loadToken;
 
     void Promise.allSettled([
-      loadLeaderboard?.() ?? Promise.resolve([]),
-      loadAchievements?.() ?? Promise.resolve([]),
+      runs.fetchLeaderboard(),
+      runs.fetchAchievements(),
     ]).then(([lb, ach]) =>
     {
       if (token !== this._loadToken)

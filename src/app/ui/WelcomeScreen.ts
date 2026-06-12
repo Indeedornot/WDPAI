@@ -1,11 +1,13 @@
 import type { Component } from './Component';
+import type { ScreenNavigator } from './ScreenNavigator';
+import type { StartController } from '../game/StartController';
 import { UiKit } from './components/UiKit';
 
 export type WelcomeScreenOptions = {
   title?: string;
   subtitle?: string;
-  /** Return false to keep the welcome dialog open. */
-  onStart: () => void | boolean;
+  start: StartController;
+  navigator: ScreenNavigator;
 };
 
 export class WelcomeScreen implements Component
@@ -128,13 +130,9 @@ export class WelcomeScreen implements Component
     const startBtn = UiKit.button({
       label: 'Start',
       title: 'Start the game',
-      onClick: () => 
+      onClick: () =>
       {
-        const res = this.options.onStart();
-        if (res === false) 
-        {
-          return;
-        }
+        this.options.start.start();
         this.close();
       },
     });
@@ -144,11 +142,7 @@ export class WelcomeScreen implements Component
       UiKit.button({
         label: 'Focus Game',
         title: 'Move keyboard focus to the game canvas (keyboard controls)',
-        onClick: () => 
-        {
-          const canvas = document.querySelector<HTMLCanvasElement>('#game');
-          canvas?.focus();
-        },
+        onClick: () => this.options.navigator.focusGame(),
       }),
     );
 

@@ -1,5 +1,8 @@
+import type { RunStatsPayload } from '../game/RunsClient';
+
 export type AppEvents = {
   'auth:changed': void;
+  'player:died': RunStatsPayload;
 };
 
 type EventHandler<T> = T extends void ? () => void : (data: T) => void;

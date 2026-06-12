@@ -1,23 +1,21 @@
 import type { ControlsConfig } from '../controls/ControlsConfig';
 import { DEFAULT_CONTROLS } from '../controls/ControlsConfig';
 import type { Component } from './Component';
+import type { ScreenNavigator } from './ScreenNavigator';
+import type { GameController } from '../game/GameController';
+import type { ControlsController } from '../controls/ControlsController';
+import type { AccessibilityController } from '../a11y/AccessibilityController';
+import type { GameSaveController } from '../save/GameSaveController';
 import { UiKit } from './components/UiKit';
 import { AccountSection, type AccountSectionAuth } from './components/AccountSection';
 import { AdminPanel, type AdminPanelAdmin } from './components/AdminPanel';
 
 export type PauseMenuOptions = {
-  onResume: () => void;
-  onPause: () => void;
-  getControls: () => ControlsConfig;
-  setControls: (next: ControlsConfig) => void;
-
-  getAccessibleMode?: () => boolean;
-  setAccessibleMode?: (enabled: boolean) => void;
-
-  onSaveNow?: () => void | Promise<void>;
-  onLoadNow?: () => void | Promise<void>;
-  onSettings?: () => void;
-  onTutorial?: () => void;
+  game: GameController;
+  controls: ControlsController;
+  accessibility: AccessibilityController;
+  save: GameSaveController;
+  navigator: ScreenNavigator;
 
   auth?: AccountSectionAuth;
   admin?: AdminPanelAdmin;
@@ -130,7 +128,7 @@ export class PauseMenu implements Component
       return;
     }
     this._isOpen = true;
-    this.options.onPause();
+    this.options.game.pause();
     this._overlay.classList.remove('ui-hidden');
     this._untrap = UiKit.trapFocus(this._panel, () => this._isOpen);
     this.render();
@@ -147,7 +145,7 @@ export class PauseMenu implements Component
     this._rebindTarget = null;
     this._view = 'main';
     this._adminPanel?.resetState();
-    this.options.onResume();
+    this.options.game.resume();
     this._overlay.classList.add('ui-hidden');
     this._untrap?.();
     this._untrap = null;
@@ -168,7 +166,7 @@ export class PauseMenu implements Component
 
   private render(): void 
   {
-    const controls = this.options.getControls();
+    const controls = this.options.controls.current;
     const title = this._view === 'main' ? 'Paused' : this._view === 'options' ? 'Options' : 'Admin';
     const subtitle = this._rebindTarget ? 'Press a key…' : '';
 
@@ -195,18 +193,12 @@ export class PauseMenu implements Component
     {
       body.appendChild(UiKit.button({ label: 'Resume', onClick: () => this.close() }));
 
-      if (this.options.onSaveNow) 
-      {
-        body.appendChild(
-          UiKit.button({ label: 'Save Now', onClick: () => void this.options.onSaveNow?.() }),
-        );
-      }
-      if (this.options.onLoadNow) 
-      {
-        body.appendChild(
-          UiKit.button({ label: 'Load Last Save', onClick: () => void this.options.onLoadNow?.() }),
-        );
-      }
+      body.appendChild(
+        UiKit.button({ label: 'Save Now', onClick: () => void this.options.save.saveNow() }),
+      );
+      body.appendChild(
+        UiKit.button({ label: 'Load Last Save', onClick: () => void this.options.save.loadNow() }),
+      );
 
       if (this.options.auth?.isLoggedIn()) 
       {
@@ -231,33 +223,27 @@ export class PauseMenu implements Component
         }),
       );
 
-      if (this.options.onSettings)
-      {
-        body.appendChild(
-          UiKit.button({
-            label: 'Settings',
-            onClick: () =>
-            {
-              this.close();
-              this.options.onSettings?.();
-            },
-          }),
-        );
-      }
+      body.appendChild(
+        UiKit.button({
+          label: 'Settings',
+          onClick: () =>
+          {
+            this.close();
+            this.options.navigator.openSettings();
+          },
+        }),
+      );
 
-      if (this.options.onTutorial)
-      {
-        body.appendChild(
-          UiKit.button({
-            label: 'How to Play',
-            onClick: () =>
-            {
-              this.close();
-              this.options.onTutorial?.();
-            },
-          }),
-        );
-      }
+      body.appendChild(
+        UiKit.button({
+          label: 'How to Play',
+          onClick: () =>
+          {
+            this.close();
+            this.options.navigator.openTutorial();
+          },
+        }),
+      );
     }
     else if (this._view === 'options') 
     {
@@ -276,33 +262,30 @@ export class PauseMenu implements Component
           label: 'Reset Controls',
           onClick: () => 
           {
-            this.options.setControls(structuredClone(DEFAULT_CONTROLS));
+            this.options.controls.set(structuredClone(DEFAULT_CONTROLS));
             this._rebindTarget = null;
             this.render();
           },
         }),
       );
 
-      if (this.options.getAccessibleMode && this.options.setAccessibleMode) 
-      {
-        const enabled = this.options.getAccessibleMode();
-        body.appendChild(
-          UiKit.section('Accessibility', [
-            UiKit.row(
-              'Accessible Mode',
-              UiKit.pill(enabled ? 'On' : 'Off'),
-              UiKit.smallButton({
-                label: enabled ? 'Disable' : 'Enable',
-                onClick: () => 
-                {
-                  this.options.setAccessibleMode?.(!enabled);
-                  this.render();
-                },
-              }),
-            ),
-          ]),
-        );
-      }
+      const accessibleEnabled = this.options.accessibility.enabled;
+      body.appendChild(
+        UiKit.section('Accessibility', [
+          UiKit.row(
+            'Accessible Mode',
+            UiKit.pill(accessibleEnabled ? 'On' : 'Off'),
+            UiKit.smallButton({
+              label: accessibleEnabled ? 'Disable' : 'Enable',
+              onClick: () =>
+              {
+                this.options.accessibility.setEnabled(!accessibleEnabled);
+                this.render();
+              },
+            }),
+          ),
+        ]),
+      );
 
       if (this._accountSection) 
       {
@@ -399,7 +382,7 @@ export class PauseMenu implements Component
       return;
     }
 
-    const current = this.options.getControls();
+    const current = this.options.controls.current;
     let next: ControlsConfig;
 
     if (t.kind === 'shootKey') 
@@ -415,7 +398,7 @@ export class PauseMenu implements Component
       next = { ...current, aim: { ...current.aim, [t.dir]: code } };
     }
 
-    this.options.setControls(next);
+    this.options.controls.set(next);
     this._rebindTarget = null;
     this.render();
   }

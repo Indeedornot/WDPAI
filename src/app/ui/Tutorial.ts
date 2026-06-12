@@ -1,8 +1,9 @@
 import type { Component } from './Component';
+import type { ScreenNavigator } from './ScreenNavigator';
 import { UiKit } from './components/UiKit';
 
 export type TutorialOptions = {
-  onClose: () => void;
+  navigator: ScreenNavigator;
 };
 
 export class Tutorial implements Component
@@ -87,7 +88,7 @@ export class Tutorial implements Component
     this._unblockKeys?.();
     this._unblockKeys = null;
 
-    this.options.onClose();
+    this.options.navigator.focusGame();
   }
 
   private render(): void

@@ -1,18 +1,13 @@
-import type { AuthUser } from '../auth/AuthClient';
 import type { Component } from './Component';
+import type { AccountController } from '../auth/AccountController';
+import type { StartController } from '../game/StartController';
 import { UiKit } from './components/UiKit';
 
 export type RegisterGateOptions = {
   title?: string;
   subtitle?: string;
-
-  auth: {
-    isLoggedIn: () => boolean;
-    getUser: () => AuthUser | null;
-    register: (email: string, password: string) => Promise<AuthUser>;
-  };
-
-  onRegistered?: (user: AuthUser) => void;
+  auth: AccountController;
+  start: StartController;
 };
 
 export class RegisterGate implements Component
@@ -224,7 +219,7 @@ export class RegisterGate implements Component
       const user = await auth.register(this._email.trim(), this._password);
       this._password = '';
       this._status = `Registered. Signed in as ${user.email}.`;
-      this.options.onRegistered?.(user);
+      this.options.start.completeRegistration();
       this.close();
     }
     catch (e) 

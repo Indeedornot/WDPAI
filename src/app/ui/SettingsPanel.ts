@@ -1,10 +1,11 @@
 import type { Component } from './Component';
+import type { ScreenNavigator } from './ScreenNavigator';
+import type { GameSettingsController } from '../game/GameSettingsController';
 import { UiKit } from './components/UiKit';
 
 export type SettingsPanelOptions = {
-  onClose: () => void;
-  onDifficultyChange?: (difficulty: 'easy' | 'normal' | 'hard') => void;
-  onEffectsToggle?: (enabled: boolean) => void;
+  navigator: ScreenNavigator;
+  settings: GameSettingsController;
 };
 
 export class SettingsPanel implements Component
@@ -92,7 +93,7 @@ export class SettingsPanel implements Component
     this._unblockKeys?.();
     this._unblockKeys = null;
 
-    this.options.onClose();
+    this.options.navigator.focusGame();
   }
 
   private render(): void
@@ -135,7 +136,7 @@ export class SettingsPanel implements Component
       input.addEventListener('change', () =>
       {
         this._difficulty = option.value;
-        this.options.onDifficultyChange?.(option.value);
+        this.options.settings.setDifficulty(option.value);
         this.render();
       });
       const wrapper = UiKit.el('div');
@@ -152,7 +153,7 @@ export class SettingsPanel implements Component
     effectsInput.addEventListener('change', () =>
     {
       this._effectsEnabled = effectsInput.checked;
-      this.options.onEffectsToggle?.(this._effectsEnabled);
+      this.options.settings.setEffects(this._effectsEnabled);
       this.render();
     });
     const effectsWrapper = UiKit.el('div');
