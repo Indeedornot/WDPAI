@@ -441,3 +441,80 @@ canvas#game:focus-visible {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---- Responsive: phones / narrow viewports ---- */
+@media (max-width: 640px) {
+  .ui-panel,
+  .ui-panel--welcome {
+    width: calc(100vw - 16px);
+    padding: 12px;
+  }
+
+  .ui-title {
+    font-size: 16px;
+  }
+
+  .ui-scroll {
+    max-height: 64vh;
+  }
+
+  /* Stack label/value so wide inputs never overflow a narrow panel. */
+  .ui-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .ui-row-value {
+    justify-content: space-between;
+  }
+
+  .ui-input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* Keep the HUD compact and clear of the settings cog. */
+  .hud {
+    top: 8px;
+    left: 8px;
+    right: 64px;
+    padding: 8px 10px;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .hud .status {
+    font-size: 12px;
+  }
+
+  .a11y-root {
+    top: 58px;
+    right: 8px;
+    left: 8px;
+    width: auto;
+  }
+
+  .error-toast {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    max-width: none;
+  }
+}
+
+/* ---- Responsive: short / landscape phones ---- */
+@media (max-height: 480px) {
+  .ui-panel,
+  .ui-panel--welcome {
+    padding: 10px;
+  }
+
+  .ui-scroll {
+    max-height: 58vh;
+  }
+
+  .ui-subtitle {
+    margin-bottom: 8px;
+  }
+}
