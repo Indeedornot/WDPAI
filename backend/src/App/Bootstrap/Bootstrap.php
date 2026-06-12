@@ -55,11 +55,12 @@ final class Bootstrap
         $corsOrigins = Helpers::parseCsvList($envString('CORS_ORIGINS', ''));
 
         $basePath = rtrim($envString('BASE_PATH', ''), '/');
+        $requireHttps = strtolower(trim($envString('REQUIRE_HTTPS', 'false'))) === 'true';
 
         $config = new AppConfig(
             new DbConfig($dsn, $dbUser, $dbPassword),
             new CorsConfig($corsOrigins),
-            new RoutingConfig($basePath),
+            new RoutingConfig($basePath, $requireHttps),
         );
 
         $kernel = new Kernel($config);

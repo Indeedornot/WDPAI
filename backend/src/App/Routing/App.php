@@ -113,7 +113,7 @@ final class App
             return null;
         }
 
-        if (str_starts_with($req->path, '/auth/') && !$req->secure) {
+        if ($this->kernel->config->routing->requireHttps && str_starts_with($req->path, '/auth/') && !$req->secure) {
             return Response::error(ApiErrorCode::Forbidden, HttpStatus::Forbidden, 'HTTPS required.');
         }
 
