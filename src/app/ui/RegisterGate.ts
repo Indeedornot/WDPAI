@@ -195,15 +195,33 @@ export class RegisterGate implements Component
     this._panel.appendChild(body);
   }
 
-  private async handleRegister(): Promise<void> 
+  private validate(): string | null
+  {
+    const email = this._email.trim();
+    if (!email) return 'Email is required.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Enter a valid email address.';
+    if (!this._password) return 'Password is required.';
+    if (this._password.length < 8) return 'Password must be at least 8 characters.';
+    return null;
+  }
+
+  private async handleRegister(): Promise<void>
   {
     const auth = this.options.auth;
+
+    const validationError = this.validate();
+    if (validationError)
+    {
+      this._status = validationError;
+      this.render();
+      return;
+    }
 
     this._busy = true;
     this._status = '';
     this.render();
 
-    try 
+    try
     {
       const user = await auth.register(this._email.trim(), this._password);
       this._password = '';
