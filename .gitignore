@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Env / secrets (commit .env.example, never .env)
+.env
+backend/.env
+
 # PHP / Composer
 backend/vendor/
 backend/.phpunit.cache/
