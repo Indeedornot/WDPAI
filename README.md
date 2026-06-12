@@ -226,13 +226,15 @@ npm install && npm test
 
 ## 8. Screenshots
 
-> Add captures here for the report (web + mobile). Place files in
-> `docs/screenshots/` and reference them below.
+Captured with Playwright (desktop 1280×800 and mobile iPhone-12 viewport).
 
-| Web                                | Mobile                                |
-| ---------------------------------- | ------------------------------------- |
-| `docs/screenshots/web-welcome.png` | `docs/screenshots/mobile-welcome.png` |
-| `docs/screenshots/web-game.png`    | `docs/screenshots/mobile-death.png`   |
+| Screen | Desktop | Mobile |
+| ------ | ------- | ------ |
+| Welcome  | ![](docs/screenshots/web-welcome.png)  | ![](docs/screenshots/mobile-welcome.png)  |
+| Register | ![](docs/screenshots/web-register.png) | ![](docs/screenshots/mobile-register.png) |
+| Gameplay | ![](docs/screenshots/web-game.png)     | ![](docs/screenshots/mobile-game.png)     |
+| Pause / hub | ![](docs/screenshots/web-pause.png) | ![](docs/screenshots/mobile-pause.png)    |
+| Tutorial | ![](docs/screenshots/web-tutorial.png) | ![](docs/screenshots/mobile-tutorial.png) |
 
 ---
 
@@ -257,7 +259,7 @@ npm install && npm test
 | Global error handling (400/403/404/500) |   ✅   | `App::handle`                        |
 | Tests (PHPUnit + integration)           |   ✅   | `backend/tests`, smoke script        |
 | Documentation (README, ERD)             |   ✅   | this file                            |
-| Screenshots (web + mobile)              |   ⬜   | **add to `docs/screenshots/`**       |
+| Screenshots (web + mobile)              |   ✅   | `docs/screenshots/` (§8)             |
 
 ---
 
